@@ -1,11 +1,262 @@
 const express = require('express');
+const { protect, restrictTo } = require('../middleware/auth');
+
 const router = express.Router();
 
-// Basic stub routes
-router.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'User routes not implemented yet'
+/**
+ * @swagger
+ * /api/v1/users:
+ *   get:
+ *     summary: Get all users (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [student, instructor, org_admin, super_admin]
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *     responses:
+ *       200:
+ *         description: List of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: integer
+ *                 pagination:
+ *                   type: object
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Insufficient permissions
+ */
+
+/**
+ * @swagger
+ * /api/v1/users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *   patch:
+ *     summary: Update user (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [student, instructor, org_admin, super_admin]
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: User not found
+ *   delete:
+ *     summary: Delete user (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: User deleted successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/activate:
+ *   patch:
+ *     summary: Activate user account (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User activated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/deactivate:
+ *   patch:
+ *     summary: Deactivate user account (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deactivated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /api/v1/users/instructors:
+ *   get:
+ *     summary: Get all instructors
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: List of instructors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ */
+
+// Protected routes - Admin only
+router.use(protect);
+
+router.get('/', restrictTo('org_admin', 'super_admin'), async (req, res) => {
+  res.status(501).json({
+    status: 'error',
+    message: 'User management endpoints not fully implemented yet. Use /api/v1/auth/me for current user profile.'
+  });
+});
+
+router.get('/instructors', async (req, res) => {
+  res.status(501).json({
+    status: 'error',
+    message: 'Instructor listing not implemented yet'
+  });
+});
+
+router
+  .route('/:id')
+  .get(async (req, res) => {
+    res.status(501).json({
+      status: 'error',
+      message: 'User profile by ID not implemented yet'
+    });
+  })
+  .patch(restrictTo('org_admin', 'super_admin'), async (req, res) => {
+    res.status(501).json({
+      status: 'error',
+      message: 'User update not implemented yet'
+    });
+  })
+  .delete(restrictTo('super_admin'), async (req, res) => {
+    res.status(501).json({
+      status: 'error',
+      message: 'User deletion not implemented yet'
+    });
+  });
+
+router.patch('/:id/activate', restrictTo('org_admin', 'super_admin'), async (req, res) => {
+  res.status(501).json({
+    status: 'error',
+    message: 'User activation not implemented yet'
+  });
+});
+
+router.patch('/:id/deactivate', restrictTo('org_admin', 'super_admin'), async (req, res) => {
+  res.status(501).json({
+    status: 'error',
+    message: 'User deactivation not implemented yet'
   });
 });
 
