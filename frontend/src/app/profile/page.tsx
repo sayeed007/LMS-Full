@@ -5,6 +5,7 @@ import { LogoutModal } from "@/components/profile/LogoutModal";
 import { NotificationSettingTab } from "@/components/profile/NotificationSettingTab";
 import { ManageCategoriesTab } from "@/components/profile/ManageCategoriesTab";
 import { AuditLogTab } from "@/components/profile/AuditLogTab";
+import { Container } from "@/components/ui";
 
 const sidebarLinks = [
     { label: "Profile" },
@@ -18,52 +19,57 @@ export default function ProfilePage() {
     const [logoutOpen, setLogoutOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-off-white-1 flex flex-col">
-            <LogoutModal
-                open={logoutOpen}
-                onOpenChange={setLogoutOpen}
-                onConfirm={() => {
-                    setLogoutOpen(false);
-                    // Add your logout logic here (e.g., signOut(), redirect, etc.)
-                }}
-            />
-            <div className="flex flex-1">
-                {/* Sidebar */}
-                <aside className="w-64 bg-transparent p-10">
-                    <div className="mb-8">
-                        <div className="text-20 font-bold text-dark">Welcome, Hafiz</div>
-                        <div className="text-14 text-grey-2">Manage your info updated</div>
-                    </div>
-                    <nav className="flex flex-col gap-2">
-                        {sidebarLinks.map(link => (
+        <div className="min-h-screen bg-off-white-1">
+            <Container size="xl" padding="lg">
+                <LogoutModal
+                    open={logoutOpen}
+                    onOpenChange={setLogoutOpen}
+                    onConfirm={() => {
+                        setLogoutOpen(false);
+                        // Add your logout logic here (e.g., signOut(), redirect, etc.)
+                    }}
+                />
+                
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Sidebar */}
+                    <aside className="lg:w-64 bg-white rounded-xl shadow-sm p-8">
+                        <div className="mb-8">
+                            <h1 className="text-xl font-bold text-gray-900">Welcome, Hafiz</h1>
+                            <p className="text-sm text-gray-600">Manage your info updated</p>
+                        </div>
+                        <nav className="flex flex-col gap-2">
+                            {sidebarLinks.map(link => (
+                                <button
+                                    key={link.label}
+                                    onClick={() => setActiveTab(link.label)}
+                                    className={`text-sm px-4 py-3 rounded-lg text-left transition-colors ${activeTab === link.label
+                                        ? "text-info bg-info/10 font-semibold border border-info/20"
+                                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                                        }`}
+                                >
+                                    {link.label}
+                                </button>
+                            ))}
                             <button
-                                key={link.label}
-                                onClick={() => setActiveTab(link.label)}
-                                className={`text-16 px-2 py-2 rounded text-left transition ${activeTab === link.label
-                                    ? "text-info bg-white font-semibold"
-                                    : "text-grey-2 hover:text-dark"
-                                    }`}
+                                className="text-sm px-4 py-3 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 mt-4 text-left transition-colors"
+                                onClick={() => setLogoutOpen(true)}
                             >
-                                {link.label}
+                                Logout
                             </button>
-                        ))}
-                        <button
-                            className="text-16 px-2 py-2 rounded text-error mt-4 text-left"
-                            onClick={() => setLogoutOpen(true)}
-                        >
-                            Logout
-                        </button>
-                    </nav>
-                </aside>
+                        </nav>
+                    </aside>
 
-                {/* Main Content */}
-                <main className="flex-1 flex flex-col items-center justify-center p-10 gap-8">
-                    {activeTab === "Profile" && <ProfileTab />}
-                    {activeTab === "Notification Setting" && <NotificationSettingTab />}
-                    {activeTab === "Manage Categories" && <ManageCategoriesTab />}
-                    {activeTab === "Audit Log" && <AuditLogTab />}
-                </main>
-            </div>
+                    {/* Main Content */}
+                    <main className="flex-1">
+                        <div className="bg-white rounded-xl shadow-sm p-8">
+                            {activeTab === "Profile" && <ProfileTab />}
+                            {activeTab === "Notification Setting" && <NotificationSettingTab />}
+                            {activeTab === "Manage Categories" && <ManageCategoriesTab />}
+                            {activeTab === "Audit Log" && <AuditLogTab />}
+                        </div>
+                    </main>
+                </div>
+            </Container>
         </div>
     );
 }

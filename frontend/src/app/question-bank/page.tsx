@@ -1,11 +1,16 @@
-// app/question-bank/page.tsx
 "use client"
 
 import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import QuestionBankGrid from "@/components/question-bank/QuestionBankGrid";
-import QuestionBankHeader from "@/components/question-bank/QuestionBankHeader";
+import { PageLayout, TabNav, SearchInput } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+const tabs = [
+    { key: "my", label: "My Questions" },
+    { key: "all", label: "All Questions" }
+];
 
 export default function QuestionBankPage() {
     const router = useRouter();
@@ -21,35 +26,51 @@ export default function QuestionBankPage() {
         setHasQuestions(true);
     }, []);
 
-
     const handleCreateNewQuestion = () => {
         router.push(`/question-bank/courses/${1}/sections/${1}/questions`);
     };
 
     return (
-        <>
-            <QuestionBankHeader
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-            />
-
-            {hasQuestions ?
-                <QuestionBankGrid
-                    activeTab={activeTab}
-                    searchQuery={searchQuery}
-                    handleCreateNewQuestion={handleCreateNewQuestion}
-                />
-                :
-                <EmptyStateWithCreate
-                    message="No question to show"
-                    description="Questions you’ve created will show up here."
-                    buttonText="Create Now"
+        <PageLayout
+            title="Question Bank"
+            actions={
+                <Button
                     onClick={handleCreateNewQuestion}
-                />
+                    className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
+                >
+                    Create Now
+                </Button>
             }
+        >
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                    <TabNav
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onTabChange={(tab) => setActiveTab(tab as "my" | "all")}
+                    />
+                    <SearchInput
+                        placeholder="Search questions..."
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                    />
+                </div>
 
-        </>
+                {hasQuestions ?
+                    <QuestionBankGrid
+                        activeTab={activeTab}
+                        searchQuery={searchQuery}
+                        handleCreateNewQuestion={handleCreateNewQuestion}
+                    />
+                    :
+                    <EmptyStateWithCreate
+                        message="No question to show"
+                        description="Questions you've created will show up here."
+                        buttonText="Create Now"
+                        onClick={handleCreateNewQuestion}
+                    />
+                }
+            </div>
+        </PageLayout>
     )
 }

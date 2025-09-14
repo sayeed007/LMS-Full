@@ -1,9 +1,9 @@
 "use client"
 import Image from 'next/image';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { NotificationPopover } from '../NotificationPopover';
+import { NavigationLink } from '@/components/ui';
 
 const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
@@ -54,17 +54,14 @@ const Header = () => {
                 {/* Desktop Navigation */}
                 <nav className="hidden lg:flex gap-5">
                     {navItems.map((item) => (
-                        <Link
+                        <NavigationLink
                             key={item.name}
                             href={item.href}
-                            className={`text-gray-600 hover:text-blue-600 px-4 py-1 transition-colors whitespace-nowrap ${activeLink === item.name.toLowerCase()
-                                ? 'text-blue-600 font-bold border-b-2 border-blue-600'
-                                : ''
-                                }`}
+                            isActive={activeLink === item.name.toLowerCase()}
                             onClick={() => setActiveLink(item.name.toLowerCase())}
                         >
                             {item.name}
-                        </Link>
+                        </NavigationLink>
                     ))}
                 </nav>
 
@@ -129,20 +126,18 @@ const Header = () => {
                 }`}>
                 <nav className="px-4 pb-4 space-y-2 bg-white/10 backdrop-blur-sm">
                     {navItems.map((item) => (
-                        <Link
+                        <NavigationLink
                             key={item.name}
                             href={item.href}
-                            className={`block text-gray-600 hover:text-blue-600 px-4 py-3 transition-colors rounded-lg hover:bg-white/20 ${activeLink === item.name.toLowerCase()
-                                ? 'text-blue-600 bg-white/20'
-                                : ''
-                                }`}
+                            isActive={activeLink === item.name.toLowerCase()}
+                            variant="mobile"
                             onClick={() => {
                                 setActiveLink(item.name.toLowerCase());
                                 setIsMobileMenuOpen(false);
                             }}
                         >
                             {item.name}
-                        </Link>
+                        </NavigationLink>
                     ))}
 
                     {/* Mobile User Profile */}
