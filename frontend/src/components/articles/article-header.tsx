@@ -19,7 +19,7 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
 }) => {
 
     return (
-        <>
+        <div className="container mx-auto py-10 px-4 lg:px-8">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-8">
                     <h1 className="text-2xl font-semibold">Article</h1>
@@ -56,7 +56,7 @@ const ArticleHeader: React.FC<ArticleHeaderProps> = ({
                     All Article
                 </button>
             </div>
-        </>
+        </div>
     )
 }
 

@@ -57,36 +57,36 @@ export default function RootLayout({
         <ReduxProvider>
           <ModalProviderWithGlobal>
             <Header />
-            <main>
-              {children}
+            {/* <main> */}
+            {children}
 
-              {/* TOAST EXAMPLE */}
-              {/* <ToastExample /> */}
+            {/* TOAST EXAMPLE */}
+            {/* <ToastExample /> */}
 
-              {/* MODAL EXAMPLE */}
-              <ModalExample />
+            {/* MODAL EXAMPLE */}
+            {/* <ModalExample /> */}
 
-              {/* TOAST */}
-              <Toaster
-                position="top-right"
-                expand={true}
-                richColors={true}
-                closeButton={true}
-                toastOptions={{
-                  style: {
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    padding: '16px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  },
-                  className: 'sonner-toast',
-                  duration: 3000,
-                }}
-              />
-            </main>
+            {/* TOAST */}
+            <Toaster
+              position="top-right"
+              expand={true}
+              richColors={true}
+              closeButton={true}
+              toastOptions={{
+                style: {
+                  background: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  padding: '16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                },
+                className: 'sonner-toast',
+                duration: 3000,
+              }}
+            />
+            {/* </main> */}
           </ModalProviderWithGlobal>
         </ReduxProvider>
       </body>
