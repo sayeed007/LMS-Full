@@ -1,5 +1,4 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQueryWithAuth } from './baseApi';
+import { baseApi } from './baseApi';
 
 // Types
 export interface QuestionBank {
@@ -103,10 +102,7 @@ export interface SingleQuestionBankResponse {
   };
 }
 
-export const questionBankApi = createApi({
-  reducerPath: 'questionBankApi',
-  baseQuery: baseQueryWithAuth,
-  tagTypes: ['QuestionBank', 'QuestionBanks'],
+export const questionBankApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all question banks with filtering
     getQuestionBanks: builder.query<QuestionBankResponse, QuestionBankFilters>({

@@ -95,7 +95,7 @@ const handler = NextAuth({
 
       // Handle credentials provider
       if (user && account?.provider === 'credentials') {
-        token.backendToken = user.token
+        token.backendToken = user.token || ''
         token.userId = user.id
         token.role = user.role
       }

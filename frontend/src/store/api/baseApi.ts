@@ -19,14 +19,18 @@ export const baseApi = createApi({
     },
   }),
   tagTypes: [
-    'User', 
-    'Course', 
-    'Lesson', 
-    'Enrollment', 
-    'Progress', 
-    'Organization', 
+    'User',
+    'Course',
+    'Lesson',
+    'Enrollment',
+    'Progress',
+    'Organization',
     'Article',
-    'Auth'
+    'Auth',
+    'QuestionBank',
+    'QuestionBanks',
+    'Question',
+    'Questions'
   ],
   endpoints: () => ({}),
 });

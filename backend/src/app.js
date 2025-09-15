@@ -17,6 +17,7 @@ const swaggerUi = require('swagger-ui-express');
 const globalErrorHandler = require('./middleware/errorHandler');
 const AppError = require('./utils/appError');
 
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');

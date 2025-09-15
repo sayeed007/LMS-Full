@@ -1,5 +1,4 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQueryWithAuth } from './baseApi';
+import { baseApi } from './baseApi';
 
 // Types
 export interface Choice {
@@ -120,10 +119,7 @@ export interface SingleQuestionResponse {
   };
 }
 
-export const questionApi = createApi({
-  reducerPath: 'questionApi',
-  baseQuery: baseQueryWithAuth,
-  tagTypes: ['Question', 'Questions'],
+export const questionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all questions with filtering
     getQuestions: builder.query<QuestionsResponse, QuestionFilters>({

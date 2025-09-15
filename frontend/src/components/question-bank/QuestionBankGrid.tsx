@@ -6,7 +6,6 @@ import PrimaryActionButton from "../ui/PrimaryButton";
 import { QuestionBankCard } from "./QuestionBankCard";
 import { useGetQuestionBanksQuery } from "@/store/api/questionBankApi";
 import { useState } from "react";
-import { Skeleton } from "../ui/skeleton";
 import { showErrorToast } from "@/lib/toast-utils";
 
 // Define the props interface
@@ -56,14 +55,14 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
     const LoadingSkeleton = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
-                    <Skeleton className="h-32 w-full rounded-md" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-3 w-2/3" />
+                <div key={i} className="bg-white rounded-lg shadow-sm border p-6 space-y-4 animate-pulse">
+                    <div className="h-32 w-full bg-gray-200 rounded-md"></div>
+                    <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-full bg-gray-200 rounded"></div>
+                    <div className="h-3 w-2/3 bg-gray-200 rounded"></div>
                     <div className="flex justify-between items-center">
-                        <Skeleton className="h-3 w-16" />
-                        <Skeleton className="h-3 w-12" />
+                        <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                        <div className="h-3 w-12 bg-gray-200 rounded"></div>
                     </div>
                 </div>
             ))}
