@@ -1,9 +1,8 @@
-import React from 'react';
 import Container from '@/components/ui/Container';
 import PageHeader from '@/components/ui/PageHeader';
 import SearchInput from '@/components/ui/SearchInput';
 import TabNav from '@/components/ui/TabNav';
-import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface Tab {
   key: string;
@@ -14,26 +13,26 @@ interface Tab {
 interface PageLayoutProps {
   title: string;
   children: React.ReactNode;
-  
+
   // Optional search functionality
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
-  
+
   // Optional tabs
   tabs?: Tab[];
   activeTab?: string;
   onTabChange?: (tabKey: string) => void;
   tabVariant?: 'underline' | 'pills' | 'contained';
-  
+
   // Layout customization
   containerSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   containerPadding?: 'none' | 'sm' | 'md' | 'lg';
   headerSize?: 'sm' | 'md' | 'lg';
-  
+
   // Additional actions in header
   headerActions?: React.ReactNode;
-  
+
   className?: string;
 }
 
@@ -48,7 +47,7 @@ export default function PageLayout({
   onTabChange,
   tabVariant = 'underline',
   containerSize = 'xl',
-  containerPadding = 'md',
+  containerPadding = 'none',
   headerSize = 'lg',
   headerActions,
   className
@@ -57,8 +56,8 @@ export default function PageLayout({
   const showTabs = tabs && activeTab && onTabChange;
 
   return (
-    <Container 
-      size={containerSize} 
+    <Container
+      size={containerSize}
       padding={containerPadding}
       className={className}
     >

@@ -236,6 +236,14 @@ const userSchema = new mongoose.Schema({
   googleId: String,
   microsoftId: String,
   linkedinId: String,
+  oauthProviders: {
+    type: Map,
+    of: {
+      id: String,
+      email: String
+    },
+    default: new Map()
+  },
   // Activity tracking
   lastActiveAt: {
     type: Date,

@@ -70,12 +70,21 @@ export default function ArticlesPage() {
                         />
                     </div>
 
-                    <ArticlesGrid
-                        activeTab={activeTab}
-                        searchQuery={searchQuery}
-                        handleCreateNewArticle={handleCreateNewArticle}
-                        isAuthenticated={!!session}
-                    />
+                    {hasArticles ?
+                        <ArticlesGrid
+                            activeTab={activeTab}
+                            searchQuery={searchQuery}
+                            handleCreateNewArticle={handleCreateNewArticle}
+                            isAuthenticated={!!session}
+                        />
+                        :
+                        <EmptyStateWithCreate
+                            message="No article to show"
+                            description="Article you’ve created will show up here."
+                            buttonText="Create Now"
+                            onClick={handleCreateNewArticle}
+                        />
+                    }
                 </div>
             </PageLayout>
 

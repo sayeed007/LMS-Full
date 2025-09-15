@@ -1,4 +1,4 @@
-// File: C:\learning-management-system\src\app\articles\page.tsx
+// File: C:\Users\nsl\Desktop\LMS\frontend\src\app\articles\page.tsx
 import * as entry from '../../../../src/app/articles/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

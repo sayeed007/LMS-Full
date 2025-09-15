@@ -7,13 +7,13 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
     prepareHeaders: (headers, { getState }) => {
-      // Get token from the auth state
+      // Get token from Redux state (synced by SessionSync component)
       const token = (getState() as RootState).auth.token;
-      
+
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
       }
-      
+
       headers.set('Content-Type', 'application/json');
       return headers;
     },

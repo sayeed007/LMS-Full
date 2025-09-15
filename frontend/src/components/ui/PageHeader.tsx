@@ -14,15 +14,15 @@ const sizeVariants = {
   lg: 'text-2xl'
 };
 
-export default function PageHeader({ 
-  title, 
-  children, 
+export default function PageHeader({
+  title,
+  children,
   className,
   size = 'lg'
 }: PageHeaderProps) {
   return (
     <div className={cn(
-      'flex items-center justify-between mb-6',
+      'flex items-center justify-between mb-4',
       className
     )}>
       <div className="flex items-center gap-8">
@@ -33,7 +33,7 @@ export default function PageHeader({
           {title}
         </h1>
       </div>
-      
+
       {children && (
         <div className="flex items-center gap-4">
           {children}

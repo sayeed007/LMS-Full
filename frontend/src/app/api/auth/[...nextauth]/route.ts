@@ -9,10 +9,12 @@ const handler = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
+    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET ? [
+      GitHubProvider({
+        clientId: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      })
+    ] : []),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -43,10 +45,10 @@ const handler = NextAuth({
             return {
               id: data.data.user._id,
               email: data.data.user.email,
-              name: `${data.data.user.firstName} ${data.data.user.lastName}`,
+              name: data.data.user.name,
               image: data.data.user.avatar,
               role: data.data.user.role,
-              token: data.data.token,
+              token: data.token,
             }
           }
 
@@ -81,7 +83,7 @@ const handler = NextAuth({
           if (response.ok) {
             const data = await response.json()
             if (data.status === 'success') {
-              token.backendToken = data.data.token
+              token.backendToken = data.token
               token.userId = data.data.user._id
               token.role = data.data.user.role
             }

@@ -228,29 +228,7 @@ router.post('/verify-email', authController.verifyEmail);
  */
 router.post('/resend-verification', authController.resendVerificationEmail);
 
-/**
- * @swagger
- * /api/v1/auth/google:
- *   get:
- *     summary: Initiate Google OAuth
- *     tags: [Authentication]
- *     responses:
- *       302:
- *         description: Redirect to Google OAuth
- */
-router.get('/google', authController.googleAuth);
-
-/**
- * @swagger
- * /api/v1/auth/google/callback:
- *   get:
- *     summary: Google OAuth callback
- *     tags: [Authentication]
- *     responses:
- *       302:
- *         description: Redirect to frontend with tokens
- */
-router.get('/google/callback', authController.googleCallback);
+// Removed backend Google OAuth routes - using NextAuth.js instead
 
 /**
  * @swagger

@@ -104,8 +104,8 @@ export interface ReportStats {
 
 // Define the Article interface to match the merged structure
 export interface Author {
-  name: string;
-  avatar: string;
+  name?: string;
+  avatar?: string;
   initials: string;
 }
 

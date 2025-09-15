@@ -19,8 +19,7 @@ const articleSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Article category is required'],
-    trim: true,
-    index: true
+    trim: true
   },
   tags: [{
     type: String,
@@ -30,7 +29,7 @@ const articleSchema = new mongoose.Schema({
   thumbnail: {
     type: String,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return !v || /^https?:\/\//.test(v);
       },
       message: 'Thumbnail must be a valid URL'
@@ -39,24 +38,21 @@ const articleSchema = new mongoose.Schema({
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Article must have an author'],
-    index: true
+    required: [true, 'Article must have an author']
   },
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
-    default: 'draft',
-    index: true
+    default: 'draft'
   },
   visibility: {
     type: String,
     enum: ['public', 'private', 'organization'],
-    default: 'public',
-    index: true
+    default: 'public'
   },
   readTime: {
     type: Number,
-    default: function() {
+    default: function () {
       // Calculate estimated read time based on content length
       // Average reading speed: 200 words per minute
       const wordCount = this.content ? this.content.split(/\s+/).length : 0;
@@ -78,13 +74,11 @@ const articleSchema = new mongoose.Schema({
     ref: 'User'
   }],
   publishedAt: {
-    type: Date,
-    index: true
+    type: Date
   },
   organization: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Organization',
-    index: true
+    ref: 'Organization'
   },
   // SEO fields
   metaTitle: {
@@ -97,8 +91,7 @@ const articleSchema = new mongoose.Schema({
   },
   slug: {
     type: String,
-    unique: true,
-    index: true
+    unique: true
   }
 }, {
   timestamps: true,
@@ -124,7 +117,7 @@ articleSchema.virtual('commentsCount', {
 });
 
 // Pre-save middleware
-articleSchema.pre('save', function(next) {
+articleSchema.pre('save', function (next) {
   // Set publishedAt when status changes to published
   if (this.isModified('status') && this.status === 'published' && !this.publishedAt) {
     this.publishedAt = new Date();
@@ -150,12 +143,12 @@ articleSchema.pre('save', function(next) {
 });
 
 // Instance methods
-articleSchema.methods.incrementViews = function() {
+articleSchema.methods.incrementViews = function () {
   this.views += 1;
   return this.save({ validateBeforeSave: false });
 };
 
-articleSchema.methods.toggleLike = function(userId) {
+articleSchema.methods.toggleLike = function (userId) {
   const isLiked = this.likedBy.includes(userId);
 
   if (isLiked) {
@@ -170,7 +163,7 @@ articleSchema.methods.toggleLike = function(userId) {
 };
 
 // Static methods
-articleSchema.statics.getPopular = function(limit = 10, timeframe = 'week') {
+articleSchema.statics.getPopular = function (limit = 10, timeframe = 'week') {
   const now = new Date();
   let dateFilter = {};
 
@@ -191,22 +184,22 @@ articleSchema.statics.getPopular = function(limit = 10, timeframe = 'week') {
     visibility: { $in: ['public', 'organization'] },
     ...dateFilter
   })
-  .sort({ views: -1, likes: -1 })
-  .limit(limit)
-  .populate('author', 'firstName lastName avatar');
+    .sort({ views: -1, likes: -1 })
+    .limit(limit)
+    .populate('author', 'name avatar');
 };
 
-articleSchema.statics.getFeatured = function(limit = 5) {
+articleSchema.statics.getFeatured = function (limit = 5) {
   return this.find({
     status: 'published',
     visibility: { $in: ['public', 'organization'] }
   })
-  .sort({ likes: -1, views: -1, publishedAt: -1 })
-  .limit(limit)
-  .populate('author', 'firstName lastName avatar');
+    .sort({ likes: -1, views: -1, publishedAt: -1 })
+    .limit(limit)
+    .populate('author', 'name avatar');
 };
 
-articleSchema.statics.getCategories = function() {
+articleSchema.statics.getCategories = function () {
   return this.distinct('category', { status: 'published' });
 };
 

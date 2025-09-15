@@ -95,7 +95,7 @@ exports.getAllArticles = catchAsync(async (req, res, next) => {
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
-    .populate('author', 'firstName lastName avatar email')
+    .populate('author', 'name avatar email')
     .populate('organization', 'name')
     .select('-likedBy'); // Exclude likedBy array for performance
 
@@ -138,7 +138,7 @@ exports.getMyArticles = catchAsync(async (req, res, next) => {
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
-    .populate('author', 'firstName lastName avatar email')
+    .populate('author', 'name avatar email')
     .populate('organization', 'name');
 
   // Get pagination data
@@ -155,7 +155,7 @@ exports.getMyArticles = catchAsync(async (req, res, next) => {
 // Get article by ID
 exports.getArticleById = catchAsync(async (req, res, next) => {
   const article = await Article.findById(req.params.id)
-    .populate('author', 'firstName lastName avatar email bio')
+    .populate('author', 'name avatar email bio')
     .populate('organization', 'name logo');
 
   if (!article) {
@@ -193,7 +193,7 @@ exports.createArticle = catchAsync(async (req, res, next) => {
   const article = await Article.create(articleData);
 
   // Populate author information for response
-  await article.populate('author', 'firstName lastName avatar email');
+  await article.populate('author', 'name avatar email');
 
   res.status(201).json({
     status: 'success',
@@ -225,7 +225,7 @@ exports.updateArticle = catchAsync(async (req, res, next) => {
       new: true,
       runValidators: true
     }
-  ).populate('author', 'firstName lastName avatar email');
+  ).populate('author', 'name avatar email');
 
   res.status(200).json({
     status: 'success',
@@ -337,7 +337,7 @@ exports.getRelatedArticles = catchAsync(async (req, res, next) => {
   })
   .sort({ likes: -1, views: -1 })
   .limit(limit)
-  .populate('author', 'firstName lastName avatar');
+  .populate('author', 'name avatar');
 
   res.status(200).json({
     status: 'success',
@@ -375,7 +375,7 @@ exports.searchArticles = catchAsync(async (req, res, next) => {
     .sort({ score: { $meta: 'textScore' }, publishedAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate('author', 'firstName lastName avatar email');
+    .populate('author', 'name avatar email');
 
   // Get pagination data
   const pagination = getPaginationData(page, limit, totalResults);

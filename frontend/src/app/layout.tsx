@@ -8,6 +8,7 @@ import ModalExample from "@/components/ModalExample";
 import { ModalProviderWithGlobal } from "@/lib/modal-utils";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import SessionProvider from "@/components/providers/SessionProvider";
+import SessionSync from "@/components/auth/SessionSync";
 
 
 // Google Fonts
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-body overflow-x-clip">
         <SessionProvider>
           <ReduxProvider>
+            <SessionSync />
             <ModalProviderWithGlobal>
               <Header />
               {/* <main> */}

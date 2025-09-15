@@ -205,25 +205,7 @@ const resendVerificationEmail = catchAsync(async (req, res, next) => {
   });
 });
 
-const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] });
-
-const googleCallback = catchAsync(async (req, res, next) => {
-  passport.authenticate('google', { session: false }, (err, user, info) => {
-    if (err) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_error`);
-    }
-    
-    if (!user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
-    }
-
-    const token = signToken(user._id);
-    const refreshToken = signRefreshToken(user._id);
-
-    // Redirect to frontend with tokens
-    res.redirect(`${process.env.FRONTEND_URL}/oauth/callback?token=${token}&refreshToken=${refreshToken}`);
-  })(req, res, next);
-});
+// Removed backend Google OAuth methods - using NextAuth.js instead
 
 const getSSOConfig = (req, res) => {
   res.status(200).json({
@@ -264,12 +246,8 @@ const oauthLogin = catchAsync(async (req, res, next) => {
       }
     } else {
       // Create new user
-      const [firstName, ...lastNameParts] = name.split(' ');
-      const lastName = lastNameParts.join(' ') || '';
-
       user = await User.create({
-        firstName,
-        lastName,
+        name,
         email,
         avatar: image,
         role: 'student', // Default role for OAuth users
@@ -319,8 +297,6 @@ module.exports = {
   resetPassword,
   verifyEmail,
   resendVerificationEmail,
-  googleAuth,
-  googleCallback,
   getSSOConfig,
   oauthLogin,
 };

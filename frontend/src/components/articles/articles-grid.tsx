@@ -137,9 +137,9 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
                                 title: article.title,
                                 category: article.category,
                                 author: {
-                                    name: article.author.firstName + " " + article.author.lastName,
+                                    name: article.author?.name,
                                     avatar: article.author.avatar || "",
-                                    initials: (article.author.firstName[0] + article.author.lastName[0]).toUpperCase()
+                                    initials: article?.author?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "AU"
                                 },
                                 publishDate: new Date(article.publishedAt || article.createdAt).toLocaleDateString(),
                                 publishTime: new Date(article.publishedAt || article.createdAt).toLocaleTimeString(),
@@ -188,11 +188,10 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
                                 <button
                                     key={pageNum}
                                     onClick={() => setCurrentPage(pageNum)}
-                                    className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                        currentPage === pageNum
-                                            ? 'bg-blue-600 text-white'
-                                            : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                                    }`}
+                                    className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === pageNum
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                                        }`}
                                 >
                                     {pageNum}
                                 </button>
