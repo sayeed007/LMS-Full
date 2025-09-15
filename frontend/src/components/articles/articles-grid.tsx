@@ -4,6 +4,7 @@
 import { useState, useMemo } from "react";
 import { ArticleCard } from "./article-card";
 import { CreateArticleModal } from "./create-article-modal";
+import { useModalActions } from "@/lib/modal-utils";
 import { useRouter } from "next/navigation";
 import PrimaryActionButton from "../ui/PrimaryButton";
 import { useGetArticlesQuery, useGetMyArticlesQuery, type Article } from "@/store/api/articleApi";
@@ -24,7 +25,7 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
     isAuthenticated
 }) => {
     const router = useRouter()
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const { openModal, closeModal } = useModalActions()
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(12) // Articles per page
 
@@ -213,10 +214,6 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
                 </div>
             )}
 
-            <CreateArticleModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-            />
         </div>
     )
 }

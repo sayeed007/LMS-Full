@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-off-white-1">
-      <Container size="xl" padding="md">
+      <Container size="xl" padding="none">
         <PageHeader title="Dashboard" />
 
         <div className="space-y-8">
@@ -114,17 +114,17 @@ export default function DashboardPage() {
                 >
                   ◀
                 </button>
-                
+
                 <div className="flex gap-4 overflow-hidden flex-1">
                   {visibleCourses.map((course) => (
                     <div
                       key={course.title}
-                      className="bg-white rounded-xl shadow-sm w-80 min-w-[320px] flex-shrink-0 hover:shadow-md transition-shadow"
+                      className="bg-white rounded-xl shadow-sm w-68 min-w-[272px] flex-shrink-0 hover:shadow-md transition-shadow"
                     >
                       <Image
                         src={course.image}
                         alt={course.title}
-                        width={320}
+                        width={1400}
                         height={128}
                         className="rounded-t-xl h-32 w-full object-cover"
                       />
@@ -168,7 +168,7 @@ export default function DashboardPage() {
             <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center">
               <h2 className="text-xl font-semibold mb-6 text-gray-900">Course Analytics</h2>
               {/* Pie chart (SVG) */}
-              <svg width="120" height="120" viewBox="0 0 32 32" className="mb-6">
+              <svg width="160" height="160" viewBox="0 0 32 32" className="mb-6">
                 {/* Published: 50.36% */}
                 <circle r="16" cx="16" cy="16" fill="white" />
                 <path d="M16 16 L16 0 A16 16 0 0 1 31.2 21.1 Z" fill="#40A578" />

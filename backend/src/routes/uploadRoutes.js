@@ -1,5 +1,6 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const uploadController = require('../controllers/uploadController');
 
 const router = express.Router();
 
@@ -436,68 +437,17 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
-router.post('/image', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Image upload not implemented yet'
-  });
-});
+router.post('/image', uploadController.uploadImageHandler);
+router.post('/document', uploadController.uploadDocumentHandler);
+router.post('/video', restrictTo('instructor', 'org_admin', 'super_admin'), uploadController.uploadVideoHandler);
+router.post('/audio', restrictTo('instructor', 'org_admin', 'super_admin'), uploadController.uploadAudioHandler);
+router.post('/bulk', restrictTo('instructor', 'org_admin', 'super_admin'), uploadController.bulkUploadHandler);
 
-router.post('/document', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Document upload not implemented yet'
-  });
-});
-
-router.post('/video', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Video upload not implemented yet'
-  });
-});
-
-router.post('/audio', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Audio upload not implemented yet'
-  });
-});
-
-router.post('/bulk', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Bulk upload not implemented yet'
-  });
-});
-
-router.get('/files', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'File listing not implemented yet'
-  });
-});
-
-router.get('/files/:id', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'File metadata retrieval not implemented yet'
-  });
-});
-
-router.delete('/files/:id', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'File deletion not implemented yet'
-  });
-});
+router.get('/files', uploadController.getFiles);
+router.get('/files/:id', uploadController.getFileById);
+router.delete('/files/:id', uploadController.deleteFile);
 
 // Legacy route for backward compatibility
-router.post('/', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Generic upload not implemented yet. Use specific endpoints like /image, /document, /video, or /audio'
-  });
-});
+router.post('/', uploadController.uploadImageHandler);
 
 module.exports = router;

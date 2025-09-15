@@ -2,9 +2,10 @@
 
 import ArticlesGrid from "@/components/articles/articles-grid";
 import { CreateArticleModal } from "@/components/articles/create-article-modal";
+import { useModalActions } from "@/lib/modal-utils";
 import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, SearchInput, TabNav } from "@/components/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetArticlesQuery, useGetMyArticlesQuery } from "@/store/api/articleApi";
 import { useSession } from "next-auth/react";
 import LoginModal from "@/components/auth/LoginModal";
@@ -15,10 +16,11 @@ const tabs = [
 ];
 
 export default function ArticlesPage() {
-    const { data: session, status } = useSession();
-    const [activeTab, setActiveTab] = useState<"my" | "all">("all"); // Default to "all" for unauthenticated users
+    const { data: session } = useSession();
+    const { openModal, closeModal } = useModalActions();
+    console.log(session);
+    const [activeTab, setActiveTab] = useState<"my" | "all">(session ? "my" : "all"); // Default to "all" for unauthenticated users
     const [searchQuery, setSearchQuery] = useState("");
-    const [openCreateArticleModal, setOpenCreateArticleModal] = useState<boolean>(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
 
     // Fetch data to determine if articles exist
@@ -30,12 +32,21 @@ export default function ArticlesPage() {
         ? (myArticlesData?.data?.length ?? 0) > 0
         : (allArticlesData?.data?.length ?? 0) > 0;
 
+    useEffect(() => {
+        if (session) {
+            setActiveTab('my');
+        }
+    }, [session]);
+
     const handleCreateNewArticle = () => {
         if (!session) {
             setShowLoginModal(true);
             return;
         }
-        setOpenCreateArticleModal(true);
+        openModal(<CreateArticleModal onClose={() => closeModal()} />, {
+            size: 'md',
+            position: 'center'
+        });
     };
 
     const handleTabChange = (tab: string) => {
@@ -48,13 +59,6 @@ export default function ArticlesPage() {
 
     return (
         <>
-            {openCreateArticleModal &&
-                <CreateArticleModal
-                    isOpen={openCreateArticleModal}
-                    onClose={() => setOpenCreateArticleModal(false)}
-                />
-            }
-
             <PageLayout title="Articles">
                 <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row justify-between border-b border-off-white-4 mb-0">

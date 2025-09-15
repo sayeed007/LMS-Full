@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { GoBackRoute } from "../reports/GoBackRoute"
 import RichTextEditor from "../RichTextEditor"
 import { Input } from "../ui/input"
@@ -12,21 +12,97 @@ import { MoreOptionsPopup } from "./article-more-option-popup"
 import { ArticleAddThumbnailModal } from "./ArticleAddThumbnailModal"
 import { ArticleAdvancedSettingModal } from "./ArticleAdvancedSettingModal"
 import SimplePageContainer from "../layout/SimplePageContainer"
+import { useCreateArticleMutation, useUpdateArticleMutation, useGetArticleCategoriesQuery, type CreateArticleRequest } from "@/store/api/articleApi"
+import { useUploadImageMutation } from "@/store/api/uploadApi"
+import { useSession } from "next-auth/react"
 
 export function ArticleCreationOptions() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const [articleName, setArticleName] = useState<string>(searchParams.get('name') || 'Untitled Article');
-    const [showMorePopup, setShowMorePopup] = useState<boolean>(false);
-    const [articleContent, setArticleContent] = useState('');
+    const { data: session } = useSession()
 
+    // Article state
+    const [articleId, setArticleId] = useState<string | null>(null)
+    const [articleName, setArticleName] = useState<string>(searchParams.get('name') || 'Untitled Article');
+    const [articleContent, setArticleContent] = useState('');
+    const [articleCategory, setArticleCategory] = useState('General');
+    const [articleTags, setArticleTags] = useState<string[]>([]);
+    const [articleThumbnail, setArticleThumbnail] = useState<string>('');
+    const [articleStatus, setArticleStatus] = useState<'draft' | 'published'>('draft');
+    const [articleVisibility, setArticleVisibility] = useState<'public' | 'private' | 'organization'>('public');
+
+    // UI state
+    const [showMorePopup, setShowMorePopup] = useState<boolean>(false);
     const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch'>('root')
     const [showAddThumbnailModal, setShowAddThumbnailModal] = useState(false);
     const [showAdvanceSettingModal, setShowAdvanceSettingModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
+    // API hooks
+    const [createArticle] = useCreateArticleMutation();
+    const [updateArticle] = useUpdateArticleMutation();
+    const [uploadImage] = useUploadImageMutation();
+    const { data: categoriesData } = useGetArticleCategoriesQuery();
+
+
+    // Create or update article
+    const saveArticle = async (status: 'draft' | 'published' = 'draft') => {
+        if (!session) {
+            alert('You must be logged in to save articles');
+            return;
+        }
+
+        if (!articleName.trim()) {
+            alert('Please enter an article title');
+            return;
+        }
+
+        if (status === 'published' && !articleContent.trim()) {
+            alert('Please add content before publishing');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const articleData: CreateArticleRequest = {
+                title: articleName.trim(),
+                content: articleContent,
+                excerpt: articleContent ? articleContent.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : '',
+                category: articleCategory,
+                tags: articleTags,
+                thumbnail: articleThumbnail,
+                status,
+                visibility: articleVisibility
+            };
+
+            if (articleId) {
+                // Update existing article
+                const result = await updateArticle({
+                    id: articleId,
+                    data: articleData
+                }).unwrap();
+                console.log('Article updated:', result);
+            } else {
+                // Create new article
+                const result = await createArticle(articleData).unwrap();
+                setArticleId(result.data.article._id);
+                console.log('Article created:', result);
+            }
+
+            if (status === 'published') {
+                alert('Article published successfully!');
+                router.push('/articles');
+            } else {
+                alert('Article saved as draft!');
+            }
+        } catch (error: any) {
+            console.error('Error saving article:', error);
+            alert(error?.data?.message || 'Failed to save article');
+        }
+        setIsLoading(false);
+    };
 
     const handleStartFromScratch = () => {
-        // router.push(`/articles/edit?name=${encodeURIComponent(articleName)}&mode=scratch`);
         setCurrentArticleWritingMethod('scratch');
     }
 
@@ -38,30 +114,42 @@ export function ArticleCreationOptions() {
         router.push(`/articles/edit?name=${encodeURIComponent(articleName)}&mode=import`)
     }
 
-
-
-    const handlePublish = () => {
-        router.push(`/articles/publish?name=${encodeURIComponent(articleName)}`)
+    const handlePublish = async () => {
+        await saveArticle('published');
     }
 
     // More popup handlers
-    const handleSaveAsDraft = () => {
-        // Implement save as draft logic
-        console.log('Saving as draft...')
-        // You can add your save logic here
+    const handleSaveAsDraft = async () => {
+        await saveArticle('draft');
     }
 
     const handleMandatoryRead = () => {
-        // Implement mandatory read logic
-        console.log('Setting as mandatory read...')
-        // You can add your mandatory read logic here
+        // Set article as mandatory read (could be a tag or special category)
+        setArticleTags(prev => [...prev.filter(tag => tag !== 'mandatory'), 'mandatory']);
+        alert('Article marked as mandatory read');
     }
 
     const handleAddThumbnail = () => {
         setShowAddThumbnailModal(true);
     };
 
-    const handleSaveThumbnail = () => {
+    const handleSaveThumbnail = async (file?: File, url?: string) => {
+        if (file) {
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('category', 'thumbnail');
+
+                const result = await uploadImage(formData).unwrap();
+                setArticleThumbnail(result.data.url);
+                alert('Thumbnail uploaded successfully!');
+            } catch (error: any) {
+                console.error('Error uploading thumbnail:', error);
+                alert(error?.data?.message || 'Failed to upload thumbnail');
+            }
+        } else if (url) {
+            setArticleThumbnail(url);
+        }
         setShowAddThumbnailModal(false);
     };
 
@@ -69,22 +157,51 @@ export function ArticleCreationOptions() {
         setShowAdvanceSettingModal(true);
     }
 
+    const handleAdvancedSettingsSave = (settings: {
+        category: string;
+        tags: string[];
+        visibility: 'public' | 'private' | 'organization';
+    }) => {
+        setArticleCategory(settings.category);
+        setArticleTags(settings.tags);
+        setArticleVisibility(settings.visibility);
+        setShowAdvanceSettingModal(false);
+    };
+
     const handlePreview = () => {
-        if (!articleName.trim() || !articleContent.trim()) {
-            alert('Please fill in both title and content');
+        if (!articleName.trim()) {
+            alert('Please enter an article title');
+            return;
+        }
+
+        if (!articleContent.trim()) {
+            alert('Please add content to preview');
             return;
         }
 
         const params = new URLSearchParams();
-        params.set('content', encodeURIComponent(''));
-        params.set('title', encodeURIComponent(''));
-        params.set('author', encodeURIComponent(''));
-        params.set('category', encodeURIComponent(''));
+        params.set('content', encodeURIComponent(articleContent));
+        params.set('title', encodeURIComponent(articleName));
+        params.set('author', encodeURIComponent(session?.user?.name || 'Anonymous'));
+        params.set('category', encodeURIComponent(articleCategory));
+        params.set('thumbnail', encodeURIComponent(articleThumbnail));
 
         const url = `/articles/preview/${encodeURIComponent(articleName)}?${params.toString()}`;
-
         router.push(url);
     };
+
+    // Auto-save functionality
+    useEffect(() => {
+        if (currentArticleWritingMethod === 'scratch' && articleContent.trim() && articleName.trim()) {
+            const autoSaveTimer = setTimeout(() => {
+                if (session) {
+                    saveArticle('draft').catch(console.error);
+                }
+            }, 30000); // Auto-save every 30 seconds
+
+            return () => clearTimeout(autoSaveTimer);
+        }
+    }, [articleContent, articleName, session, currentArticleWritingMethod]);
 
     return (
         <SimplePageContainer containerSize="xl" containerPadding="none">
@@ -122,13 +239,17 @@ export function ArticleCreationOptions() {
                         variant="ghost"
                         size="sm"
                         onClick={() => { handlePublish() }}
-                        className="cursor-pointer bg-info text-white px-6 py-2 rounded-lg font-medium shadow-drop hover:bg-info/90 transition"
+                        disabled={isLoading || !articleName.trim() || !articleContent.trim()}
+                        className="cursor-pointer bg-info text-white px-6 py-2 rounded-lg font-medium shadow-drop hover:bg-info/90 transition disabled:opacity-50"
                     >
-                        Publish
+                        {isLoading ? 'Publishing...' : 'Publish'}
                     </Button>
 
                     <PrimaryOutlineButton
-                        onClick={() => { handlePreview() }}>
+                        onClick={() => { handlePreview() }}
+                        disabled={isLoading || !articleName.trim() || !articleContent.trim()}
+                        className={isLoading ? 'opacity-50' : ''}
+                    >
                         Preview
                     </PrimaryOutlineButton>
 
@@ -174,6 +295,13 @@ export function ArticleCreationOptions() {
                         <p className="text-gray-600">
                             Create by your own or from ready template
                         </p>
+                        {!session && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p className="text-yellow-800 text-sm">
+                                    ⚠️ You need to be logged in to save articles
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-6">
@@ -223,6 +351,25 @@ export function ArticleCreationOptions() {
                 :
                 currentArticleWritingMethod === 'scratch' ?
                     <div className="container mx-auto p-6">
+                        <div className="mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="text-sm text-gray-600">
+                                    Status: <span className="font-semibold">{articleStatus}</span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    Category: <span className="font-semibold">{articleCategory}</span>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    Visibility: <span className="font-semibold">{articleVisibility}</span>
+                                </div>
+                            </div>
+                            {isLoading && (
+                                <div className="flex items-center gap-2 text-sm text-blue-600">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                                    Saving...
+                                </div>
+                            )}
+                        </div>
                         <RichTextEditor
                             value={articleContent}
                             onChange={setArticleContent}
@@ -241,15 +388,22 @@ export function ArticleCreationOptions() {
                     open={showAddThumbnailModal}
                     onOpenChange={setShowAddThumbnailModal}
                     onSave={handleSaveThumbnail}
+                    currentThumbnail={articleThumbnail}
                 />
             }
 
-
+            {/* Advanced Settings Modal */}
             {showAdvanceSettingModal &&
                 <ArticleAdvancedSettingModal
                     open={showAdvanceSettingModal}
                     onOpenChange={setShowAdvanceSettingModal}
-                    onSave={handleSaveThumbnail}
+                    onSave={handleAdvancedSettingsSave}
+                    currentSettings={{
+                        category: articleCategory,
+                        tags: articleTags,
+                        visibility: articleVisibility
+                    }}
+                    availableCategories={categoriesData?.data?.categories || []}
                 />
             }
 
