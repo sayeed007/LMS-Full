@@ -9,6 +9,7 @@ pnpm-debug.log*
 
 # Frontend Build Output
 frontend/.next/
+frontend/.next/*
 frontend/out/
 frontend/dist/
 frontend/build/

@@ -11,6 +11,7 @@ import PrimaryOutlineButton from "../ui/PrimaryOutlineButton"
 import { MoreOptionsPopup } from "./article-more-option-popup"
 import { ArticleAddThumbnailModal } from "./ArticleAddThumbnailModal"
 import { ArticleAdvancedSettingModal } from "./ArticleAdvancedSettingModal"
+import SimplePageContainer from "../layout/SimplePageContainer"
 
 export function ArticleCreationOptions() {
     const router = useRouter()
@@ -19,14 +20,14 @@ export function ArticleCreationOptions() {
     const [showMorePopup, setShowMorePopup] = useState<boolean>(false);
     const [articleContent, setArticleContent] = useState('');
 
-    const [currentArticleWrittingMethod, setCurrentArticleWrittingMethod] = useState<'root' | 'scratch'>('root')
-    const [showAddThumbnailModal, setShowAddThubnailModal] = useState(false);
+    const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch'>('root')
+    const [showAddThumbnailModal, setShowAddThumbnailModal] = useState(false);
     const [showAdvanceSettingModal, setShowAdvanceSettingModal] = useState(false);
 
 
     const handleStartFromScratch = () => {
         // router.push(`/articles/edit?name=${encodeURIComponent(articleName)}&mode=scratch`);
-        setCurrentArticleWrittingMethod('scratch');
+        setCurrentArticleWritingMethod('scratch');
     }
 
     const handleReadyTemplate = () => {
@@ -57,11 +58,11 @@ export function ArticleCreationOptions() {
     }
 
     const handleAddThumbnail = () => {
-        setShowAddThubnailModal(true);
+        setShowAddThumbnailModal(true);
     };
 
     const handleSaveThumbnail = () => {
-        setShowAddThubnailModal(false);
+        setShowAddThumbnailModal(false);
     };
 
     const handleAdvancedSetting = () => {
@@ -86,86 +87,85 @@ export function ArticleCreationOptions() {
     };
 
     return (
-        <>
-            {/* Header */}
-            <div className="px-2 py-4">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-2">
-                        <GoBackRoute />
-                        <div className="relative flex items-center gap-2 flex-2">
-                            <Input
-                                value={articleName}
-                                onChange={(e) => {
-                                    // Update URL with new name
-                                    setArticleName(e.target.value);
-                                    router.replace(`/articles/create?name=${encodeURIComponent(e.target.value)}`)
-                                }}
-                                className="flex-1 text-lg pr-10 font-medium bg-transparent outline-none focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:border focus:border-gray-300"
-                            />
-                            <Image
-                                src="/icons/Cross.png"
-                                alt="Cross"
-                                width={16}
-                                height={16}
-                                className="cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4"
-                                onClick={() => {
-                                    setArticleName('');
-                                    router.replace(`/articles/create?name=${encodeURIComponent('')}`)
-                                }}
-                            />
-                        </div>
-                    </div>
+        <SimplePageContainer containerSize="xl" containerPadding="none">
 
-                    <div className="flex items-center justify-end gap-2 flex-1">
+            {/* Header */}
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-2">
+                    <GoBackRoute />
+                    <div className="relative flex items-center gap-2 flex-2">
+                        <Input
+                            value={articleName}
+                            onChange={(e) => {
+                                // Update URL with new name
+                                setArticleName(e.target.value);
+                                router.replace(`/articles/create?name=${encodeURIComponent(e.target.value)}`)
+                            }}
+                            className="flex-1 text-lg pr-10 font-medium bg-transparent outline-none focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:border focus:border-gray-300"
+                        />
+                        <Image
+                            src="/icons/Cross.png"
+                            alt="Cross"
+                            width={16}
+                            height={16}
+                            className="cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4"
+                            onClick={() => {
+                                setArticleName('');
+                                router.replace(`/articles/create?name=${encodeURIComponent('')}`)
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 flex-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { handlePublish() }}
+                        className="cursor-pointer bg-info text-white px-6 py-2 rounded-lg font-medium shadow-drop hover:bg-info/90 transition"
+                    >
+                        Publish
+                    </Button>
+
+                    <PrimaryOutlineButton
+                        onClick={() => { handlePreview() }}>
+                        Preview
+                    </PrimaryOutlineButton>
+
+
+                    <div className="relative">
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => { handlePublish() }}
-                            className="cursor-pointer bg-info text-white px-6 py-2 rounded-lg font-medium shadow-drop hover:bg-info/90 transition"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowMorePopup(prev => {
+                                    return !prev
+                                });
+                            }}
+                            className="cursor-pointer bg-background text-info border-1 border-info px-6 py-2 rounded-lg font-medium shadow-drop hover:bg-info/90 hover:text-white transition"
                         >
-                            Publish
+                            More
                         </Button>
 
-                        <PrimaryOutlineButton
-                            onClick={() => { handlePreview() }}>
-                            Preview
-                        </PrimaryOutlineButton>
-
-
-                        <div className="relative">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setShowMorePopup(prev => {
-                                        return !prev
-                                    });
-                                }}
-                                className="cursor-pointer bg-background text-info border-1 border-info px-6 py-2 rounded-lg font-medium shadow-drop hover:bg-info/90 hover:text-white transition"
-                            >
-                                More
-                            </Button>
-
-                            <MoreOptionsPopup
-                                isOpen={showMorePopup}
-                                onClose={() => {
-                                    setShowMorePopup(false)
-                                }}
-                                onSaveAsDraft={handleSaveAsDraft}
-                                onMandatoryRead={handleMandatoryRead}
-                                onAddThumbnail={handleAddThumbnail}
-                                onAdvancedSetting={handleAdvancedSetting}
-                            />
-                        </div>
+                        <MoreOptionsPopup
+                            isOpen={showMorePopup}
+                            onClose={() => {
+                                setShowMorePopup(false)
+                            }}
+                            onSaveAsDraft={handleSaveAsDraft}
+                            onMandatoryRead={handleMandatoryRead}
+                            onAddThumbnail={handleAddThumbnail}
+                            onAdvancedSetting={handleAdvancedSetting}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
 
-            {currentArticleWrittingMethod === 'root' ?
+            {currentArticleWritingMethod === 'root' ?
                 <div className="flex flex-col items-center justify-center min-h-[calc(80vh-80px)] px-6">
                     <div className="text-center mb-6">
                         <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -221,7 +221,7 @@ export function ArticleCreationOptions() {
                     </div>
                 </div>
                 :
-                currentArticleWrittingMethod === 'scratch' ?
+                currentArticleWritingMethod === 'scratch' ?
                     <div className="container mx-auto p-6">
                         <RichTextEditor
                             value={articleContent}
@@ -239,7 +239,7 @@ export function ArticleCreationOptions() {
             {showAddThumbnailModal &&
                 <ArticleAddThumbnailModal
                     open={showAddThumbnailModal}
-                    onOpenChange={setShowAddThubnailModal}
+                    onOpenChange={setShowAddThumbnailModal}
                     onSave={handleSaveThumbnail}
                 />
             }
@@ -254,6 +254,6 @@ export function ArticleCreationOptions() {
             }
 
 
-        </>
+        </SimplePageContainer>
     )
 }
