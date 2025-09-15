@@ -236,6 +236,77 @@ const getSSOConfig = (req, res) => {
   });
 };
 
+const oauthLogin = catchAsync(async (req, res, next) => {
+  const { provider, providerId, email, name, image } = req.body;
+
+  if (!provider || !providerId || !email || !name) {
+    return next(new AppError('Missing required OAuth data', 400));
+  }
+
+  try {
+    // Check if user already exists with this OAuth provider
+    let user = await User.findOne({
+      $or: [
+        { email },
+        { [`oauthProviders.${provider}.id`]: providerId }
+      ]
+    });
+
+    if (user) {
+      // Update OAuth provider info if not already present
+      if (!user.oauthProviders || !user.oauthProviders[provider]) {
+        user.oauthProviders = user.oauthProviders || {};
+        user.oauthProviders[provider] = {
+          id: providerId,
+          email,
+        };
+        await user.save({ validateBeforeSave: false });
+      }
+    } else {
+      // Create new user
+      const [firstName, ...lastNameParts] = name.split(' ');
+      const lastName = lastNameParts.join(' ') || '';
+
+      user = await User.create({
+        firstName,
+        lastName,
+        email,
+        avatar: image,
+        role: 'student', // Default role for OAuth users
+        emailVerified: true, // OAuth emails are considered verified
+        oauthProviders: {
+          [provider]: {
+            id: providerId,
+            email,
+          }
+        },
+        // Set a random password since this is OAuth
+        password: crypto.randomBytes(32).toString('hex'),
+      });
+    }
+
+    // Generate JWT tokens
+    const token = signToken(user._id);
+    const refreshToken = signRefreshToken(user._id);
+
+    // Remove sensitive data
+    user.password = undefined;
+    user.oauthProviders = undefined;
+
+    res.status(200).json({
+      status: 'success',
+      token,
+      refreshToken,
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    console.error('OAuth login error:', error);
+    return next(new AppError('OAuth authentication failed', 500));
+  }
+});
+
 module.exports = {
   signup,
   login,
@@ -251,4 +322,5 @@ module.exports = {
   googleAuth,
   googleCallback,
   getSSOConfig,
+  oauthLogin,
 };

@@ -2,8 +2,12 @@
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { NotificationPopover } from '../NotificationPopover';
-import { NavigationLink } from '@/components/ui';
+import { NavigationLink, Container } from '@/components/ui';
+import UserMenu from './UserMenu';
+import LoginModal from '../auth/LoginModal';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
@@ -16,7 +20,9 @@ const navItems = [
 const Header = () => {
     const [activeLink, setActiveLink] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
+    const { data: session, status } = useSession();
     const pathname = usePathname();
     const router = useRouter();
 
@@ -35,124 +41,167 @@ const Header = () => {
 
     return (
         <header className="bg-gradient-to-r from-gradient-start to-gradient-end text-gray-700 mb-6 sticky top-0 z-50 shadow-sm">
-            <div className="flex justify-between items-center px-4 py-4 lg:px-8">
-                {/* Logo */}
-                <div
-                    className="flex-shrink-0"
-                    onClick={() => router.push('/')}
-                >
-                    <Image
-                        src="/TafuriHR_logo.png"
-                        alt="Tafuri HR Logo"
-                        width={138}
-                        height={29}
-                        priority
-                        className="h-auto w-auto max-w-[100px] sm:max-w-[120px] lg:max-w-[138px]"
-                    />
-                </div>
-
-                {/* Desktop Navigation */}
-                <nav className="hidden lg:flex gap-5">
-                    {navItems.map((item) => (
-                        <NavigationLink
-                            key={item.name}
-                            href={item.href}
-                            isActive={activeLink === item.name.toLowerCase()}
-                            onClick={() => setActiveLink(item.name.toLowerCase())}
-                        >
-                            {item.name}
-                        </NavigationLink>
-                    ))}
-                </nav>
-
-                {/* Right side - User info and notifications */}
-                <div className="flex items-center gap-3 sm:gap-6 lg:gap-8">
-                    {/* Notification Icon */}
-                    <button
-                        className="relative hover:scale-110 transition-transform"
-                        aria-label="Notifications"
+            <Container size="xl" padding="none">
+                <div className="flex justify-between items-center py-4">
+                    {/* Logo */}
+                    <div
+                        className="flex-shrink-0 cursor-pointer"
+                        onClick={() => router.push('/')}
                     >
-                        <NotificationPopover>
-                            <Image
-                                src="/icons/Bell.png"
-                                alt="Notifications"
-                                width={28}
-                                height={28}
-                                className="w-6 h-6 sm:w-7 sm:h-7"
+                        <Image
+                            src="/TafuriHR_logo.png"
+                            alt="Tafuri HR Logo"
+                            width={138}
+                            height={29}
+                            priority
+                            className="h-auto w-auto max-w-[100px] sm:max-w-[120px] lg:max-w-[138px]"
+                        />
+                    </div>
+
+                    {/* Desktop Navigation */}
+                    <nav className="hidden lg:flex gap-6">
+                        {navItems.map((item) => (
+                            <NavigationLink
+                                key={item.name}
+                                href={item.href}
+                                isActive={activeLink === item.name.toLowerCase()}
+                                onClick={() => setActiveLink(item.name.toLowerCase())}
+                            >
+                                {item.name}
+                            </NavigationLink>
+                        ))}
+                    </nav>
+
+                    {/* Right side - User info and notifications */}
+                    <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
+                        {/* Show notifications only if user is logged in */}
+                        {session && (
+                            <button
+                                className="relative hover:scale-110 transition-transform"
+                                aria-label="Notifications"
+                            >
+                                <NotificationPopover>
+                                    <Image
+                                        src="/icons/Bell.png"
+                                        alt="Notifications"
+                                        width={28}
+                                        height={28}
+                                        className="w-6 h-6 sm:w-7 sm:h-7"
+                                    />
+                                </NotificationPopover>
+                            </button>
+                        )}
+
+                        {/* Authentication Section */}
+                        {status === 'loading' ? (
+                            <div className="hidden sm:flex items-center gap-3">
+                                <div className="animate-pulse bg-gray-200 h-4 w-20 rounded"></div>
+                                <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
+                            </div>
+                        ) : session ? (
+                            <div className="hidden sm:block">
+                                <UserMenu
+                                    user={{
+                                        name: session.user.name,
+                                        email: session.user.email,
+                                        image: session.user.image,
+                                        role: session.user.role
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <Button
+                                onClick={() => setShowLoginModal(true)}
+                                variant="outline"
+                                className="hidden sm:block bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                            >
+                                Sign In
+                            </Button>
+                        )}
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            className="lg:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1"
+                            onClick={toggleMobileMenu}
+                            aria-label="Toggle mobile menu"
+                            aria-expanded={isMobileMenuOpen}
+                        >
+                            <span
+                                className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''
+                                    }`}
                             />
-                        </NotificationPopover>
-                    </button>
-
-                    {/* User Profile - Hidden on small screens */}
-                    <div className="hidden sm:flex items-center gap-2">
-                        <span className="text-xs sm:text-sm whitespace-nowrap">Welcome, Hafiz</span>
-                        <Image
-                            src="/Dummy_Profile.png"
-                            alt="User Profile"
-                            width={32}
-                            height={32}
-                            className="rounded-full w-7 h-7 sm:w-8 sm:h-8"
-                            onClick={() => router.push('/profile')}
-                        />
+                            <span
+                                className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''
+                                    }`}
+                            />
+                            <span
+                                className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
+                                    }`}
+                            />
+                        </button>
                     </div>
-
-                    {/* Mobile Menu Button */}
-                    <button
-                        className="lg:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1"
-                        onClick={toggleMobileMenu}
-                        aria-label="Toggle mobile menu"
-                        aria-expanded={isMobileMenuOpen}
-                    >
-                        <span
-                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''
-                                }`}
-                        />
-                        <span
-                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''
-                                }`}
-                        />
-                        <span
-                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
-                                }`}
-                        />
-                    </button>
                 </div>
-            </div>
 
-            {/* Mobile Navigation Menu */}
-            <div className={`lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
-                ? 'max-h-96 opacity-100'
-                : 'max-h-0 opacity-0 overflow-hidden'
-                }`}>
-                <nav className="px-4 pb-4 space-y-2 bg-white/10 backdrop-blur-sm">
-                    {navItems.map((item) => (
-                        <NavigationLink
-                            key={item.name}
-                            href={item.href}
-                            isActive={activeLink === item.name.toLowerCase()}
-                            variant="mobile"
-                            onClick={() => {
-                                setActiveLink(item.name.toLowerCase());
-                                setIsMobileMenuOpen(false);
-                            }}
-                        >
-                            {item.name}
-                        </NavigationLink>
-                    ))}
+                {/* Mobile Navigation Menu */}
+                <div className={`lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
+                    ? 'max-h-96 opacity-100'
+                    : 'max-h-0 opacity-0 overflow-hidden'
+                    }`}>
+                    <nav className="px-4 pb-4 md:px-6 lg:px-8 space-y-2 bg-white/10 backdrop-blur-sm">
+                        {navItems.map((item) => (
+                            <NavigationLink
+                                key={item.name}
+                                href={item.href}
+                                isActive={activeLink === item.name.toLowerCase()}
+                                variant="mobile"
+                                onClick={() => {
+                                    setActiveLink(item.name.toLowerCase());
+                                    setIsMobileMenuOpen(false);
+                                }}
+                            >
+                                {item.name}
+                            </NavigationLink>
+                        ))}
 
-                    {/* Mobile User Profile */}
-                    <div className="sm:hidden flex items-center gap-3 px-4 py-3 border-t border-white/20 mt-2 pt-4">
-                        <Image
-                            src="/Dummy_Profile.png"
-                            alt="User Profile"
-                            width={32}
-                            height={32}
-                            className="rounded-full w-8 h-8"
-                        />
-                        <span className="text-sm text-gray-600">Welcome, Hafiz</span>
-                    </div>
-                </nav>
-            </div>
+                        {/* Mobile Authentication Section */}
+                        <div className="sm:hidden border-t border-white/20 mt-2 pt-4">
+                            {session ? (
+                                <div className="px-4 py-3 md:px-6 lg:px-8">
+                                    <UserMenu
+                                        user={{
+                                            name: session.user.name,
+                                            email: session.user.email,
+                                            image: session.user.image,
+                                            role: session.user.role
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="px-4 py-3 md:px-6 lg:px-8">
+                                    <Button
+                                        onClick={() => {
+                                            setShowLoginModal(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                                        variant="outline"
+                                    >
+                                        Sign In
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </nav>
+                </div>
+            </Container>
+
+            {/* Login Modal */}
+            <LoginModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+                title="Sign in to continue"
+                message="Please sign in to access your account and enjoy all features."
+            />
         </header>
     );
 };

@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import ModalExample from "@/components/ModalExample";
 import { ModalProviderWithGlobal } from "@/lib/modal-utils";
 import ReduxProvider from "@/components/providers/ReduxProvider";
+import SessionProvider from "@/components/providers/SessionProvider";
 
 
 // Google Fonts
@@ -54,11 +55,12 @@ export default function RootLayout({
 
 
       <body className="min-h-screen bg-body overflow-x-clip">
-        <ReduxProvider>
-          <ModalProviderWithGlobal>
-            <Header />
-            {/* <main> */}
-            {children}
+        <SessionProvider>
+          <ReduxProvider>
+            <ModalProviderWithGlobal>
+              <Header />
+              {/* <main> */}
+              {children}
 
             {/* TOAST EXAMPLE */}
             {/* <ToastExample /> */}
@@ -87,8 +89,9 @@ export default function RootLayout({
               }}
             />
             {/* </main> */}
-          </ModalProviderWithGlobal>
-        </ReduxProvider>
+            </ModalProviderWithGlobal>
+          </ReduxProvider>
+        </SessionProvider>
       </body>
     </html>
   );

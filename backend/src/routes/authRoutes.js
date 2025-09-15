@@ -254,6 +254,45 @@ router.get('/google/callback', authController.googleCallback);
 
 /**
  * @swagger
+ * /api/v1/auth/oauth:
+ *   post:
+ *     summary: OAuth login/signup for NextAuth.js
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - provider
+ *               - providerId
+ *               - email
+ *               - name
+ *             properties:
+ *               provider:
+ *                 type: string
+ *                 enum: [google, github]
+ *               providerId:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OAuth login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ */
+router.post('/oauth', authController.oauthLogin);
+
+/**
+ * @swagger
  * /api/v1/auth/sso/config:
  *   get:
  *     summary: Get SSO configuration

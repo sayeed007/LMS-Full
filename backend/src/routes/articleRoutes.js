@@ -1,5 +1,6 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const articleController = require('../controllers/articleController');
 
 const router = express.Router();
 
@@ -371,70 +372,32 @@ const router = express.Router();
  */
 
 // Public routes
-router.get('/categories', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article categories not implemented yet'
-  });
-});
+router.get('/categories', articleController.getArticleCategories);
+router.get('/featured', articleController.getFeaturedArticles);
+router.get('/popular', articleController.getPopularArticles);
+router.get('/search', articleController.searchArticles);
+router.get('/', articleController.getAllArticles);
 
-router.get('/featured', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Featured articles not implemented yet'
-  });
-});
-
-router.get('/', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article listing not implemented yet'
-  });
-});
-
-router.get('/:id', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article details not implemented yet'
-  });
-});
-
-// Protected routes
+// Protected routes - Define specific routes before generic ones
 router.use(protect);
 
-router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article creation not implemented yet'
-  });
-});
+// User-specific routes (must come before /:id routes)
+router.get('/my-articles', articleController.getMyArticles);
+router.get('/stats', articleController.getArticleStats);
 
-router.patch('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article update not implemented yet'
-  });
-});
+// Generic routes with ID parameter (must come after specific routes)
+router.get('/:id', articleController.getArticleById);
+router.get('/:id/related', articleController.getRelatedArticles);
 
-router.delete('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article deletion not implemented yet'
-  });
-});
+// Article management routes
+router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.createArticle);
+router.patch('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.updateArticle);
+router.delete('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.deleteArticle);
 
-router.post('/:id/like', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article like functionality not implemented yet'
-  });
-});
-
-router.delete('/:id/like', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Article unlike functionality not implemented yet'
-  });
-});
+// Article actions
+router.post('/:id/like', articleController.toggleLikeArticle);
+router.delete('/:id/like', articleController.toggleLikeArticle);
+router.patch('/:id/publish', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
+router.patch('/:id/archive', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.archiveArticle);
 
 module.exports = router;

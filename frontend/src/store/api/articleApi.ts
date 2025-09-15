@@ -46,6 +46,24 @@ export interface ArticleListParams {
   search?: string;
 }
 
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalResults: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+export interface ArticleListResponse {
+  status: string;
+  results: number;
+  pagination: PaginationInfo;
+  data: Article[];
+}
+
 export interface ArticleStats {
   totalArticles: number;
   publishedArticles: number;
@@ -57,7 +75,7 @@ export interface ArticleStats {
 
 export const articleApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getArticles: builder.query<BaseApiResponse<Article[]>, ArticleListParams | void>({
+    getArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
       query: (params) => ({
         url: '/articles',
         params,
@@ -70,7 +88,7 @@ export const articleApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'Article', id }],
     }),
 
-    getMyArticles: builder.query<BaseApiResponse<Article[]>, ArticleListParams | void>({
+    getMyArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
       query: (params) => ({
         url: '/articles/my-articles',
         params,
