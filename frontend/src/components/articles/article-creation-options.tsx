@@ -15,6 +15,20 @@ import SimplePageContainer from "../layout/SimplePageContainer"
 import { useCreateArticleMutation, useUpdateArticleMutation, useGetArticleCategoriesQuery, type CreateArticleRequest } from "@/store/api/articleApi"
 import { useUploadImageMutation } from "@/store/api/uploadApi"
 import { useSession } from "next-auth/react"
+import {
+    showSuccessToast,
+    showErrorToast,
+    showFormErrorToast,
+    showValidationErrorToast,
+    showFileUploadToast,
+    showFileUploadSuccessToast,
+    showFileUploadErrorToast,
+    showSaveLoadingToast,
+    showSaveSuccessToast,
+    dismissToast,
+    showAuthErrorToast,
+    showFormSuccessToast
+} from "@/lib/toast-utils"
 
 export function ArticleCreationOptions() {
     const router = useRouter()
@@ -47,22 +61,25 @@ export function ArticleCreationOptions() {
 
     // Create or update article
     const saveArticle = async (status: 'draft' | 'published' = 'draft') => {
+        // Validation
         if (!session) {
-            alert('You must be logged in to save articles');
+            showAuthErrorToast('You must be logged in to save articles');
             return;
         }
 
         if (!articleName.trim()) {
-            alert('Please enter an article title');
+            showValidationErrorToast('Article Title');
             return;
         }
 
         if (status === 'published' && !articleContent.trim()) {
-            alert('Please add content before publishing');
+            showValidationErrorToast('Article Content');
             return;
         }
 
         setIsLoading(true);
+        const loadingToastId = showSaveLoadingToast();
+
         try {
             const articleData: CreateArticleRequest = {
                 title: articleName.trim(),
@@ -89,15 +106,20 @@ export function ArticleCreationOptions() {
                 console.log('Article created:', result);
             }
 
+            dismissToast(loadingToastId);
+
             if (status === 'published') {
-                alert('Article published successfully!');
-                router.push('/articles');
+                showFormSuccessToast('Article published successfully! Your content is now live.');
+                setTimeout(() => router.push('/articles'), 1500);
             } else {
-                alert('Article saved as draft!');
+                showSaveSuccessToast('Article saved as draft! You can continue editing anytime.');
             }
         } catch (error: any) {
+            dismissToast(loadingToastId);
             console.error('Error saving article:', error);
-            alert(error?.data?.message || 'Failed to save article');
+
+            const errorMessage = error?.data?.message || 'Failed to save article. Please try again.';
+            showFormErrorToast(errorMessage, () => saveArticle(status));
         }
         setIsLoading(false);
     };
@@ -126,7 +148,7 @@ export function ArticleCreationOptions() {
     const handleMandatoryRead = () => {
         // Set article as mandatory read (could be a tag or special category)
         setArticleTags(prev => [...prev.filter(tag => tag !== 'mandatory'), 'mandatory']);
-        alert('Article marked as mandatory read');
+        showSuccessToast('Mandatory Read', 'Article has been marked as mandatory reading for all users.');
     }
 
     const handleAddThumbnail = () => {
@@ -135,6 +157,8 @@ export function ArticleCreationOptions() {
 
     const handleSaveThumbnail = async (file?: File, url?: string) => {
         if (file) {
+            const uploadToastId = showFileUploadToast(file.name);
+
             try {
                 const formData = new FormData();
                 formData.append('image', file);
@@ -142,13 +166,19 @@ export function ArticleCreationOptions() {
 
                 const result = await uploadImage(formData).unwrap();
                 setArticleThumbnail(result.data.url);
-                alert('Thumbnail uploaded successfully!');
+
+                dismissToast(uploadToastId);
+                showFileUploadSuccessToast(file.name);
             } catch (error: any) {
+                dismissToast(uploadToastId);
                 console.error('Error uploading thumbnail:', error);
-                alert(error?.data?.message || 'Failed to upload thumbnail');
+
+                const errorMessage = error?.data?.message || 'Failed to upload thumbnail. Please check file size and format.';
+                showFileUploadErrorToast(errorMessage, () => handleSaveThumbnail(file));
             }
         } else if (url) {
             setArticleThumbnail(url);
+            showSuccessToast('Thumbnail updated', 'Article thumbnail has been set successfully.');
         }
         setShowAddThumbnailModal(false);
     };
@@ -170,12 +200,12 @@ export function ArticleCreationOptions() {
 
     const handlePreview = () => {
         if (!articleName.trim()) {
-            alert('Please enter an article title');
+            showValidationErrorToast('Article Title');
             return;
         }
 
         if (!articleContent.trim()) {
-            alert('Please add content to preview');
+            showValidationErrorToast('Article Content');
             return;
         }
 

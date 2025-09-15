@@ -4,6 +4,8 @@ import storage from 'redux-persist/lib/storage';
 
 // API imports
 import { baseApi } from './api/baseApi';
+import { questionBankApi } from './api/questionBankApi';
+import { questionApi } from './api/questionApi';
 
 // Slice imports
 import authReducer from './slices/authSlice';
@@ -20,6 +22,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   [baseApi.reducerPath]: baseApi.reducer,
+  [questionBankApi.reducerPath]: questionBankApi.reducer,
+  [questionApi.reducerPath]: questionApi.reducer,
 });
 
 // Persisted reducer
@@ -35,7 +39,7 @@ export const store = configureStore({
         ignoredActionsPaths: ['meta.arg', 'payload.timestamp'],
         ignoredPaths: ['register'],
       },
-    }).concat(baseApi.middleware),
+    }).concat(baseApi.middleware, questionBankApi.middleware, questionApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

@@ -390,14 +390,14 @@ router.get('/:id', articleController.getArticleById);
 router.get('/:id/related', articleController.getRelatedArticles);
 
 // Article management routes
-router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.createArticle);
-router.patch('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.updateArticle);
-router.delete('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.deleteArticle);
+router.post('/', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.createArticle);
+router.patch('/:id', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.updateArticle);
+router.delete('/:id', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.deleteArticle);
 
 // Article actions
 router.post('/:id/like', articleController.toggleLikeArticle);
 router.delete('/:id/like', articleController.toggleLikeArticle);
-router.patch('/:id/publish', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
-router.patch('/:id/archive', restrictTo('instructor', 'org_admin', 'super_admin'), articleController.archiveArticle);
+router.patch('/:id/publish', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
+router.patch('/:id/archive', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.archiveArticle);
 
 module.exports = router;
