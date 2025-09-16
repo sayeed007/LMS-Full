@@ -74,7 +74,7 @@ export default function QuizTakingPage() {
   const handleStartQuiz = async () => {
     try {
       const response = await startQuizAttempt(quizId).unwrap();
-      setAttemptId(response.data?.attemptId);
+      setAttemptId(response.data?.attemptId || null);
       if (response.data?.timeRemaining) {
         setTimeLeft(response.data.timeRemaining);
       }
@@ -167,6 +167,7 @@ export default function QuizTakingPage() {
   // Get question status
   const getQuestionStatus = (index: number) => {
     const question = questions[index];
+    if (!question) return { hasAnswer: false, isFlagged: false, isCurrent: false };
     const questionId = typeof question === 'string' ? question : question?._id;
     const hasAnswer = questionId && answers[questionId];
     const isFlagged = flaggedQuestions.has(index);
