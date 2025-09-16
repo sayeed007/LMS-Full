@@ -19,6 +19,8 @@ export interface CreateArticleRequest {
   category: string;
   tags?: string[];
   thumbnail?: string;
+  status?: string;
+  visibility?: string;
 }
 
 export interface UpdateArticleRequest {

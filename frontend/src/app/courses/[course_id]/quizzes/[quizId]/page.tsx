@@ -74,8 +74,8 @@ export default function QuizTakingPage() {
   const handleStartQuiz = async () => {
     try {
       const response = await startQuizAttempt(quizId).unwrap();
-      setAttemptId(response.data.attemptId);
-      if (response.data.timeRemaining) {
+      setAttemptId(response.data?.attemptId);
+      if (response.data?.timeRemaining) {
         setTimeLeft(response.data.timeRemaining);
       }
       showSuccessToast("Quiz started successfully!");
@@ -141,7 +141,7 @@ export default function QuizTakingPage() {
         answers: submissionAnswers
       }).unwrap();
 
-      setQuizResults(response.data.result);
+      setQuizResults(response.data?.result);
       setShowResults(true);
       setTimeLeft(null);
 
@@ -167,7 +167,8 @@ export default function QuizTakingPage() {
   // Get question status
   const getQuestionStatus = (index: number) => {
     const question = questions[index];
-    const hasAnswer = question && answers[question._id];
+    const questionId = typeof question === 'string' ? question : question?._id;
+    const hasAnswer = questionId && answers[questionId];
     const isFlagged = flaggedQuestions.has(index);
     const isCurrent = index === currentQuestionIndex;
 
@@ -256,7 +257,7 @@ export default function QuizTakingPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl">
                     Question {currentQuestionIndex + 1}
-                    {currentQuestion?.points && (
+                    {typeof currentQuestion === 'object' && currentQuestion?.points && (
                       <Badge variant="secondary" className="ml-2">
                         {currentQuestion.points} pts
                       </Badge>
@@ -276,11 +277,16 @@ export default function QuizTakingPage() {
                 {currentQuestion && (
                   <>
                     <div className="prose max-w-none">
-                      <p className="text-lg text-gray-900">{currentQuestion.questionText}</p>
+                      <p className="text-lg text-gray-900">
+                        {typeof currentQuestion === 'object' ? currentQuestion.questionText || currentQuestion.text : 'Question text not available'}
+                      </p>
                     </div>
 
                     <div className="space-y-4">
-                      {renderQuestionInput(currentQuestion, answers[currentQuestion._id], (answer) =>
+                      {typeof currentQuestion === 'object' && renderQuestionInput(
+                        currentQuestion,
+                        answers[currentQuestion._id],
+                        (answer) =>
                         handleAnswerChange(currentQuestion._id, answer)
                       )}
                     </div>
@@ -391,10 +397,10 @@ export default function QuizTakingPage() {
                   <span className="text-sm text-gray-600">Flagged:</span>
                   <span className="text-sm font-medium">{flaggedQuestions.size}</span>
                 </div>
-                {quiz.settings?.passingScore && (
+                {quiz.passingScore && (
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Passing Score:</span>
-                    <span className="text-sm font-medium">{quiz.settings.passingScore}%</span>
+                    <span className="text-sm font-medium">{quiz.passingScore}%</span>
                   </div>
                 )}
               </CardContent>
@@ -538,7 +544,7 @@ function QuizIntroView({ quiz, attempts, onStartQuiz, isStarting }: any) {
                       <span className="text-sm">Attempt {index + 1}</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">{attempt.percentage}%</span>
-                        <Badge variant={attempt.isPassed ? "success" : "destructive"}>
+                        <Badge className={attempt.isPassed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
                           {attempt.isPassed ? "Passed" : "Failed"}
                         </Badge>
                       </div>
@@ -615,7 +621,7 @@ function QuizResultsView({ quiz, results, onRetakeQuiz }: any) {
                 <div className="text-sm text-gray-600">Time Spent</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-semibold">{quiz.settings?.passingScore || 'N/A'}%</div>
+                <div className="text-lg font-semibold">{quiz.passingScore || 'N/A'}%</div>
                 <div className="text-sm text-gray-600">Passing Score</div>
               </div>
             </div>

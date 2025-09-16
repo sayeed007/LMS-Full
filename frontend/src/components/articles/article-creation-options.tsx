@@ -102,7 +102,7 @@ export function ArticleCreationOptions() {
             } else {
                 // Create new article
                 const result = await createArticle(articleData).unwrap();
-                setArticleId(result.data.article._id);
+                setArticleId(result.data?.article._id);
                 console.log('Article created:', result);
             }
 
@@ -165,7 +165,7 @@ export function ArticleCreationOptions() {
                 formData.append('category', 'thumbnail');
 
                 const result = await uploadImage(formData).unwrap();
-                setArticleThumbnail(result.data.url);
+                setArticleThumbnail(result.data?.url);
 
                 dismissToast(uploadToastId);
                 showFileUploadSuccessToast(file.name);

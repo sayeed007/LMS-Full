@@ -131,6 +131,7 @@ export interface CourseResource {
   url: string;
   type: 'pdf' | 'video' | 'image' | 'document' | 'link' | 'other';
   size?: number;
+  downloadable?: boolean;
   uploadedAt: string;
 }
 
@@ -144,6 +145,7 @@ export interface CourseAssignment {
 
 export interface CourseLesson extends BaseDocument {
   title: string;
+  description?: string;
   content: string;
   type: 'video' | 'text' | 'quiz' | 'assignment' | 'interactive';
   duration: number; // in minutes
@@ -233,7 +235,7 @@ export interface Course extends BaseDocument {
   slug: string;
   description: string;
   shortDescription?: string;
-  instructor: string; // User ObjectId
+  instructor: string | User; // User ObjectId or populated User object
   coInstructors: string[]; // User ObjectIds
   category: 'programming' | 'web-development' | 'mobile-development' | 'data-science' |
   'machine-learning' | 'artificial-intelligence' | 'cybersecurity' | 'cloud-computing' |
@@ -271,7 +273,7 @@ export interface Course extends BaseDocument {
   stats: CourseStats;
   settings: CourseSettings;
   organization?: string; // Organization ObjectId
-  createdBy: string; // User ObjectId
+  createdBy: string | User; // User ObjectId or populated User object
   lastUpdatedBy?: string; // User ObjectId
   isDeleted: boolean;
   deletedAt?: string;

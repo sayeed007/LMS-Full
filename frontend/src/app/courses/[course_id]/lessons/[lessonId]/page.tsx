@@ -41,10 +41,10 @@ export default function LessonPlayerPage() {
   const [updateProgress, { isLoading: isCompletingLesson }] = useUpdateProgressMutation();
 
   const lesson = lessonData?.data?.lesson;
-  const lessons = lessonsData?.data?.lessons || [];
+  const lessons = lessonsData?.data || [];
 
   // Find current lesson index and navigation
-  const currentLessonIndex = lessons.findIndex(l => l._id === lessonId);
+  const currentLessonIndex = lessons.findIndex((l: any) => l._id === lessonId);
   const previousLesson = currentLessonIndex > 0 ? lessons[currentLessonIndex - 1] : null;
   const nextLesson = currentLessonIndex < lessons.length - 1 ? lessons[currentLessonIndex + 1] : null;
 
@@ -68,7 +68,6 @@ export default function LessonPlayerPage() {
         enrollmentId: "temp", // This should come from enrollment context
         data: {
           lessonId,
-          completed: true,
           timeSpent
         }
       }).unwrap();
@@ -162,7 +161,7 @@ export default function LessonPlayerPage() {
                 </Button>
               )}
               {isCompleted && (
-                <Badge variant="success" className="bg-green-100 text-green-800">
+                <Badge className="bg-green-100 text-green-800">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Completed
                 </Badge>
@@ -223,18 +222,21 @@ export default function LessonPlayerPage() {
                               </div>
                             </div>
                             <div className="flex space-x-2">
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4 mr-2" />
-                                  Open
-                                </a>
+                              <Button size="sm" variant="outline" onClick={() => window.open(resource.url, '_blank')}>
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Open
                               </Button>
                               {resource.downloadable && (
-                                <Button size="sm" variant="outline" asChild>
-                                  <a href={resource.url} download>
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Download
-                                  </a>
+                                <Button size="sm" variant="outline" onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = resource.url;
+                                  link.download = resource.title;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                }}>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download
                                 </Button>
                               )}
                             </div>
@@ -311,7 +313,7 @@ export default function LessonPlayerPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {lessons.map((l, index) => (
+                  {lessons.map((l: any, index: number) => (
                     <button
                       key={l._id}
                       onClick={() => router.push(`/courses/${courseId}/lessons/${l._id}`)}
