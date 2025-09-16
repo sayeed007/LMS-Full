@@ -105,7 +105,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function() {
+    required: function () {
       return !this.googleId; // Password required only if not using OAuth
     },
     minlength: [8, 'Password must be at least 8 characters'],
@@ -127,7 +127,7 @@ const userSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return !v || /^\+?[\d\s-()]+$/.test(v);
       },
       message: 'Please provide a valid phone number'
@@ -263,8 +263,7 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes
-userSchema.index({ email: 1 });
+// Indexes - FIXED: Removed duplicate email index since unique: true already creates one
 userSchema.index({ role: 1 });
 userSchema.index({ organization: 1 });
 userSchema.index({ 'learningProgress.courseId': 1 });
@@ -272,12 +271,12 @@ userSchema.index({ isActive: 1 });
 userSchema.index({ emailVerified: 1 });
 
 // Virtual for account lock status
-userSchema.virtual('isLocked').get(function() {
+userSchema.virtual('isLocked').get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
 // Pre-save middleware to hash password
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // Only run this function if password was actually modified
   if (!this.isModified('password') || !this.password) return next();
 
@@ -288,7 +287,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Pre-save middleware to update lastActiveAt
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (this.isModified('lastLogin')) {
     this.lastActiveAt = new Date();
   }
@@ -296,66 +295,66 @@ userSchema.pre('save', function(next) {
 });
 
 // Instance method to check password
-userSchema.methods.correctPassword = async function(candidatePassword, userPassword) {
+userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
   if (!userPassword) return false;
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
 // Instance method to generate auth token
-userSchema.methods.generateAuthToken = function() {
+userSchema.methods.generateAuthToken = function () {
   const payload = {
     id: this._id,
     email: this.email,
     role: this.role
   };
-  
+
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
 };
 
 // Instance method to generate refresh token
-userSchema.methods.generateRefreshToken = function() {
+userSchema.methods.generateRefreshToken = function () {
   const payload = {
     id: this._id,
     type: 'refresh'
   };
-  
+
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d'
   });
 };
 
 // Instance method to create password reset token
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
-  
+
   this.passwordResetToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  
+
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
+
   return resetToken;
 };
 
 // Instance method to create email verification token
-userSchema.methods.createEmailVerificationToken = function() {
+userSchema.methods.createEmailVerificationToken = function () {
   const verificationToken = crypto.randomBytes(32).toString('hex');
-  
+
   this.emailVerificationToken = crypto
     .createHash('sha256')
     .update(verificationToken)
     .digest('hex');
-  
+
   this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-  
+
   return verificationToken;
 };
 
 // Instance method to handle failed login attempts
-userSchema.methods.incLoginAttempts = function() {
+userSchema.methods.incLoginAttempts = function () {
   // If we have a previous lock that has expired, restart at 1
   if (this.lockUntil && this.lockUntil < Date.now()) {
     return this.updateOne({
@@ -367,21 +366,21 @@ userSchema.methods.incLoginAttempts = function() {
       }
     });
   }
-  
+
   const updates = { $inc: { loginAttempts: 1 } };
-  
+
   // If we're at max attempts and not locked yet, lock account
   if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
     updates.$set = {
       lockUntil: Date.now() + 2 * 60 * 60 * 1000 // Lock for 2 hours
     };
   }
-  
+
   return this.updateOne(updates);
 };
 
 // Instance method to reset login attempts
-userSchema.methods.resetLoginAttempts = function() {
+userSchema.methods.resetLoginAttempts = function () {
   return this.updateOne({
     $unset: {
       loginAttempts: 1,
@@ -391,12 +390,12 @@ userSchema.methods.resetLoginAttempts = function() {
 };
 
 // Static method to find users with specific role
-userSchema.statics.findByRole = function(role) {
+userSchema.statics.findByRole = function (role) {
   return this.find({ role, isActive: true });
 };
 
 // Static method to find users in organization
-userSchema.statics.findByOrganization = function(organizationId) {
+userSchema.statics.findByOrganization = function (organizationId) {
   return this.find({ organization: organizationId, isActive: true });
 };
 

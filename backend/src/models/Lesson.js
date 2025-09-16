@@ -184,8 +184,7 @@ const lessonSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
-lessonSchema.index({ course: 1, order: 1 });
+// Indexes for performance - FIXED: Removed duplicate compound index
 lessonSchema.index({ course: 1, isPublished: 1 });
 lessonSchema.index({ createdBy: 1 });
 lessonSchema.index({ type: 1 });
@@ -194,21 +193,21 @@ lessonSchema.index({ isActive: 1, isDeleted: 1 });
 lessonSchema.index({ createdAt: -1 });
 lessonSchema.index({ title: 'text', description: 'text', content: 'text' });
 
-// Compound index for ordering within course
+// Compound index for ordering within course - Keep only this one with unique constraint
 lessonSchema.index({ course: 1, order: 1 }, { unique: true });
 
 // Virtual for completion rate
-lessonSchema.virtual('completionRate').get(function() {
+lessonSchema.virtual('completionRate').get(function () {
   return this.views > 0 ? (this.completions / this.views) * 100 : 0;
 });
 
 // Virtual for resource count
-lessonSchema.virtual('resourceCount').get(function() {
+lessonSchema.virtual('resourceCount').get(function () {
   return this.resources ? this.resources.length : 0;
 });
 
 // Virtual for formatted duration
-lessonSchema.virtual('formattedDuration').get(function() {
+lessonSchema.virtual('formattedDuration').get(function () {
   if (!this.duration) return '0 min';
   const hours = Math.floor(this.duration / 60);
   const minutes = this.duration % 60;
@@ -220,7 +219,7 @@ lessonSchema.virtual('formattedDuration').get(function() {
 });
 
 // Pre-save middleware
-lessonSchema.pre('save', function(next) {
+lessonSchema.pre('save', function (next) {
   this.lastModified = new Date();
 
   // Auto-set duration for video lessons if not provided
@@ -232,7 +231,7 @@ lessonSchema.pre('save', function(next) {
 });
 
 // Pre-remove middleware for soft delete
-lessonSchema.pre('remove', function(next) {
+lessonSchema.pre('remove', function (next) {
   this.isDeleted = true;
   this.deletedAt = new Date();
   this.isActive = false;
@@ -240,43 +239,43 @@ lessonSchema.pre('remove', function(next) {
 });
 
 // Instance methods
-lessonSchema.methods.publish = function() {
+lessonSchema.methods.publish = function () {
   this.isPublished = true;
   this.isActive = true;
   return this.save();
 };
 
-lessonSchema.methods.unpublish = function() {
+lessonSchema.methods.unpublish = function () {
   this.isPublished = false;
   return this.save();
 };
 
-lessonSchema.methods.addView = function() {
+lessonSchema.methods.addView = function () {
   this.views += 1;
   return this.save();
 };
 
-lessonSchema.methods.markComplete = function() {
+lessonSchema.methods.markComplete = function () {
   this.completions += 1;
   return this.save();
 };
 
-lessonSchema.methods.addResource = function(resourceData) {
+lessonSchema.methods.addResource = function (resourceData) {
   this.resources.push(resourceData);
   return this.save();
 };
 
-lessonSchema.methods.removeResource = function(resourceId) {
+lessonSchema.methods.removeResource = function (resourceId) {
   this.resources = this.resources.filter(r => r._id.toString() !== resourceId.toString());
   return this.save();
 };
 
-lessonSchema.methods.updateOrder = function(newOrder) {
+lessonSchema.methods.updateOrder = function (newOrder) {
   this.order = newOrder;
   return this.save();
 };
 
-lessonSchema.methods.softDelete = function() {
+lessonSchema.methods.softDelete = function () {
   this.isDeleted = true;
   this.deletedAt = new Date();
   this.isActive = false;
@@ -284,7 +283,7 @@ lessonSchema.methods.softDelete = function() {
 };
 
 // Static methods
-lessonSchema.statics.findByCourse = function(courseId, options = {}) {
+lessonSchema.statics.findByCourse = function (courseId, options = {}) {
   const query = {
     course: courseId,
     isDeleted: false
@@ -305,14 +304,14 @@ lessonSchema.statics.findByCourse = function(courseId, options = {}) {
     .sort({ order: 1 });
 };
 
-lessonSchema.statics.getNextOrder = async function(courseId) {
+lessonSchema.statics.getNextOrder = async function (courseId) {
   const lastLesson = await this.findOne({ course: courseId })
     .sort({ order: -1 });
 
   return lastLesson ? lastLesson.order + 1 : 1;
 };
 
-lessonSchema.statics.reorderLessons = async function(courseId, lessonOrders) {
+lessonSchema.statics.reorderLessons = async function (courseId, lessonOrders) {
   const bulkOps = lessonOrders.map(({ _id, order }) => ({
     updateOne: {
       filter: { _id, course: courseId },
@@ -323,7 +322,7 @@ lessonSchema.statics.reorderLessons = async function(courseId, lessonOrders) {
   return this.bulkWrite(bulkOps);
 };
 
-lessonSchema.statics.getCourseStats = async function(courseId) {
+lessonSchema.statics.getCourseStats = async function (courseId) {
   const stats = await this.aggregate([
     { $match: { course: mongoose.Types.ObjectId(courseId), isDeleted: false } },
     {

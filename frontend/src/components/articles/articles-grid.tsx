@@ -139,7 +139,7 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
                                 category: article.category,
                                 author: {
                                     name: article.author?.name,
-                                    avatar: article.author.avatar || "",
+                                    avatar: article?.author?.avatar || "",
                                     initials: article?.author?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "AU"
                                 },
                                 publishDate: new Date(article.publishedAt || article.createdAt).toLocaleDateString(),

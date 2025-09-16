@@ -399,15 +399,15 @@ courseSchema.index({ 'rating.average': -1 });
 courseSchema.index({ 'stats.totalEnrollments': -1 });
 courseSchema.index({ createdAt: -1 });
 courseSchema.index({ price: 1 });
-courseSchema.index({ slug: 1 });
+// courseSchema.index({ slug: 1 });
 
 // Virtual for enrollment count
-courseSchema.virtual('enrollmentCount').get(function() {
+courseSchema.virtual('enrollmentCount').get(function () {
   return this.enrollments ? this.enrollments.length : 0;
 });
 
 // Virtual for lesson count
-courseSchema.virtual('lessonCount').get(function() {
+courseSchema.virtual('lessonCount').get(function () {
   if (!this.chapters) return 0;
   return this.chapters.reduce((total, chapter) => {
     return total + (chapter.lessons ? chapter.lessons.length : 0);
@@ -415,7 +415,7 @@ courseSchema.virtual('lessonCount').get(function() {
 });
 
 // Virtual for total duration
-courseSchema.virtual('totalDuration').get(function() {
+courseSchema.virtual('totalDuration').get(function () {
   if (!this.chapters) return 0;
   return this.chapters.reduce((total, chapter) => {
     return total + chapter.lessons.reduce((chapterTotal, lesson) => {
@@ -425,13 +425,13 @@ courseSchema.virtual('totalDuration').get(function() {
 });
 
 // Pre-save middleware to generate slug
-courseSchema.pre('save', function(next) {
+courseSchema.pre('save', function (next) {
   if (this.isModified('title') || this.isNew) {
     this.slug = this.title
       .toLowerCase()
       .replace(/[^a-zA-Z0-9 ]/g, '')
       .replace(/\s+/g, '-');
-    
+
     // Ensure slug is unique by appending timestamp if needed
     if (this.isNew) {
       this.slug += '-' + Date.now();
@@ -441,23 +441,23 @@ courseSchema.pre('save', function(next) {
 });
 
 // Pre-save middleware to update stats
-courseSchema.pre('save', function(next) {
+courseSchema.pre('save', function (next) {
   if (this.enrollments) {
     this.stats.totalEnrollments = this.enrollments.length;
     this.stats.totalCompletions = this.enrollments.filter(e => e.status === 'completed').length;
-    this.stats.completionRate = this.stats.totalEnrollments > 0 
-      ? (this.stats.totalCompletions / this.stats.totalEnrollments) * 100 
+    this.stats.completionRate = this.stats.totalEnrollments > 0
+      ? (this.stats.totalCompletions / this.stats.totalEnrollments) * 100
       : 0;
   }
-  
+
   if (this.reviews && this.reviews.length > 0) {
     const approvedReviews = this.reviews.filter(r => r.isApproved);
     this.rating.count = approvedReviews.length;
-    
+
     if (approvedReviews.length > 0) {
       const totalRating = approvedReviews.reduce((sum, review) => sum + review.rating, 0);
       this.rating.average = totalRating / approvedReviews.length;
-      
+
       // Update distribution
       this.rating.distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       approvedReviews.forEach(review => {
@@ -465,94 +465,94 @@ courseSchema.pre('save', function(next) {
       });
     }
   }
-  
+
   next();
 });
 
 // Static method to find published courses
-courseSchema.statics.findPublished = function() {
-  return this.find({ 
-    isPublished: true, 
-    isApproved: true, 
-    isDeleted: false 
+courseSchema.statics.findPublished = function () {
+  return this.find({
+    isPublished: true,
+    isApproved: true,
+    isDeleted: false
   });
 };
 
 // Static method to find courses by category
-courseSchema.statics.findByCategory = function(category) {
-  return this.find({ 
-    category, 
-    isPublished: true, 
-    isApproved: true, 
-    isDeleted: false 
+courseSchema.statics.findByCategory = function (category) {
+  return this.find({
+    category,
+    isPublished: true,
+    isApproved: true,
+    isDeleted: false
   });
 };
 
 // Static method to find featured courses
-courseSchema.statics.findFeatured = function() {
-  return this.find({ 
-    isFeatured: true, 
-    isPublished: true, 
-    isApproved: true, 
-    isDeleted: false 
+courseSchema.statics.findFeatured = function () {
+  return this.find({
+    isFeatured: true,
+    isPublished: true,
+    isApproved: true,
+    isDeleted: false
   });
 };
 
 // Instance method to enroll student
-courseSchema.methods.enrollStudent = function(studentId) {
+courseSchema.methods.enrollStudent = function (studentId) {
   const existingEnrollment = this.enrollments.find(
     enrollment => enrollment.student.toString() === studentId.toString()
   );
-  
+
   if (existingEnrollment) {
     throw new Error('Student is already enrolled in this course');
   }
-  
+
   this.enrollments.push({
     student: studentId,
     enrolledAt: new Date()
   });
-  
+
   return this.save();
 };
 
 // Instance method to update student progress
-courseSchema.methods.updateProgress = function(studentId, lessonId) {
+courseSchema.methods.updateProgress = function (studentId, lessonId) {
   const enrollment = this.enrollments.find(
     e => e.student.toString() === studentId.toString()
   );
-  
+
   if (!enrollment) {
     throw new Error('Student is not enrolled in this course');
   }
-  
+
   // Check if lesson is already completed
   const existingCompletion = enrollment.completedLessons.find(
     cl => cl.lessonId.toString() === lessonId.toString()
   );
-  
+
   if (!existingCompletion) {
     enrollment.completedLessons.push({
       lessonId,
       completedAt: new Date()
     });
   }
-  
+
   // Update progress percentage
   const totalLessons = this.lessonCount;
   if (totalLessons > 0) {
     enrollment.progress = (enrollment.completedLessons.length / totalLessons) * 100;
   }
-  
+
   // Update current lesson
   enrollment.currentLesson = lessonId;
   enrollment.lastAccessedAt = new Date();
-  
+
   // Mark as completed if 100%
   if (enrollment.progress >= 100) {
     enrollment.status = 'completed';
   }
-  
+
   return this.save();
 };
 
