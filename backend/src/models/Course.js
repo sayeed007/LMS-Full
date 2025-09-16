@@ -3,28 +3,41 @@ const mongoose = require('mongoose');
 const resourceSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: [true, 'Resource title is required'],
+    trim: true
   },
   url: {
     type: String,
-    required: true
+    required: [true, 'Resource URL is required']
   },
   type: {
     type: String,
-    enum: ['pdf', 'video', 'image', 'document', 'link', 'other'],
-    default: 'document'
+    enum: ['pdf', 'video', 'link', 'document', 'image', 'audio'],
+    required: [true, 'Resource type is required']
   },
-  size: Number,
+  size: Number, // in bytes
+  duration: Number, // for video/audio resources in seconds
+  downloadable: {
+    type: Boolean,
+    default: true
+  },
   uploadedAt: {
     type: Date,
     default: Date.now
   }
-});
+}, { _id: true });
 
 const lessonSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Lesson title is required']
+    required: [true, 'Lesson title is required'],
+    trim: true,
+    maxlength: [100, 'Lesson title cannot exceed 100 characters']
+  },
+  description: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Lesson description cannot exceed 500 characters']
   },
   content: {
     type: String,
@@ -32,31 +45,59 @@ const lessonSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['video', 'text', 'quiz', 'assignment', 'interactive'],
-    default: 'text'
+    enum: ['text', 'video', 'quiz', 'assignment', 'live', 'download'],
+    default: 'text',
+    required: [true, 'Lesson type is required']
   },
-  duration: {
-    type: Number,
-    default: 0 // in minutes
-  },
-  videoUrl: String,
-  videoThumbnail: String,
   order: {
     type: Number,
-    required: true
+    required: [true, 'Lesson order is required'],
+    min: [1, 'Lesson order must be at least 1']
   },
+  duration: {
+    type: Number, // in minutes
+    default: 0,
+    min: [0, 'Duration cannot be negative']
+  },
+  // Content details
+  videoUrl: String,
+  videoProvider: {
+    type: String,
+    enum: ['youtube', 'vimeo', 'wistia', 'local', 'aws-s3'],
+    default: 'local'
+  },
+  videoDuration: Number, // in seconds for video lessons
+  videoThumbnail: String,
+  transcript: String,
+  // Resources and attachments
+  resources: [resourceSchema],
+  // Access control
   isPreview: {
     type: Boolean,
     default: false
   },
-  resources: [resourceSchema],
+  isPublished: {
+    type: Boolean,
+    default: false
+  },
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  // References to related content
   quiz: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Quiz'
   },
   assignment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Assignment'
+  },
+  // Assignment details (embedded)
+  assignmentDetails: {
     title: String,
     description: String,
+    instructions: String,
     dueDate: Date,
     maxScore: {
       type: Number,
@@ -66,6 +107,12 @@ const lessonSchema = new mongoose.Schema({
       type: String,
       enum: ['text', 'file', 'url', 'code'],
       default: 'text'
+    },
+    maxFileSize: Number, // in MB
+    allowedFileTypes: [String],
+    maxFiles: {
+      type: Number,
+      default: 1
     }
   },
   completionCriteria: {
@@ -77,12 +124,60 @@ const lessonSchema = new mongoose.Schema({
     type: Number,
     default: 0 // in seconds
   },
-  isPublished: {
-    type: Boolean,
-    default: false
-  }
+  // Settings
+  settings: {
+    allowComments: {
+      type: Boolean,
+      default: true
+    },
+    downloadable: {
+      type: Boolean,
+      default: false
+    },
+    autoComplete: {
+      type: Boolean,
+      default: false
+    },
+    preventSkipping: {
+      type: Boolean,
+      default: false
+    },
+    showTranscript: {
+      type: Boolean,
+      default: false
+    }
+  },
+  // Analytics
+  views: {
+    type: Number,
+    default: 0
+  },
+  completions: {
+    type: Number,
+    default: 0
+  },
+  averageTimeSpent: {
+    type: Number, // in seconds
+    default: 0
+  },
+  likes: {
+    type: Number,
+    default: 0
+  },
+  // Metadata
+  tags: [{
+    type: String,
+    trim: true,
+    lowercase: true
+  }],
+  language: {
+    type: String,
+    default: 'en'
+  },
+  thumbnail: String
 }, {
-  timestamps: true
+  timestamps: true,
+  _id: true
 });
 
 const chapterSchema = new mongoose.Schema({
@@ -204,31 +299,18 @@ const courseSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Course category is required'],
-    enum: [
-      'programming',
-      'web-development',
-      'mobile-development',
-      'data-science',
-      'machine-learning',
-      'artificial-intelligence',
-      'cybersecurity',
-      'cloud-computing',
-      'devops',
-      'blockchain',
-      'game-development',
-      'ui-ux-design',
-      'digital-marketing',
-      'business',
-      'finance',
-      'management',
-      'personal-development',
-      'health-fitness',
-      'language-learning',
-      'arts-crafts',
-      'music',
-      'photography',
-      'other'
-    ]
+    validate: {
+      validator: async function(value) {
+        // Check if category exists in Category collection
+        const Category = mongoose.model('Category');
+        const category = await Category.findOne({
+          name: value,
+          isActive: true
+        });
+        return !!category;
+      },
+      message: 'Category must be a valid active category from the system'
+    }
   },
   subcategory: String,
   level: {
@@ -270,9 +352,13 @@ const courseSchema = new mongoose.Schema({
   }],
   prerequisites: [String],
   learningObjectives: [String],
+  learningOutcomes: [String],
   targetAudience: [String],
   requirements: [String],
-  whatYouWillLearn: [String],
+  estimatedDuration: {
+    type: Number,
+    default: 0 // in hours
+  },
   isPublished: {
     type: Boolean,
     default: false
@@ -399,7 +485,6 @@ courseSchema.index({ 'rating.average': -1 });
 courseSchema.index({ 'stats.totalEnrollments': -1 });
 courseSchema.index({ createdAt: -1 });
 courseSchema.index({ price: 1 });
-// courseSchema.index({ slug: 1 });
 
 // Virtual for enrollment count
 courseSchema.virtual('enrollmentCount').get(function () {

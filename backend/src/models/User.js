@@ -124,6 +124,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     maxlength: [500, 'Bio cannot exceed 500 characters']
   },
+  profile: {
+    bio: String,
+    location: String,
+    website: String,
+    phoneNumber: String,
+    expertise: [String],
+    experience: String,
+    education: String
+  },
   phoneNumber: {
     type: String,
     validate: {
@@ -160,6 +169,10 @@ const userSchema = new mongoose.Schema({
     default: true
   },
   emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  isEmailVerified: {
     type: Boolean,
     default: false
   },

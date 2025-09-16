@@ -6,6 +6,7 @@ const seedEnrollments = async (courses, lessons, users) => {
   const publishedCourses = courses.filter(course => course.isPublished);
 
   const enrollments = [];
+  const enrollmentTracker = new Set(); // To prevent duplicates
 
   // Create realistic enrollment scenarios
   for (const student of students) {
@@ -14,6 +15,12 @@ const seedEnrollments = async (courses, lessons, users) => {
     const selectedCourses = shuffleArray([...publishedCourses]).slice(0, numberOfCourses);
 
     for (const course of selectedCourses) {
+      // Create unique key to prevent duplicates
+      const enrollmentKey = `${student._id}-${course._id}`;
+      if (enrollmentTracker.has(enrollmentKey)) {
+        continue; // Skip if already enrolled
+      }
+      enrollmentTracker.add(enrollmentKey);
       const courseLessons = lessons.filter(lesson =>
         lesson.course.toString() === course._id.toString() && lesson.isPublished
       );
@@ -104,11 +111,16 @@ const seedEnrollments = async (courses, lessons, users) => {
   // Student who dropped out early
   const dropoutStudent = students[0];
   const dropoutCourse = publishedCourses[0];
-  const dropoutLessons = lessons.filter(lesson =>
-    lesson.course.toString() === dropoutCourse._id.toString()
-  );
+  const dropoutKey = `${dropoutStudent._id}-${dropoutCourse._id}`;
 
-  enrollments.push({
+  // Only add if not already enrolled
+  if (!enrollmentTracker.has(dropoutKey)) {
+    enrollmentTracker.add(dropoutKey);
+    const dropoutLessons = lessons.filter(lesson =>
+      lesson.course.toString() === dropoutCourse._id.toString()
+    );
+
+    enrollments.push({
     user: dropoutStudent._id,
     course: dropoutCourse._id,
     enrolledAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
@@ -130,16 +142,22 @@ const seedEnrollments = async (courses, lessons, users) => {
     paymentStatus: 'completed',
     enrollmentType: 'individual'
   });
+  }
 
   // High achiever with multiple completed courses
   const achiever = students[1];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < Math.min(3, publishedCourses.length); i++) {
     const achieverCourse = publishedCourses[i];
-    const achieverLessons = lessons.filter(lesson =>
-      lesson.course.toString() === achieverCourse._id.toString()
-    );
+    const achieverKey = `${achiever._id}-${achieverCourse._id}`;
 
-    enrollments.push({
+    // Only add if not already enrolled
+    if (!enrollmentTracker.has(achieverKey)) {
+      enrollmentTracker.add(achieverKey);
+      const achieverLessons = lessons.filter(lesson =>
+        lesson.course.toString() === achieverCourse._id.toString()
+      );
+
+      enrollments.push({
       user: achiever._id,
       course: achieverCourse._id,
       enrolledAt: new Date(Date.now() - (90 - i * 30) * 24 * 60 * 60 * 1000),
@@ -173,6 +191,7 @@ const seedEnrollments = async (courses, lessons, users) => {
       enrollmentType: 'individual',
       completedAt: new Date(Date.now() - (50 - i * 15) * 24 * 60 * 60 * 1000)
     });
+    }
   }
 
   const createdEnrollments = await Enrollment.insertMany(enrollments);

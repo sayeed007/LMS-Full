@@ -2,21 +2,13 @@
 
 import { AddChapterModal } from "@/components/AddChapterModal";
 import { Container } from "@/components/ui";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AvatarWithDate } from "@/components/ui/AvatarWithDate";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useGetCourseByIdQuery } from "@/store/api/courseApi";
+import { BookOpen, ChevronRight, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useGetCourseByIdQuery } from "@/store/api/courseApi";
-import { ChevronDown, ChevronRight, BookOpen, Clock, Users, BarChart3 } from "lucide-react";
-
-// Fallback data structure for development/testing
-const initialChapters = [
-  { id: "c1", name: "Understanding DevOps & SDLC" },
-  { id: "c2", name: "Version Control and CI/CD Basics" },
-  { id: "c3", name: "Building CI/CD Pipelines (Module 3-4)" },
-  { id: "c4", name: "CI/CD Pipeline Fundamentals" },
-];
 
 interface CourseDetailClientProps {
   courseId: string | null;
@@ -35,15 +27,15 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
 
   const course = courseData?.data?.course?.[0] || {};
   const error = propError || (queryError ? 'Failed to fetch course data' : null);
-  const [chapters, setChapters] = useState(initialChapters);
-  const [showAdd, setShowAdd] = useState(false);
+  // const [chapters, setChapters] = useState([]);
+  // const [showAdd, setShowAdd] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
   const router = useRouter();
 
-  const handleAddChapter = (chapter: { name: string }) => {
-    setChapters((prev) => [...prev, { ...chapter, id: Date.now().toString() }]);
-    setShowAdd(false);
-  };
+  // const handleAddChapter = (chapter: { name: string }) => {
+  //   setChapters((prev) => [...prev, { ...chapter, id: Date.now().toString() }]);
+  //   setShowAdd(false);
+  // };
 
   const handleContinueCourse = () => {
     if (course?._id) {
@@ -279,11 +271,11 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
         <div className="flex-1 hidden md:flex"></div>
       </div>
 
-      <AddChapterModal
+      {/* <AddChapterModal
         open={showAdd}
         onOpenChange={setShowAdd}
         onAdd={handleAddChapter}
-      />
+      /> */}
     </Container>
     // </div>
   );

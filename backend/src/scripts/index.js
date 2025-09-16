@@ -5,6 +5,7 @@ const chalk = require('chalk');
 
 // Import models
 const User = require('../models/User');
+const Category = require('../models/Category');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 const { Quiz, QuizAttempt } = require('../models/Quiz');
@@ -14,6 +15,7 @@ const Enrollment = require('../models/Enrollment');
 
 // Import seeders
 const { seedUsers } = require('./userSeeder');
+const { seedCategories } = require('./categorySeeder');
 const { seedCourses } = require('./courseSeeder');
 const { seedLessons } = require('./lessonSeeder');
 const { seedQuestionBanks, seedQuestions, seedQuizzes } = require('./quizSeeder');
@@ -42,6 +44,7 @@ const clearDatabase = async () => {
     await Lesson.deleteMany({});
     await Enrollment.deleteMany({});
     await Course.deleteMany({});
+    await Category.deleteMany({});
     await User.deleteMany({});
 
     console.log(chalk.green('✅ Database cleared'));
@@ -70,32 +73,37 @@ const seedDatabase = async () => {
     const users = await seedUsers();
     console.log(chalk.green(`✅ Created ${users.length} users\n`));
 
-    // 2. Seed Courses
+    // 2. Seed Categories
+    console.log(chalk.cyan('📁 Seeding categories...'));
+    const categories = await seedCategories(users);
+    console.log(chalk.green(`✅ Created ${categories.length} categories\n`));
+
+    // 3. Seed Courses
     console.log(chalk.cyan('📚 Seeding courses...'));
     const courses = await seedCourses(users);
     console.log(chalk.green(`✅ Created ${courses.length} courses\n`));
 
-    // 3. Seed Question Banks
+    // 4. Seed Question Banks
     console.log(chalk.cyan('🏦 Seeding question banks...'));
     const questionBanks = await seedQuestionBanks(users, courses);
     console.log(chalk.green(`✅ Created ${questionBanks.length} question banks\n`));
 
-    // 4. Seed Questions
+    // 5. Seed Questions
     console.log(chalk.cyan('❓ Seeding questions...'));
     const questions = await seedQuestions(questionBanks, users);
     console.log(chalk.green(`✅ Created ${questions.length} questions\n`));
 
-    // 5. Seed Lessons
+    // 6. Seed Lessons
     console.log(chalk.cyan('📖 Seeding lessons...'));
     const lessons = await seedLessons(courses, users);
     console.log(chalk.green(`✅ Created ${lessons.length} lessons\n`));
 
-    // 6. Seed Quizzes
+    // 7. Seed Quizzes
     console.log(chalk.cyan('🧭 Seeding quizzes...'));
     const quizzes = await seedQuizzes(courses, questions, users);
     console.log(chalk.green(`✅ Created ${quizzes.length} quizzes\n`));
 
-    // 7. Seed Enrollments
+    // 8. Seed Enrollments
     console.log(chalk.cyan('🎓 Seeding enrollments...'));
     const enrollments = await seedEnrollments(courses, lessons, users);
     console.log(chalk.green(`✅ Created ${enrollments.length} enrollments\n`));
@@ -105,9 +113,10 @@ const seedDatabase = async () => {
 
     console.log(chalk.blue('📊 Summary:'));
     console.log(chalk.white(`   Users: ${users.length}`));
+    console.log(chalk.white(`   Categories: ${categories.length}`));
+    console.log(chalk.white(`   Courses: ${courses.length}`));
     console.log(chalk.white(`   Question Banks: ${questionBanks.length}`));
     console.log(chalk.white(`   Questions: ${questions.length}`));
-    console.log(chalk.white(`   Courses: ${courses.length}`));
     console.log(chalk.white(`   Lessons: ${lessons.length}`));
     console.log(chalk.white(`   Quizzes: ${quizzes.length}`));
     console.log(chalk.white(`   Enrollments: ${enrollments.length}\n`));

@@ -6,6 +6,7 @@ import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, TabNav } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { showErrorToast } from "@/lib/toast-utils";
+import { useModalActions } from "@/lib/modal-utils";
 import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
 import { CourseDetails } from "@/types";
 import { useRouter } from "next/navigation";
@@ -36,9 +37,9 @@ const tabs = [
 ];
 
 export default function CoursesPage() {
-  const [showCreate, setShowCreate] = useState(false);
   const [activeTab, setActiveTab] = useState("my");
   const router = useRouter();
+  const { openModal, closeModal } = useModalActions();
 
   // API queries based on active tab
   const {
@@ -68,9 +69,13 @@ export default function CoursesPage() {
     { skip: activeTab !== "enrolled" }
   );
 
-  const handleCreateCourse = (course: CourseDetails) => {
-    setShowCreate(false);
-    router.push(`/courses/create`);
+  const openCreateModal = () => {
+    openModal(
+      <CreateCourseModal
+        onClose={() => closeModal()}
+      />,
+      { size: 'md', position: 'center' }
+    );
   };
 
   // Get current data and loading state based on active tab
@@ -114,7 +119,7 @@ export default function CoursesPage() {
         title="Courses"
         headerActions={
           <Button
-            onClick={() => setShowCreate(true)}
+            onClick={openCreateModal}
             className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
           >
             Create Now
@@ -158,7 +163,7 @@ export default function CoursesPage() {
               buttonText={activeTab === "my" ? "Create Now" : "Browse Courses"}
               onClick={() => {
                 if (activeTab === "my") {
-                  setShowCreate(true);
+                  openCreateModal();
                 } else {
                   setActiveTab("all");
                 }
@@ -167,12 +172,6 @@ export default function CoursesPage() {
           )}
         </div>
       </PageLayout>
-
-      <CreateCourseModal
-        open={showCreate}
-        onOpenChange={setShowCreate}
-        onCreate={handleCreateCourse}
-      />
     </>
   );
 }

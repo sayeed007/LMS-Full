@@ -137,7 +137,7 @@ const seedQuestions = async (questionBanks, users) => {
     }
   );
 
-  // Let's add just one more simple question for now
+  // Add more comprehensive questions
   questions.push(
     {
       text: 'What does DOM stand for?',
@@ -150,8 +150,153 @@ const seedQuestions = async (questionBanks, users) => {
       questionBank: jsFundamentalsBank._id,
       course: jsFundamentalsBank.course,
       createdBy: john._id
+    },
+    {
+      text: 'Which method is used to select an element by its ID in JavaScript?',
+      type: 'single-choice',
+      choices: [
+        { text: 'document.getElementById()', isCorrect: true },
+        { text: 'document.querySelector()', isCorrect: false },
+        { text: 'document.getElementsByClassName()', isCorrect: false },
+        { text: 'document.querySelectorAll()', isCorrect: false }
+      ],
+      points: 4,
+      difficulty: 'easy',
+      explanation: 'document.getElementById() is the specific method for selecting elements by their ID attribute.',
+      category: 'DOM',
+      tags: ['dom', 'selection', 'methods'],
+      questionBank: jsFundamentalsBank._id,
+      course: jsFundamentalsBank.course,
+      createdBy: john._id
+    },
+    {
+      text: 'What is the difference between let and var in JavaScript?',
+      type: 'descriptive',
+      points: 8,
+      difficulty: 'medium',
+      explanation: 'let has block scope while var has function scope. let also prevents redeclaration in the same scope.',
+      category: 'Variables',
+      tags: ['variables', 'scope', 'es6'],
+      questionBank: jsFundamentalsBank._id,
+      course: jsFundamentalsBank.course,
+      createdBy: john._id
     }
   );
+
+  // Machine Learning Questions
+  const mlBank = questionBanks.find(qb => qb.name === 'Machine Learning Basics');
+  if (mlBank) {
+    questions.push(
+      {
+        text: 'What are the main types of machine learning?',
+        type: 'multiple-choice',
+        choices: [
+          { text: 'Supervised Learning', isCorrect: true },
+          { text: 'Unsupervised Learning', isCorrect: true },
+          { text: 'Reinforcement Learning', isCorrect: true },
+          { text: 'Deep Learning', isCorrect: false }
+        ],
+        points: 6,
+        difficulty: 'medium',
+        explanation: 'The three main types are supervised, unsupervised, and reinforcement learning. Deep learning is a subset of machine learning.',
+        category: 'ML Types',
+        tags: ['types', 'supervised', 'unsupervised', 'reinforcement'],
+        questionBank: mlBank._id,
+        course: mlBank.course,
+        createdBy: sarah._id
+      },
+      {
+        text: 'In supervised learning, the algorithm learns from labeled training data.',
+        type: 'true-false',
+        choices: [
+          { text: 'True', isCorrect: true },
+          { text: 'False', isCorrect: false }
+        ],
+        points: 3,
+        difficulty: 'easy',
+        explanation: 'Supervised learning uses labeled examples to learn patterns and make predictions.',
+        category: 'ML Types',
+        tags: ['supervised', 'labeled-data'],
+        questionBank: mlBank._id,
+        course: mlBank.course,
+        createdBy: sarah._id
+      }
+    );
+  }
+
+  // Design Questions
+  const designBank = questionBanks.find(qb => qb.name === 'UI/UX Design Principles');
+  if (designBank) {
+    questions.push(
+      {
+        text: 'Which design principle refers to the visual weight distribution in a layout?',
+        type: 'single-choice',
+        choices: [
+          { text: 'Balance', isCorrect: true },
+          { text: 'Contrast', isCorrect: false },
+          { text: 'Emphasis', isCorrect: false },
+          { text: 'Repetition', isCorrect: false }
+        ],
+        points: 4,
+        difficulty: 'easy',
+        explanation: 'Balance refers to how visual elements are distributed to create stability in a design.',
+        category: 'Design Principles',
+        tags: ['balance', 'visual-weight', 'principles'],
+        questionBank: designBank._id,
+        course: designBank.course,
+        createdBy: michael._id
+      },
+      {
+        text: 'What is the golden ratio and why is it important in design?',
+        type: 'descriptive',
+        points: 7,
+        difficulty: 'medium',
+        explanation: 'The golden ratio (1:1.618) creates aesthetically pleasing proportions found in nature and art.',
+        category: 'Design Principles',
+        tags: ['golden-ratio', 'proportion', 'aesthetics'],
+        questionBank: designBank._id,
+        course: designBank.course,
+        createdBy: michael._id
+      }
+    );
+  }
+
+  // Cybersecurity Questions
+  const cyberBank = questionBanks.find(qb => qb.name === 'Cybersecurity Fundamentals');
+  if (cyberBank) {
+    questions.push(
+      {
+        text: 'What is the most important principle of ethical hacking?',
+        type: 'single-choice',
+        choices: [
+          { text: 'Finding as many vulnerabilities as possible', isCorrect: false },
+          { text: 'Getting written authorization before testing', isCorrect: true },
+          { text: 'Using the most advanced tools available', isCorrect: false },
+          { text: 'Working as quickly as possible', isCorrect: false }
+        ],
+        points: 5,
+        difficulty: 'medium',
+        explanation: 'Written authorization is crucial for legal and ethical compliance in penetration testing.',
+        category: 'Ethics',
+        tags: ['authorization', 'ethics', 'legal'],
+        questionBank: cyberBank._id,
+        course: cyberBank.course,
+        createdBy: emily._id
+      },
+      {
+        text: 'What is the typical methodology for ethical hacking? List the main phases.',
+        type: 'descriptive',
+        points: 10,
+        difficulty: 'hard',
+        explanation: 'The phases typically include: Reconnaissance, Scanning, Enumeration, Vulnerability Assessment, Exploitation, and Reporting.',
+        category: 'Methodology',
+        tags: ['methodology', 'phases', 'process'],
+        questionBank: cyberBank._id,
+        course: cyberBank.course,
+        createdBy: emily._id
+      }
+    );
+  }
 
   const createdQuestions = await Question.insertMany(questions);
 
@@ -180,9 +325,9 @@ const seedQuizzes = async (courses, questions, users) => {
   const quizzes = [];
 
   // JavaScript Course Quizzes
-  const jsCourse = courses.find(c => c.title.includes('JavaScript Mastery'));
+  const jsCourse = courses.find(c => c.title.includes('JavaScript'));
   const jsQuestions = questions.filter(q =>
-    q.category === 'Variables' || q.category === 'Data Types' || q.category === 'Language Features'
+    q.course && q.course.toString() === jsCourse?._id.toString()
   );
 
   if (jsCourse && jsQuestions.length > 0) {
@@ -267,7 +412,7 @@ const seedQuizzes = async (courses, questions, users) => {
   // Machine Learning Course Quiz
   const mlCourse = courses.find(c => c.title.includes('Machine Learning'));
   const mlQuestions = questions.filter(q =>
-    q.category === 'ML Types' || q.category === 'Algorithms' || q.category === 'Model Performance'
+    q.course && q.course.toString() === mlCourse?._id.toString()
   );
 
   if (mlCourse && mlQuestions.length > 0) {
@@ -314,7 +459,9 @@ const seedQuizzes = async (courses, questions, users) => {
 
   // Design Course Quiz
   const designCourse = courses.find(c => c.title.includes('UI/UX Design'));
-  const designQuestions = questions.filter(q => q.category === 'Design Principles');
+  const designQuestions = questions.filter(q =>
+    q.course && q.course.toString() === designCourse?._id.toString()
+  );
 
   if (designCourse && designQuestions.length > 0) {
     quizzes.push({
@@ -345,7 +492,7 @@ const seedQuizzes = async (courses, questions, users) => {
   // Cybersecurity Course Quiz
   const cyberCourse = courses.find(c => c.title.includes('Ethical Hacking'));
   const cyberQuestions = questions.filter(q =>
-    q.category === 'Ethics' || q.category === 'Methodology'
+    q.course && q.course.toString() === cyberCourse?._id.toString()
   );
 
   if (cyberCourse && cyberQuestions.length > 0) {

@@ -8,6 +8,7 @@ import { baseApi } from './api/baseApi';
 import './api/questionBankApi';
 import './api/questionApi';
 import './api/quizApi';
+import './api/categoryApi';
 
 // Slice imports
 import authReducer from './slices/authSlice';

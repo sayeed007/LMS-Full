@@ -1,33 +1,44 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CreateCategoryModal } from "@/components/CreateCategoryModal";
+import { useModalActions } from "@/lib/modal-utils";
+import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
+import { useGetCategoriesQuery, getCategoryOptions } from "@/store/api/categoryApi";
+import { useCreateCourseMutation } from "@/store/api/courseApi";
 import { CourseDetails } from "@/types";
 import { useFormik } from "formik";
+import { Plus } from "lucide-react";
 import Select from "react-select";
 import * as Yup from "yup";
 
-const categoryOptions = [
-  { value: "Design & Development", label: "Design & Development" },
-  { value: "Business & Management", label: "Business & Management" },
-  { value: "Technology & Development", label: "Technology & Development" },
-  {
-    value: "Personal Development & Learning",
-    label: "Personal Development & Learning",
-  },
-  { value: "Health & Wellness", label: "Health & Wellness" },
-  { value: "Data & Analytics", label: "Data & Analytics" },
-  { value: "Design & Creative Arts", label: "Design & Creative Arts" },
-];
 
 export function CreateCourseModal({
-  open,
-  onOpenChange,
+  onClose,
   onCreate,
 }: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  onCreate: (course: Omit<CourseDetails, "id">) => void;
+  onClose: () => void;
+  onCreate?: (course: Omit<CourseDetails, "id">) => void;
 }) {
+  const { openModal, closeModal } = useModalActions();
+  const [createCourse, { isLoading: isCreating }] = useCreateCourseMutation();
+
+  // Fetch categories from API
+  const {
+    data: categoriesResponse,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategoriesQuery({
+    isActive: true,
+    limit: 100
+  });
+
+  const categories = categoriesResponse?.data || [];
+  const categoryOptions = getCategoryOptions(categories);
+
+  // Show error if categories failed to load
+  if (categoriesError) {
+    showErrorToast("Failed to load categories");
+  }
   const {
     handleSubmit,
     handleChange,
@@ -41,7 +52,7 @@ export function CreateCourseModal({
   } = useFormik({
     initialValues: {
       name: "",
-      category: categoryOptions[0],
+      category: categoryOptions.length > 0 ? categoryOptions[0] : null,
       description: "",
       difficulty: "Beginner",
     },
@@ -52,33 +63,63 @@ export function CreateCourseModal({
       description: Yup.string().max(500).required("Description is required"),
       difficulty: Yup.string().required("Difficulty is required"),
     }),
-    onSubmit: (values) => {
-      onCreate({
-        name: values.name,
-        category: values.category.value,
-        description: values.description,
-        difficulty: values.difficulty,
-        chapters: 0,
-        lessons: 0,
-        quizzes: 0,
-        image: "/Thumbnail.png",
-      });
-      resetForm();
-      onOpenChange(false);
+    onSubmit: async (values) => {
+      try {
+        // Create course using API
+        const result = await createCourse({
+          title: values.name,
+          description: values.description,
+          category: values.category?.value || "",
+          level: values.difficulty.toLowerCase() as "beginner" | "intermediate" | "advanced",
+          language: "English", // Default language
+          price: 0, // Default free course
+          currency: "USD"
+        }).unwrap();
+
+        showSuccessToast("Course created successfully!");
+
+        // Call optional onCreate callback
+        if (onCreate) {
+          onCreate({
+            name: values.name,
+            category: values.category?.value || "",
+            description: values.description,
+            difficulty: values.difficulty,
+            chapters: 0,
+            lessons: 0,
+            quizzes: 0,
+            image: "/Thumbnail.png",
+          });
+        }
+
+        resetForm();
+        onClose();
+      } catch (error: any) {
+        console.error("Error creating course:", error);
+        showErrorToast(error?.data?.message || "Failed to create course");
+      }
     },
   });
 
+  const openCreateCategoryModal = () => {
+    openModal(
+      <CreateCategoryModal
+        onClose={() => closeModal()}
+      />,
+      { size: 'md', position: 'center' }
+    );
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-full p-8 rounded-xl">
-        <div className="text-xl font-bold mb-4 text-gray-900">
-          Create Course
-        </div>
+    <div className="p-6 max-w-md">
+      <h2 className="text-xl font-bold mb-4 text-gray-900">
+        Create Course
+      </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Course Name */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
-              Course Name
+              Course Name <span className="text-red-500">*</span>
             </label>
             <Input
               name="name"
@@ -96,13 +137,15 @@ export function CreateCourseModal({
           {/* Course Category */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
-              Course Category
+              Course Category <span className="text-red-500">*</span>
             </label>
             <Select
               options={categoryOptions}
               value={values.category}
               onChange={(option) => setFieldValue("category", option)}
               onBlur={() => setFieldTouched("category", true)}
+              isLoading={categoriesLoading}
+              placeholder={categoriesLoading ? "Loading categories..." : "Select a category"}
               classNamePrefix="react-select"
               styles={{
                 control: (base) => ({
@@ -117,9 +160,10 @@ export function CreateCourseModal({
               Not found in list?{" "}
               <button
                 type="button"
-                className="text-blue-600 font-semibold hover:underline"
-                onClick={() => alert("Handle 'Add New' action")}
+                className="text-blue-600 font-semibold hover:underline inline-flex items-center gap-1"
+                onClick={openCreateCategoryModal}
               >
+                <Plus className="h-3 w-3" />
                 Add New
               </button>
             </div>
@@ -133,7 +177,7 @@ export function CreateCourseModal({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -157,7 +201,7 @@ export function CreateCourseModal({
           {/* Difficulty */}
           <div>
             <div className="text-sm font-medium mb-2 text-gray-700">
-              Difficulty label
+              Difficulty <span className="text-red-500">*</span>
             </div>
             <div className="flex gap-6">
               {["Beginner", "Intermediate", "Advanced"].map((level) => (
@@ -188,22 +232,23 @@ export function CreateCourseModal({
               variant="ghost"
               size="sm"
               type="submit"
-              className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
+              disabled={isCreating || categoriesLoading}
+              className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Now
+              {isCreating ? "Creating..." : "Create Now"}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               type="button"
-              onClick={() => onOpenChange(false)}
-              className="text-gray-600 hover:text-gray-900 px-6 py-2 font-medium"
+              onClick={() => onClose()}
+              disabled={isCreating}
+              className="text-gray-600 hover:text-gray-900 px-6 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }
