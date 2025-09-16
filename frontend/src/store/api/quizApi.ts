@@ -9,7 +9,8 @@ export interface QuizPopulated extends BackendQuiz {
 }
 
 // Legacy Quiz interface for backward compatibility
-export interface Quiz extends QuizPopulated { }
+// export interface Quiz extends QuizPopulated { }
+export type Quiz = QuizPopulated;
 
 export interface Question {
   _id: string;

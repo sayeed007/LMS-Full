@@ -22,7 +22,9 @@ export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'create
 }
 
 // Keep for backward compatibility
-export interface QuestionBank extends QuestionBankPopulated { }
+// export interface QuestionBank extends QuestionBankPopulated { }
+export type QuestionBank = QuestionBankPopulated;
+
 
 export interface Section {
   _id: string;
