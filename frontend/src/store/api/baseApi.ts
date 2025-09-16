@@ -30,7 +30,8 @@ export const baseApi = createApi({
     'QuestionBank',
     'QuestionBanks',
     'Question',
-    'Questions'
+    'Questions',
+    'Quiz'
   ],
   endpoints: () => ({}),
 });
