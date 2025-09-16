@@ -1,5 +1,5 @@
+import { Course, CourseLesson } from '../../types/backend-models';
 import { baseApi, BaseApiResponse } from './baseApi';
-import { Course, CourseLesson, CourseChapter } from '../../types/backend-models';
 
 // API-specific interfaces for requests/responses
 export interface CoursePopulated extends Omit<Course, 'instructor' | 'createdBy'> {

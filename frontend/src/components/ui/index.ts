@@ -21,3 +21,6 @@ export * from './input';
 export * from './select';
 export * from './sonner';
 export * from './textarea';
+
+// Custom UI Components
+export { AvatarWithDate } from './AvatarWithDate';

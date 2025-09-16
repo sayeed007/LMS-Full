@@ -1,12 +1,20 @@
-import { Course } from "@/store/api/courseApi";
+import { showErrorToast } from "@/lib/toast-utils";
+import { Course } from "@/types/backend-models";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 
 
 export function CourseCard({ course }: { course: Course }) {
+  const router = useRouter();
 
   const onClick = () => {
-
+    try {
+      router.push(`/courses/${course._id}`);
+    } catch (error) {
+      console.error(error);
+      showErrorToast('Navigation Error', 'Failed to navigate to edit page');
+    }
   };
 
   return (

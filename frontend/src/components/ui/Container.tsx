@@ -18,9 +18,12 @@ const sizeVariants = {
 
 const paddingVariants = {
   none: '',
-  sm: 'px-4 py-6',
-  md: 'px-4 py-8 lg:px-8 lg:py-10',
-  lg: 'px-6 py-12 lg:px-12'
+  sm: 'p-4',
+  md: 'p-8 lg:p-8',
+  lg: 'p-12 lg:p-12'
+  // sm: 'px-4 py-6',
+  // md: 'px-4 py-8 lg:px-8 lg:py-10',
+  // lg: 'px-6 py-12 lg:px-12'
 };
 
 export default function Container({
