@@ -1,24 +1,15 @@
-import { baseApi } from './baseApi';
+import { baseApi, BaseApiResponse } from './baseApi';
+import { Quiz as BackendQuiz } from '../../types/backend-models';
 
-// Types
-export interface Quiz {
-  _id: string;
-  title: string;
-  description?: string;
-  instructions?: string;
-  course: string;
-  questionBank?: string;
-  questions: Question[];
-  settings: QuizSettings;
-  status: 'draft' | 'published' | 'archived';
-  isActive: boolean;
-  totalAttempts: number;
-  averageScore: number;
-  passRate: number;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+// API-specific interface for populated quizzes
+export interface QuizPopulated extends BackendQuiz {
+  totalAttempts?: number;
+  averageScore?: number;
+  passRate?: number;
 }
+
+// Legacy Quiz interface for backward compatibility
+export interface Quiz extends QuizPopulated {}
 
 export interface Question {
   _id: string;
@@ -88,13 +79,26 @@ export interface CreateQuizRequest {
   description?: string;
   instructions?: string;
   course: string;
-  questionBank?: string;
   questions: string[];
-  settings?: Partial<QuizSettings>;
+  timeLimit?: number;
+  passingScore?: number;
+  maxAttempts?: number;
+  showResults?: boolean;
+  showCorrectAnswers?: boolean;
+  randomizeQuestions?: boolean;
 }
 
-export interface UpdateQuizRequest extends Partial<CreateQuizRequest> {
-  status?: 'draft' | 'published' | 'archived';
+export interface UpdateQuizRequest {
+  title?: string;
+  description?: string;
+  instructions?: string;
+  questions?: string[];
+  timeLimit?: number;
+  passingScore?: number;
+  maxAttempts?: number;
+  showResults?: boolean;
+  showCorrectAnswers?: boolean;
+  randomizeQuestions?: boolean;
   isActive?: boolean;
 }
 
@@ -139,8 +143,8 @@ export interface QuizResultsResponse {
 export const quizApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all quizzes with filtering
-    getQuizzes: builder.query<any, QuizListParams | void>({
-      query: (params) => ({
+    getQuizzes: builder.query<BaseApiResponse<QuizPopulated[]>, QuizListParams | void>({
+      query: (params = {}) => ({
         url: '/quizzes',
         params,
       }),
@@ -148,13 +152,13 @@ export const quizApi = baseApi.injectEndpoints({
     }),
 
     // Get quiz by ID
-    getQuizById: builder.query<{ status: string; data: { quiz: Quiz } }, string>({
+    getQuizById: builder.query<BaseApiResponse<{ quiz: QuizPopulated }>, string>({
       query: (id) => `/quizzes/${id}`,
       providesTags: (result, error, id) => [{ type: 'Quiz', id }],
     }),
 
     // Create new quiz
-    createQuiz: builder.mutation<{ status: string; data: { quiz: Quiz } }, CreateQuizRequest>({
+    createQuiz: builder.mutation<BaseApiResponse<{ quiz: QuizPopulated }>, CreateQuizRequest>({
       query: (data) => ({
         url: '/quizzes',
         method: 'POST',
@@ -164,7 +168,7 @@ export const quizApi = baseApi.injectEndpoints({
     }),
 
     // Update quiz
-    updateQuiz: builder.mutation<{ status: string; data: { quiz: Quiz } }, { id: string; data: UpdateQuizRequest }>({
+    updateQuiz: builder.mutation<BaseApiResponse<{ quiz: QuizPopulated }>, { id: string; data: UpdateQuizRequest }>({
       query: ({ id, data }) => ({
         url: `/quizzes/${id}`,
         method: 'PATCH',
@@ -183,7 +187,7 @@ export const quizApi = baseApi.injectEndpoints({
     }),
 
     // Start quiz attempt
-    startQuizAttempt: builder.mutation<{ status: string; data: StartQuizAttemptResponse }, string>({
+    startQuizAttempt: builder.mutation<BaseApiResponse<StartQuizAttemptResponse>, string>({
       query: (quizId) => ({
         url: `/quizzes/${quizId}/attempt`,
         method: 'POST',
@@ -192,7 +196,7 @@ export const quizApi = baseApi.injectEndpoints({
     }),
 
     // Submit quiz answers
-    submitQuiz: builder.mutation<{ status: string; data: SubmitQuizResponse }, SubmitQuizRequest>({
+    submitQuiz: builder.mutation<BaseApiResponse<SubmitQuizResponse>, SubmitQuizRequest>({
       query: ({ quizId, attemptId, answers }) => ({
         url: `/quizzes/${quizId}/submit`,
         method: 'POST',
@@ -202,19 +206,19 @@ export const quizApi = baseApi.injectEndpoints({
     }),
 
     // Get quiz attempts for current user
-    getQuizAttempts: builder.query<{ status: string; data: { attempts: QuizAttempt[] } }, string>({
+    getQuizAttempts: builder.query<BaseApiResponse<{ attempts: QuizAttempt[] }>, string>({
       query: (quizId) => `/quizzes/${quizId}/attempts`,
       providesTags: (result, error, quizId) => [{ type: 'Quiz', id: quizId }],
     }),
 
     // Get quiz results and analytics (instructor only)
-    getQuizResults: builder.query<{ status: string; data: QuizResultsResponse }, string>({
+    getQuizResults: builder.query<BaseApiResponse<QuizResultsResponse>, string>({
       query: (quizId) => `/quizzes/${quizId}/results`,
       providesTags: (result, error, quizId) => [{ type: 'Quiz', id: quizId }],
     }),
 
     // Get quizzes for a specific course
-    getCourseQuizzes: builder.query<any, string>({
+    getCourseQuizzes: builder.query<BaseApiResponse<QuizPopulated[]>, string>({
       query: (courseId) => `/quizzes?courseId=${courseId}`,
       providesTags: (result, error, courseId) => [
         { type: 'Quiz', id: courseId },

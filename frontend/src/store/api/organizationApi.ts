@@ -1,68 +1,35 @@
 import { baseApi, BaseApiResponse } from './baseApi';
-import type { User } from '../slices/authSlice';
-import type { Course } from './courseApi';
+import { Organization as BackendOrganization, User } from '../../types/backend-models';
+import type { CoursePopulated } from './courseApi';
 
-export interface Organization {
-  _id: string;
-  name: string;
-  email: string;
-  type: 'educational_institution' | 'corporate' | 'government' | 'non_profit' | 'other';
-  description?: string;
-  website?: string;
-  logo?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    zipCode?: string;
-  };
-  contactPerson?: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    position?: string;
-  };
-  settings?: {
-    allowPublicCourses: boolean;
-    requireApproval: boolean;
-    customBranding: boolean;
-  };
-  isActive: boolean;
-  memberCount: number;
-  coursesCount: number;
-  createdAt: string;
-  updatedAt: string;
+// Use backend organization type with computed fields for API
+export interface OrganizationPopulated extends BackendOrganization {
+  memberCount?: number; // Computed field
+  coursesCount?: number; // Computed field
 }
 
 export interface CreateOrganizationRequest {
   name: string;
-  email: string;
-  type: 'educational_institution' | 'corporate' | 'government' | 'non_profit' | 'other';
+  slug?: string;
   description?: string;
-  website?: string;
   logo?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    zipCode?: string;
-  };
-  contactPerson?: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    position?: string;
-  };
+  website?: string;
+  contactEmail?: string;
+  phone?: string;
+  address?: BackendOrganization['address'];
+  settings?: Partial<BackendOrganization['settings']>;
 }
 
-export interface UpdateOrganizationRequest extends Partial<CreateOrganizationRequest> {
-  settings?: {
-    allowPublicCourses?: boolean;
-    requireApproval?: boolean;
-    customBranding?: boolean;
-  };
+export interface UpdateOrganizationRequest {
+  name?: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  contactEmail?: string;
+  phone?: string;
+  address?: BackendOrganization['address'];
+  settings?: Partial<BackendOrganization['settings']>;
+  isActive?: boolean;
 }
 
 export interface OrganizationListParams {
@@ -75,7 +42,7 @@ export interface OrganizationListParams {
 
 export interface AddMemberRequest {
   userId: string;
-  role: 'student' | 'instructor' | 'org_admin';
+  role: User['role'];
 }
 
 export interface OrganizationStats {
@@ -89,20 +56,20 @@ export interface OrganizationStats {
 
 export const organizationApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getOrganizations: builder.query<BaseApiResponse<Organization[]>, OrganizationListParams | void>({
-      query: (params) => ({
+    getOrganizations: builder.query<BaseApiResponse<OrganizationPopulated[]>, OrganizationListParams | void>({
+      query: (params = {}) => ({
         url: '/organizations',
         params,
       }),
       providesTags: ['Organization'],
     }),
 
-    getOrganizationById: builder.query<BaseApiResponse<{ organization: Organization }>, string>({
+    getOrganizationById: builder.query<BaseApiResponse<{ organization: OrganizationPopulated }>, string>({
       query: (id) => `/organizations/${id}`,
       providesTags: (result, error, id) => [{ type: 'Organization', id }],
     }),
 
-    createOrganization: builder.mutation<BaseApiResponse<{ organization: Organization }>, CreateOrganizationRequest>({
+    createOrganization: builder.mutation<BaseApiResponse<{ organization: OrganizationPopulated }>, CreateOrganizationRequest>({
       query: (data) => ({
         url: '/organizations',
         method: 'POST',
@@ -111,7 +78,7 @@ export const organizationApi = baseApi.injectEndpoints({
       invalidatesTags: ['Organization'],
     }),
 
-    updateOrganization: builder.mutation<BaseApiResponse<{ organization: Organization }>, { id: string; data: UpdateOrganizationRequest }>({
+    updateOrganization: builder.mutation<BaseApiResponse<{ organization: OrganizationPopulated }>, { id: string; data: UpdateOrganizationRequest }>({
       query: ({ id, data }) => ({
         url: `/organizations/${id}`,
         method: 'PATCH',
@@ -164,7 +131,7 @@ export const organizationApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getOrganizationCourses: builder.query<BaseApiResponse<Course[]>, { id: string; params?: { page?: number; limit?: number; status?: string } }>({
+    getOrganizationCourses: builder.query<BaseApiResponse<CoursePopulated[]>, { id: string; params?: { page?: number; limit?: number; status?: string } }>({
       query: ({ id, params }) => ({
         url: `/organizations/${id}/courses`,
         params,

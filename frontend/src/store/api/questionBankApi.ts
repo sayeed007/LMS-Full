@@ -1,39 +1,28 @@
 import { baseApi } from './baseApi';
+import { QuestionBank as BackendQuestionBank, User } from '../../types/backend-models';
 
-// Types
-export interface QuestionBank {
-  _id: string;
-  name: string;
-  description?: string;
-  course: {
-    _id: string;
-    title: string;
-    description?: string;
-  };
-  sections: Section[];
+// API-specific types for populated question banks
+export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'createdBy'> {
+  sections: Section[]; // Local section interface
   createdBy: {
     _id: string;
     name: string;
     email: string;
     avatar?: string;
   };
-  organization?: string;
-  settings: QuestionBankSettings;
-  status: 'draft' | 'active' | 'archived';
-  visibility: 'public' | 'private' | 'organization';
-  isTemplate: boolean;
-  totalQuestions: number;
-  averageDifficulty: 'easy' | 'medium' | 'hard';
-  estimatedDuration: number;
-  timesUsed: number;
-  averageScore: number;
+  // Additional computed fields
+  totalQuestions?: number;
+  averageDifficulty?: 'easy' | 'medium' | 'hard';
+  estimatedDuration?: number;
+  timesUsed?: number;
+  averageScore?: number;
   lastUsed?: string;
-  tags: string[];
   thumbnail?: string;
-  color: string;
-  createdAt: string;
-  updatedAt: string;
+  color?: string;
 }
+
+// Keep for backward compatibility
+export interface QuestionBank extends QuestionBankPopulated {}
 
 export interface Section {
   _id: string;
@@ -62,26 +51,16 @@ export interface CreateQuestionBankRequest {
   name: string;
   description?: string;
   course: string;
-  sections?: Partial<Section>[];
-  visibility?: 'public' | 'private' | 'organization';
-  settings?: Partial<QuestionBankSettings>;
-  tags?: string[];
-  color?: string;
 }
 
 export interface UpdateQuestionBankRequest {
   name?: string;
   description?: string;
-  visibility?: 'public' | 'private' | 'organization';
-  settings?: Partial<QuestionBankSettings>;
-  tags?: string[];
-  color?: string;
 }
 
 export interface QuestionBankFilters {
   courseId?: string;
   my?: boolean;
-  status?: 'draft' | 'active' | 'archived';
   page?: number;
   limit?: number;
   search?: string;
@@ -105,8 +84,8 @@ export interface SingleQuestionBankResponse {
 export const questionBankApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all question banks with filtering
-    getQuestionBanks: builder.query<QuestionBankResponse, QuestionBankFilters>({
-      query: (params) => ({
+    getQuestionBanks: builder.query<QuestionBankResponse, QuestionBankFilters | void>({
+      query: (params = {}) => ({
         url: '/question-banks',
         params: {
           ...params,

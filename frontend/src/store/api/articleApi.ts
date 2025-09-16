@@ -1,23 +1,15 @@
 import { baseApi, BaseApiResponse } from './baseApi';
-import type { User } from '../slices/authSlice';
+import { Article as BackendArticle } from '../../types/backend-models';
 
-export interface Article {
-  _id: string;
-  title: string;
-  content: string;
-  excerpt?: string;
-  category: string;
-  tags: string[];
-  thumbnail?: string;
-  author: User;
-  status: 'draft' | 'published' | 'archived';
-  visibility: 'public' | 'private' | 'organization';
-  readTime: number;
-  views: number;
-  likes: number;
-  publishedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+// API-specific interface for populated articles
+export interface ArticlePopulated extends Omit<BackendArticle, 'author'> {
+  author: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  readTime?: number; // Additional computed field for frontend
 }
 
 export interface CreateArticleRequest {
@@ -27,12 +19,15 @@ export interface CreateArticleRequest {
   category: string;
   tags?: string[];
   thumbnail?: string;
-  status?: 'draft' | 'published';
-  visibility?: 'public' | 'private' | 'organization';
 }
 
-export interface UpdateArticleRequest extends Partial<CreateArticleRequest> {
-  status?: 'draft' | 'published' | 'archived';
+export interface UpdateArticleRequest {
+  title?: string;
+  content?: string;
+  excerpt?: string;
+  category?: string;
+  tags?: string[];
+  thumbnail?: string;
 }
 
 export interface ArticleListParams {
@@ -61,7 +56,7 @@ export interface ArticleListResponse {
   status: string;
   results: number;
   pagination: PaginationInfo;
-  data: Article[];
+  data: ArticlePopulated[];
 }
 
 export interface ArticleStats {
@@ -76,27 +71,27 @@ export interface ArticleStats {
 export const articleApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: '/articles',
         params,
       }),
       providesTags: ['Article'],
     }),
 
-    getArticleById: builder.query<BaseApiResponse<{ article: Article }>, string>({
+    getArticleById: builder.query<BaseApiResponse<{ article: ArticlePopulated }>, string>({
       query: (id) => `/articles/${id}`,
       providesTags: (result, error, id) => [{ type: 'Article', id }],
     }),
 
     getMyArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: '/articles/my-articles',
         params,
       }),
       providesTags: ['Article'],
     }),
 
-    createArticle: builder.mutation<BaseApiResponse<{ article: Article }>, CreateArticleRequest>({
+    createArticle: builder.mutation<BaseApiResponse<{ article: ArticlePopulated }>, CreateArticleRequest>({
       query: (data) => ({
         url: '/articles',
         method: 'POST',
@@ -105,7 +100,7 @@ export const articleApi = baseApi.injectEndpoints({
       invalidatesTags: ['Article'],
     }),
 
-    updateArticle: builder.mutation<BaseApiResponse<{ article: Article }>, { id: string; data: UpdateArticleRequest }>({
+    updateArticle: builder.mutation<BaseApiResponse<{ article: ArticlePopulated }>, { id: string; data: UpdateArticleRequest }>({
       query: ({ id, data }) => ({
         url: `/articles/${id}`,
         method: 'PATCH',
@@ -143,7 +138,7 @@ export const articleApi = baseApi.injectEndpoints({
       providesTags: ['Article'],
     }),
 
-    getFeaturedArticles: builder.query<BaseApiResponse<Article[]>, { limit?: number }>({
+    getFeaturedArticles: builder.query<BaseApiResponse<ArticlePopulated[]>, { limit?: number }>({
       query: (params) => ({
         url: '/articles/featured',
         params,
@@ -151,7 +146,7 @@ export const articleApi = baseApi.injectEndpoints({
       providesTags: ['Article'],
     }),
 
-    getPopularArticles: builder.query<BaseApiResponse<Article[]>, { limit?: number; period?: 'week' | 'month' | 'year' }>({
+    getPopularArticles: builder.query<BaseApiResponse<ArticlePopulated[]>, { limit?: number; period?: 'week' | 'month' | 'year' }>({
       query: (params) => ({
         url: '/articles/popular',
         params,
@@ -159,7 +154,7 @@ export const articleApi = baseApi.injectEndpoints({
       providesTags: ['Article'],
     }),
 
-    getRelatedArticles: builder.query<BaseApiResponse<Article[]>, { id: string; limit?: number }>({
+    getRelatedArticles: builder.query<BaseApiResponse<ArticlePopulated[]>, { id: string; limit?: number }>({
       query: ({ id, limit }) => ({
         url: `/articles/${id}/related`,
         params: { limit },
@@ -172,7 +167,7 @@ export const articleApi = baseApi.injectEndpoints({
       providesTags: ['Article'],
     }),
 
-    searchArticles: builder.query<BaseApiResponse<Article[]>, { query: string; filters?: ArticleListParams }>({
+    searchArticles: builder.query<BaseApiResponse<ArticlePopulated[]>, { query: string; filters?: ArticleListParams }>({
       query: ({ query, filters }) => ({
         url: '/articles/search',
         params: { q: query, ...filters },
@@ -188,7 +183,7 @@ export const articleApi = baseApi.injectEndpoints({
       }),
     }),
 
-    duplicateArticle: builder.mutation<BaseApiResponse<{ article: Article }>, string>({
+    duplicateArticle: builder.mutation<BaseApiResponse<{ article: ArticlePopulated }>, string>({
       query: (id) => ({
         url: `/articles/${id}/duplicate`,
         method: 'POST',
@@ -196,7 +191,7 @@ export const articleApi = baseApi.injectEndpoints({
       invalidatesTags: ['Article'],
     }),
 
-    publishArticle: builder.mutation<BaseApiResponse<{ article: Article }>, string>({
+    publishArticle: builder.mutation<BaseApiResponse<{ article: ArticlePopulated }>, string>({
       query: (id) => ({
         url: `/articles/${id}/publish`,
         method: 'PATCH',
@@ -204,7 +199,7 @@ export const articleApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [{ type: 'Article', id }, 'Article'],
     }),
 
-    archiveArticle: builder.mutation<BaseApiResponse<{ article: Article }>, string>({
+    archiveArticle: builder.mutation<BaseApiResponse<{ article: ArticlePopulated }>, string>({
       query: (id) => ({
         url: `/articles/${id}/archive`,
         method: 'PATCH',

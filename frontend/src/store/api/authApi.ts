@@ -1,5 +1,5 @@
 import { baseApi, BaseApiResponse } from './baseApi';
-import type { User } from '../slices/authSlice';
+import { User } from '../../types/backend-models';
 
 export interface LoginRequest {
   email: string;
@@ -12,12 +12,11 @@ export interface LoginResponse {
 }
 
 export interface RegisterRequest {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   password: string;
   passwordConfirm: string;
-  role?: 'student' | 'instructor';
+  role?: User['role'];
   organization?: string;
 }
 

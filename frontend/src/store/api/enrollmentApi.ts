@@ -1,30 +1,23 @@
 import { baseApi, BaseApiResponse } from './baseApi';
-import type { Course } from './courseApi';
-import type { User } from '../slices/authSlice';
+import { Enrollment as BackendEnrollment, User } from '../../types/backend-models';
+import type { CoursePopulated } from './courseApi';
 
-export interface Enrollment {
-  _id: string;
-  user: User | string;
-  course: Course | string;
-  enrolledAt: string;
-  status: 'active' | 'completed' | 'dropped';
-  progress: {
-    completedLessons: string[];
-    currentLesson?: string;
-    completionPercentage: number;
-    timeSpent: number;
-    lastAccessed?: string;
+// API-specific interface for populated enrollments
+export interface EnrollmentPopulated extends Omit<BackendEnrollment, 'student' | 'course'> {
+  student: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar?: string;
   };
-  certificate?: {
-    issued: boolean;
-    issuedAt?: string;
-    certificateId?: string;
-    downloadUrl?: string;
-  };
-  rating?: {
-    value: number;
-    review?: string;
-    submittedAt: string;
+  course: {
+    _id: string;
+    title: string;
+    thumbnail?: string;
+    instructor: {
+      _id: string;
+      name: string;
+    };
   };
 }
 
@@ -41,7 +34,6 @@ export interface EnrollmentStats {
 
 export interface ProgressUpdate {
   lessonId: string;
-  completed: boolean;
   timeSpent?: number;
 }
 
@@ -57,7 +49,6 @@ export interface EnrollmentListParams {
 
 export interface CreateEnrollmentRequest {
   courseId: string;
-  userId?: string; // For admin enrolling users
 }
 
 export interface BulkEnrollmentRequest {
@@ -72,28 +63,28 @@ export interface RateCourseRequest {
 
 export const enrollmentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getEnrollments: builder.query<BaseApiResponse<Enrollment[]>, EnrollmentListParams | void>({
-      query: (params) => ({
+    getEnrollments: builder.query<BaseApiResponse<EnrollmentPopulated[]>, EnrollmentListParams | void>({
+      query: (params = {}) => ({
         url: '/enrollments',
         params,
       }),
       providesTags: ['Enrollment'],
     }),
 
-    getEnrollmentById: builder.query<BaseApiResponse<{ enrollment: Enrollment }>, string>({
+    getEnrollmentById: builder.query<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, string>({
       query: (id) => `/enrollments/${id}`,
       providesTags: (result, error, id) => [{ type: 'Enrollment', id }],
     }),
 
-    getMyEnrollments: builder.query<BaseApiResponse<Enrollment[]>, EnrollmentListParams | void>({
-      query: (params) => ({
+    getMyEnrollments: builder.query<BaseApiResponse<EnrollmentPopulated[]>, EnrollmentListParams | void>({
+      query: (params = {}) => ({
         url: '/enrollments/my-enrollments',
         params,
       }),
       providesTags: ['Enrollment'],
     }),
 
-    getCourseEnrollments: builder.query<BaseApiResponse<Enrollment[]>, { courseId: string; params?: EnrollmentListParams }>({
+    getCourseEnrollments: builder.query<BaseApiResponse<EnrollmentPopulated[]>, { courseId: string; params?: EnrollmentListParams }>({
       query: ({ courseId, params }) => ({
         url: `/courses/${courseId}/enrollments`,
         params,
@@ -104,7 +95,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    enrollInCourse: builder.mutation<BaseApiResponse<{ enrollment: Enrollment }>, CreateEnrollmentRequest>({
+    enrollInCourse: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, CreateEnrollmentRequest>({
       query: (data) => ({
         url: '/enrollments',
         method: 'POST',
@@ -113,7 +104,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       invalidatesTags: ['Enrollment', 'Course'],
     }),
 
-    bulkEnroll: builder.mutation<BaseApiResponse<{ enrollments: Enrollment[]; failed: Array<{ userId: string; error: string }> }>, BulkEnrollmentRequest>({
+    bulkEnroll: builder.mutation<BaseApiResponse<{ enrollments: EnrollmentPopulated[]; failed: Array<{ userId: string; error: string }> }>, BulkEnrollmentRequest>({
       query: (data) => ({
         url: '/enrollments/bulk',
         method: 'POST',
@@ -134,7 +125,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    updateProgress: builder.mutation<BaseApiResponse<{ enrollment: Enrollment }>, { enrollmentId: string; data: ProgressUpdate }>({
+    updateProgress: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, { enrollmentId: string; data: ProgressUpdate }>({
       query: ({ enrollmentId, data }) => ({
         url: `/enrollments/${enrollmentId}/progress`,
         method: 'PATCH',
@@ -147,7 +138,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    markCourseComplete: builder.mutation<BaseApiResponse<{ enrollment: Enrollment }>, string>({
+    markCourseComplete: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, string>({
       query: (enrollmentId) => ({
         url: `/enrollments/${enrollmentId}/complete`,
         method: 'PATCH',
@@ -159,7 +150,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    rateCourse: builder.mutation<BaseApiResponse<{ enrollment: Enrollment }>, { enrollmentId: string; data: RateCourseRequest }>({
+    rateCourse: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, { enrollmentId: string; data: RateCourseRequest }>({
       query: ({ enrollmentId, data }) => ({
         url: `/enrollments/${enrollmentId}/rating`,
         method: 'POST',
@@ -172,7 +163,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    updateRating: builder.mutation<BaseApiResponse<{ enrollment: Enrollment }>, { enrollmentId: string; data: RateCourseRequest }>({
+    updateRating: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, { enrollmentId: string; data: RateCourseRequest }>({
       query: ({ enrollmentId, data }) => ({
         url: `/enrollments/${enrollmentId}/rating`,
         method: 'PATCH',
@@ -185,7 +176,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    deleteRating: builder.mutation<BaseApiResponse<{ enrollment: Enrollment }>, string>({
+    deleteRating: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated }>, string>({
       query: (enrollmentId) => ({
         url: `/enrollments/${enrollmentId}/rating`,
         method: 'DELETE',
@@ -197,7 +188,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    generateCertificate: builder.mutation<BaseApiResponse<{ enrollment: Enrollment; certificateUrl: string }>, string>({
+    generateCertificate: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated; certificateUrl: string }>, string>({
       query: (enrollmentId) => ({
         url: `/enrollments/${enrollmentId}/certificate`,
         method: 'POST',
@@ -243,8 +234,8 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getDetailedProgress: builder.query<BaseApiResponse<{ 
-      enrollment: Enrollment;
+    getDetailedProgress: builder.query<BaseApiResponse<{
+      enrollment: EnrollmentPopulated;
       lessonProgress: Array<{
         lesson: string;
         title: string;
