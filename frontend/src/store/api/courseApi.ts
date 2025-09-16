@@ -40,7 +40,28 @@ export interface CreateCourseRequest {
   settings?: Partial<Course['settings']>;
 }
 
-export interface UpdateCourseRequest extends Partial<CreateCourseRequest> {
+export interface UpdateCourseRequest {
+  title?: string;
+  description?: string;
+  shortDescription?: string;
+  category?: Course['category'];
+  subcategory?: string;
+  level?: Course['level'];
+  language?: string;
+  price?: number;
+  originalPrice?: number;
+  discountPrice?: number;
+  currency?: string;
+  thumbnail?: string;
+  previewVideo?: string;
+  images?: string[];
+  tags?: string[];
+  prerequisites?: string[];
+  learningObjectives?: string[];
+  targetAudience?: string[];
+  requirements?: string[];
+  whatYouWillLearn?: string[];
+  settings?: Partial<Course['settings']>;
   isPublished?: boolean;
   isFeatured?: boolean;
   isApproved?: boolean;
@@ -52,7 +73,10 @@ export interface CreateChapterRequest {
   order: number;
 }
 
-export interface UpdateChapterRequest extends Partial<CreateChapterRequest> {
+export interface UpdateChapterRequest {
+  title?: string;
+  description?: string;
+  order?: number;
   isPublished?: boolean;
 }
 
@@ -73,7 +97,22 @@ export interface CreateLessonRequest {
   isPublished?: boolean;
 }
 
-export interface UpdateLessonRequest extends Partial<CreateLessonRequest> { }
+export interface UpdateLessonRequest {
+  title?: string;
+  content?: string;
+  type?: CourseLesson['type'];
+  duration?: number;
+  videoUrl?: string;
+  videoThumbnail?: string;
+  order?: number;
+  isPreview?: boolean;
+  resources?: CourseLesson['resources'];
+  quiz?: string;
+  assignment?: CourseLesson['assignment'];
+  completionCriteria?: CourseLesson['completionCriteria'];
+  minTimeToComplete?: number;
+  isPublished?: boolean;
+}
 
 export interface CourseListParams {
   page?: number;
@@ -104,7 +143,7 @@ export interface CourseStatsResponse {
 export const courseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: '/courses',
         params,
       }),
@@ -117,7 +156,7 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     getMyCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: '/courses/my-courses',
         params,
       }),
@@ -125,7 +164,7 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     getEnrolledCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: '/courses/enrolled',
         params,
       }),
@@ -158,7 +197,7 @@ export const courseApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [{ type: 'Course', id }, 'Course'],
     }),
 
-    duplicateCourse: builder.mutation<BaseApiResponse<{ course: Course }>, string>({
+    duplicateCourse: builder.mutation<BaseApiResponse<{ course: CoursePopulated }>, string>({
       query: (id) => ({
         url: `/courses/${id}/duplicate`,
         method: 'POST',
@@ -166,7 +205,7 @@ export const courseApi = baseApi.injectEndpoints({
       invalidatesTags: ['Course'],
     }),
 
-    publishCourse: builder.mutation<BaseApiResponse<{ course: Course }>, string>({
+    publishCourse: builder.mutation<BaseApiResponse<{ course: CoursePopulated }>, string>({
       query: (id) => ({
         url: `/courses/${id}/publish`,
         method: 'PATCH',
@@ -174,7 +213,7 @@ export const courseApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [{ type: 'Course', id }, 'Course'],
     }),
 
-    archiveCourse: builder.mutation<BaseApiResponse<{ course: Course }>, string>({
+    archiveCourse: builder.mutation<BaseApiResponse<{ course: CoursePopulated }>, string>({
       query: (id) => ({
         url: `/courses/${id}/archive`,
         method: 'PATCH',
@@ -183,7 +222,7 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     // Lessons
-    getLessons: builder.query<BaseApiResponse<Lesson[]>, { courseId: string; params?: { page?: number; limit?: number } }>({
+    getLessons: builder.query<BaseApiResponse<CourseLesson[]>, { courseId: string; params?: { page?: number; limit?: number } }>({
       query: ({ courseId, params }) => ({
         url: `/courses/${courseId}/lessons`,
         params,
@@ -194,12 +233,12 @@ export const courseApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getLessonById: builder.query<BaseApiResponse<{ lesson: Lesson }>, { courseId: string; lessonId: string }>({
+    getLessonById: builder.query<BaseApiResponse<{ lesson: CourseLesson }>, { courseId: string; lessonId: string }>({
       query: ({ courseId, lessonId }) => `/courses/${courseId}/lessons/${lessonId}`,
       providesTags: (result, error, { lessonId }) => [{ type: 'Lesson', id: lessonId }],
     }),
 
-    createLesson: builder.mutation<BaseApiResponse<{ lesson: Lesson }>, { courseId: string; data: CreateLessonRequest }>({
+    createLesson: builder.mutation<BaseApiResponse<{ lesson: CourseLesson }>, { courseId: string; data: CreateLessonRequest }>({
       query: ({ courseId, data }) => ({
         url: `/courses/${courseId}/lessons`,
         method: 'POST',
@@ -212,7 +251,7 @@ export const courseApi = baseApi.injectEndpoints({
       ],
     }),
 
-    updateLesson: builder.mutation<BaseApiResponse<{ lesson: Lesson }>, { courseId: string; lessonId: string; data: UpdateLessonRequest }>({
+    updateLesson: builder.mutation<BaseApiResponse<{ lesson: CourseLesson }>, { courseId: string; lessonId: string; data: UpdateLessonRequest }>({
       query: ({ courseId, lessonId, data }) => ({
         url: `/courses/${courseId}/lessons/${lessonId}`,
         method: 'PATCH',
@@ -238,7 +277,7 @@ export const courseApi = baseApi.injectEndpoints({
       ],
     }),
 
-    reorderLessons: builder.mutation<BaseApiResponse<Lesson[]>, { courseId: string; lessons: Array<{ _id: string; order: number }> }>({
+    reorderLessons: builder.mutation<BaseApiResponse<CourseLesson[]>, { courseId: string; lessons: Array<{ _id: string; order: number }> }>({
       query: ({ courseId, lessons }) => ({
         url: `/courses/${courseId}/lessons/reorder`,
         method: 'PATCH',
@@ -263,7 +302,7 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     // Featured Courses
-    getFeaturedCourses: builder.query<BaseApiResponse<Course[]>, { limit?: number }>({
+    getFeaturedCourses: builder.query<BaseApiResponse<CoursePopulated[]>, { limit?: number }>({
       query: (params) => ({
         url: '/courses/featured',
         params,
