@@ -164,6 +164,60 @@ router.get('/featured', courseController.getFeaturedCourses);
 
 /**
  * @swagger
+ * /api/v1/courses/my-courses:
+ *   get:
+ *     summary: Get current user's courses
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's courses (created or enrolled)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Course'
+ */
+router.get('/my-courses', protect, courseController.getMyCourses);
+
+/**
+ * @swagger
+ * /api/v1/courses/enrolled:
+ *   get:
+ *     summary: Get current user's enrolled courses
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's enrolled courses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Course'
+ */
+router.get('/enrolled', protect, courseController.getEnrolledCourses);
+
+/**
+ * @swagger
  * /api/v1/courses:
  *   get:
  *     summary: Get all courses with filtering
@@ -293,32 +347,6 @@ router.use(protect);
  */
 router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), courseController.createCourse);
 
-/**
- * @swagger
- * /api/v1/courses/my-courses:
- *   get:
- *     summary: Get current user's courses
- *     tags: [Courses]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User's courses (created or enrolled)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                 results:
- *                   type: integer
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Course'
- */
-router.get('/my-courses', courseController.getMyCourses);
 
 /**
  * @swagger

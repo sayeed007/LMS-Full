@@ -322,6 +322,97 @@ const getFeaturedCourses = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get user's enrolled courses
+const getEnrolledCourses = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, sort, category, level, search } = req.query;
+
+  // Get user's enrollments first
+  const Enrollment = require('../models/Enrollment');
+  const enrollments = await Enrollment.find({
+    student: req.user._id,
+    status: { $in: ['active', 'completed'] }
+  }).select('course');
+
+  const courseIds = enrollments.map(enrollment => enrollment.course);
+
+  if (courseIds.length === 0) {
+    return res.status(200).json({
+      status: 'success',
+      results: 0,
+      data: [],
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: 0,
+        pages: 0,
+      },
+    });
+  }
+
+  // Build filter for enrolled courses
+  const filter = {
+    _id: { $in: courseIds },
+    isDeleted: { $ne: true }
+  };
+
+  if (category) filter.category = category;
+  if (level) filter.level = level;
+  if (search) {
+    filter.$or = [
+      { title: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } },
+    ];
+  }
+
+  // Build sort object
+  let sortObj = {};
+  if (sort) {
+    const parts = sort.split(',');
+    parts.forEach(part => {
+      if (part.startsWith('-')) {
+        sortObj[part.substring(1)] = -1;
+      } else {
+        sortObj[part] = 1;
+      }
+    });
+  } else {
+    sortObj.createdAt = -1;
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const total = await Course.countDocuments(filter);
+
+  const courses = await Course.find(filter)
+    .populate('instructor', 'name email avatar')
+    .populate('coInstructors', 'name email avatar')
+    .populate('createdBy', 'name email')
+    .sort(sortObj)
+    .skip(skip)
+    .limit(parseInt(limit))
+    .lean();
+
+  // Add enrollment info to each course
+  const coursesWithEnrollment = courses.map(course => {
+    const enrollment = enrollments.find(e => e.course.toString() === course._id.toString());
+    return {
+      ...course,
+      enrollmentStatus: enrollment?.status || 'not_enrolled'
+    };
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: courses.length,
+    pagination: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      pages: Math.ceil(total / parseInt(limit)),
+    },
+    data: coursesWithEnrollment,
+  });
+});
+
 module.exports = {
   getAllCourses,
   getCourse,
@@ -332,6 +423,7 @@ module.exports = {
   enrollCourse,
   updateProgress,
   getMyCourses,
+  getEnrolledCourses,
   getCourseProgress,
   getCourseStats,
   getCategories,
