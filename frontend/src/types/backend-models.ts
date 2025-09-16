@@ -236,10 +236,10 @@ export interface Course extends BaseDocument {
   instructor: string; // User ObjectId
   coInstructors: string[]; // User ObjectIds
   category: 'programming' | 'web-development' | 'mobile-development' | 'data-science' |
-           'machine-learning' | 'artificial-intelligence' | 'cybersecurity' | 'cloud-computing' |
-           'devops' | 'blockchain' | 'game-development' | 'ui-ux-design' | 'digital-marketing' |
-           'business' | 'finance' | 'management' | 'personal-development' | 'health-fitness' |
-           'language-learning' | 'arts-crafts' | 'music' | 'photography' | 'other';
+  'machine-learning' | 'artificial-intelligence' | 'cybersecurity' | 'cloud-computing' |
+  'devops' | 'blockchain' | 'game-development' | 'ui-ux-design' | 'digital-marketing' |
+  'business' | 'finance' | 'management' | 'personal-development' | 'health-fitness' |
+  'language-learning' | 'arts-crafts' | 'music' | 'photography' | 'other';
   subcategory?: string;
   level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   language: string;
@@ -398,6 +398,12 @@ export interface Enrollment extends BaseDocument {
   lastAccessedAt: string;
 }
 
+export interface author {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+};
 export interface Article extends BaseDocument {
   title: string;
   content: string;
@@ -406,7 +412,7 @@ export interface Article extends BaseDocument {
   category: string;
   tags: string[];
   thumbnail?: string;
-  author: string; // User ObjectId
+  author: author; // User ObjectId
   isPublished: boolean;
   publishedAt?: string;
   views: number;

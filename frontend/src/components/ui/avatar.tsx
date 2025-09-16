@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 import * as React from "react"
 
 const Avatar = React.forwardRef<
@@ -18,16 +19,28 @@ Avatar.displayName = "Avatar"
 
 const AvatarImage = React.forwardRef<
     HTMLImageElement,
-    React.ImgHTMLAttributes<HTMLImageElement>
->(({ className, ...props }, ref) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-        ref={ref}
-        alt={props?.alt || ''}
-        className={`aspect-square h-full w-full ${className || ''}`}
-        {...props}
-    />
-))
+    React.ImgHTMLAttributes<HTMLImageElement> & {
+        src?: string;
+        alt?: string;
+    }
+>(({ className, src, alt, ...props }, ref) => {
+    const [error, setError] = React.useState(false);
+
+    if (!src || error) {
+        return null;
+    }
+
+    return (
+        <Image
+            ref={ref}
+            src={src}
+            alt={alt || ''}
+            className={cn("aspect-square h-full w-full object-cover", className)}
+            onError={() => setError(true)}
+            {...props}
+        />
+    );
+})
 AvatarImage.displayName = "AvatarImage"
 
 const AvatarFallback = React.forwardRef<
@@ -36,7 +49,10 @@ const AvatarFallback = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <div
         ref={ref}
-        className={`flex h-full w-full items-center justify-center rounded-full bg-muted ${className || ''}`}
+        className={cn(
+            "flex h-full w-full p-2 items-center justify-center rounded-full bg-gray-100 text-gray-600 font-medium select-none",
+            className
+        )}
         {...props}
     />
 ))

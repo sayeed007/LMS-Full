@@ -194,6 +194,9 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
+// Utility routes (must come before parameterized routes)
+router.get('/course/:courseId', questionBankController.getQuestionBanksByCourse);
+
 // Main CRUD routes
 router
   .route('/')
@@ -215,8 +218,7 @@ router.delete('/:id/sections/:sectionId', questionBankController.deleteSection);
 router.patch('/:id/activate', questionBankController.activateQuestionBank);
 router.patch('/:id/archive', questionBankController.archiveQuestionBank);
 
-// Utility routes
+// Duplication route
 router.post('/:id/duplicate', questionBankController.duplicateQuestionBank);
-router.get('/course/:courseId', questionBankController.getQuestionBanksByCourse);
 
 module.exports = router;

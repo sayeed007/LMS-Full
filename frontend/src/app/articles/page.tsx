@@ -18,8 +18,7 @@ const tabs = [
 export default function ArticlesPage() {
     const { data: session } = useSession();
     const { openModal, closeModal } = useModalActions();
-    console.log(session);
-    const [activeTab, setActiveTab] = useState<"my" | "all">(session ? "my" : "all"); // Default to "all" for unauthenticated users
+    const [activeTab, setActiveTab] = useState<"my" | "all">("my"); // Default to "all" for unauthenticated users
     const [searchQuery, setSearchQuery] = useState("");
     const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -31,12 +30,6 @@ export default function ArticlesPage() {
     const hasArticles = activeTab === "my"
         ? (myArticlesData?.data?.length ?? 0) > 0
         : (allArticlesData?.data?.length ?? 0) > 0;
-
-    useEffect(() => {
-        if (session) {
-            setActiveTab('my');
-        }
-    }, [session]);
 
     const handleCreateNewArticle = () => {
         if (!session) {

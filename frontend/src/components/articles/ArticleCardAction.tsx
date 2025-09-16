@@ -10,7 +10,7 @@ interface ArticleCardActionProps {
     onClose: () => void
     onEditArticle: () => void
     onDuplicate: () => void
-    onMandatoryRead: () => void
+    // onMandatoryRead: () => void
     onDeleteArticle: () => void
 }
 
@@ -19,7 +19,7 @@ export function ArticleCardAction({
     onClose,
     onEditArticle,
     onDuplicate,
-    onMandatoryRead,
+    // onMandatoryRead,
     onDeleteArticle
 }: ArticleCardActionProps) {
     const popupRef = useRef<HTMLDivElement>(null)
@@ -103,7 +103,7 @@ export function ArticleCardAction({
                     <span className="text-gray-700 text-sm">Duplicate</span>
                 </Button>
 
-                <Button
+                {/* <Button
                     variant="ghost"
                     className="flex items-center gap-3 px-0 py-3 text-left justify-start hover:bg-off-white-3 rounded-none border-b-1 border-off-white-4"
                     onClick={() => {
@@ -118,9 +118,7 @@ export function ArticleCardAction({
                         height={24}
                     />
                     <span className="text-gray-700 text-sm">Mandatory Read</span>
-                </Button>
-
-
+                </Button> */}
 
                 <Button
                     variant="ghost"

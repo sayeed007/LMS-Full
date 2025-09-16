@@ -323,7 +323,7 @@ const getFeaturedCourses = catchAsync(async (req, res, next) => {
 });
 
 // Get user's enrolled courses
-const getEnrolledCourses = asyncHandler(async (req, res) => {
+const getEnrolledCourses = catchAsync(async (req, res, next) => {
   const { page = 1, limit = 10, sort, category, level, search } = req.query;
 
   // Get user's enrollments first

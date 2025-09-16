@@ -31,7 +31,7 @@ export default function Container({
 }: ContainerProps) {
   return (
     <div className={cn(
-      'container mx-auto',
+      'container mx-auto px-8 xl:px-0',
       sizeVariants[size],
       paddingVariants[padding],
       className

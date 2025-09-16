@@ -37,7 +37,7 @@ const tabs = [
 
 export default function CoursesPage() {
   const [showCreate, setShowCreate] = useState(false);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("my");
   const router = useRouter();
 
   // API queries based on active tab
@@ -100,7 +100,6 @@ export default function CoursesPage() {
   };
 
   const { courses, isLoading, error } = getCurrentData();
-  console.log(courses);
 
   // Handle API errors
   if (error) {
