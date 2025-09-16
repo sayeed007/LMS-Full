@@ -538,4 +538,459 @@ router
    */
   .delete(restrictTo('instructor', 'org_admin', 'super_admin'), courseController.deleteCourse);
 
+// Import enrollment controller functions
+const {
+  getCourseEnrollments,
+  getProgress
+} = require('../controllers/enrollmentController');
+
+// Import lesson controller functions
+const {
+  getLessons,
+  getLessonById,
+  createLesson,
+  updateLesson,
+  deleteLesson,
+  reorderLessons,
+  completeLesson,
+  getLessonStats,
+  addResource,
+  removeResource
+} = require('../controllers/lessonController');
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/enrollments:
+ *   get:
+ *     summary: Get enrollments for a specific course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, completed, dropped, suspended]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Course enrollments
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Course not found
+ */
+router.get('/:id/enrollments', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getCourseEnrollments(req, res, next);
+});
+
+// Lesson Routes
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons:
+ *   get:
+ *     summary: Get all lessons for a course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: List of course lessons
+ *       403:
+ *         description: No access to course
+ *       404:
+ *         description: Course not found
+ *   post:
+ *     summary: Create a new lesson for the course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *               - type
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [text, video, quiz, assignment, live, download]
+ *               order:
+ *                 type: number
+ *               duration:
+ *                 type: number
+ *               isPreview:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Lesson created successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.route('/:id/lessons')
+  .get((req, res, next) => {
+    req.params.courseId = req.params.id;
+    getLessons(req, res, next);
+  })
+  .post(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    createLesson(req, res, next);
+  });
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/reorder:
+ *   patch:
+ *     summary: Reorder lessons in a course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - lessons
+ *             properties:
+ *               lessons:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     order:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Lessons reordered successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.patch('/:id/lessons/reorder', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  reorderLessons(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}:
+ *   get:
+ *     summary: Get lesson by ID
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lesson details
+ *       403:
+ *         description: No access to lesson
+ *       404:
+ *         description: Lesson not found
+ *   patch:
+ *     summary: Update lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               duration:
+ *                 type: number
+ *               isPreview:
+ *                 type: boolean
+ *               isPublished:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Lesson updated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Lesson not found
+ *   delete:
+ *     summary: Delete lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Lesson deleted successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Lesson not found
+ */
+router.route('/:id/lessons/:lessonId')
+  .get((req, res, next) => {
+    req.params.courseId = req.params.id;
+    getLessonById(req, res, next);
+  })
+  .patch(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    updateLesson(req, res, next);
+  })
+  .delete(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    deleteLesson(req, res, next);
+  });
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/complete:
+ *   post:
+ *     summary: Mark lesson as complete (Student only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               timeSpent:
+ *                 type: number
+ *                 description: Time spent on lesson in seconds
+ *     responses:
+ *       200:
+ *         description: Lesson completed successfully
+ *       403:
+ *         description: Not enrolled in course
+ *       404:
+ *         description: Lesson not found
+ */
+router.post('/:id/lessons/:lessonId/complete', restrictTo('student'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  completeLesson(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/stats:
+ *   get:
+ *     summary: Get lesson statistics (Instructor/Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lesson statistics
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Lesson not found
+ */
+router.get('/:id/lessons/:lessonId/stats', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getLessonStats(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/resources:
+ *   post:
+ *     summary: Add resource to lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - url
+ *               - type
+ *             properties:
+ *               title:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [pdf, video, link, document, image, audio]
+ *               downloadable:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Resource added successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.post('/:id/lessons/:lessonId/resources', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  addResource(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/resources/{resourceId}:
+ *   delete:
+ *     summary: Remove resource from lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: resourceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Resource removed successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.delete('/:id/lessons/:lessonId/resources/:resourceId', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  removeResource(req, res, next);
+});
+
 module.exports = router;

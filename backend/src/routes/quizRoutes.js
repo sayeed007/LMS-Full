@@ -1,5 +1,16 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const {
+  getAllQuizzes,
+  getQuiz,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz,
+  startQuizAttempt,
+  submitQuiz,
+  getQuizAttempts,
+  getQuizResults
+} = require('../controllers/quizController');
 
 const router = express.Router();
 
@@ -423,68 +434,23 @@ const router = express.Router();
 router.use(protect);
 
 // Public quiz routes (for enrolled students)
-router.get('/', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz listing not implemented yet'
-  });
-});
+router.get('/', getAllQuizzes);
 
-router.get('/:id', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz details not implemented yet'
-  });
-});
+router.get('/:id', getQuiz);
 
-router.post('/:id/attempt', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz attempt functionality not implemented yet'
-  });
-});
+router.post('/:id/attempt', startQuizAttempt);
 
-router.post('/:id/submit', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz submission not implemented yet'
-  });
-});
+router.post('/:id/submit', submitQuiz);
 
-router.get('/:id/attempts', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz attempts history not implemented yet'
-  });
-});
+router.get('/:id/attempts', getQuizAttempts);
 
 // Instructor/Admin only routes
-router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz creation not implemented yet'
-  });
-});
+router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), createQuiz);
 
-router.patch('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz update not implemented yet'
-  });
-});
+router.patch('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), updateQuiz);
 
-router.delete('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz deletion not implemented yet'
-  });
-});
+router.delete('/:id', restrictTo('instructor', 'org_admin', 'super_admin'), deleteQuiz);
 
-router.get('/:id/results', restrictTo('instructor', 'org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Quiz results analytics not implemented yet'
-  });
-});
+router.get('/:id/results', restrictTo('instructor', 'org_admin', 'super_admin'), getQuizResults);
 
 module.exports = router;
