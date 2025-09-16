@@ -143,9 +143,9 @@ export interface CourseStatsResponse {
 export const courseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/courses',
-        params,
+        params: params || {},
       }),
       providesTags: ['Course'],
     }),
@@ -156,17 +156,17 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     getMyCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/courses/my-courses',
-        params,
+        params: params || {},
       }),
       providesTags: ['Course'],
     }),
 
     getEnrolledCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/courses/enrolled',
-        params,
+        params: params || {},
       }),
       providesTags: ['Course', 'Enrollment'],
     }),
