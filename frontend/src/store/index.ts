@@ -7,6 +7,7 @@ import { baseApi } from './api/baseApi';
 // Import to ensure endpoints are injected
 import './api/questionBankApi';
 import './api/questionApi';
+import './api/quizApi';
 
 // Slice imports
 import authReducer from './slices/authSlice';
