@@ -57,9 +57,9 @@ export interface OrganizationStats {
 export const organizationApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getOrganizations: builder.query<BaseApiResponse<OrganizationPopulated[]>, OrganizationListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/organizations',
-        params,
+        params: params || {},
       }),
       providesTags: ['Organization'],
     }),

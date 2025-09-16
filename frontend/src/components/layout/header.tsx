@@ -84,9 +84,9 @@ const Header = () => {
                                     <Image
                                         src="/icons/Bell.png"
                                         alt="Notifications"
-                                        width={28}
-                                        height={28}
-                                        className="w-6 h-6 sm:w-7 sm:h-7"
+                                        width={24}
+                                        height={24}
+                                        className="w-6 h-6"
                                     />
                                 </NotificationPopover>
                             </button>

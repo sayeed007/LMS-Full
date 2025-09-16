@@ -77,7 +77,7 @@ export default function UserMenu({ user }: UserMenuProps) {
             className="rounded-full w-7 h-7 sm:w-8 sm:h-8 object-cover"
           />
         ) : (
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-medium">
             {getInitials(user.name)}
           </div>
         )}

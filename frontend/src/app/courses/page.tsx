@@ -5,16 +5,15 @@ import { CreateCourseModal } from "@/components/CreateCourseModal";
 import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, TabNav } from "@/components/ui";
 import { Button } from "@/components/ui/button";
+import { showErrorToast } from "@/lib/toast-utils";
+import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
 import { CourseDetails } from "@/types";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
-import { useGetCoursesQuery, useGetMyCoursesQuery, useGetEnrolledCoursesQuery } from "@/store/api/courseApi";
-import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 // Loading skeleton component
 const CoursesSkeleton = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
     {Array.from({ length: 10 }).map((_, i) => (
       <div key={i} className="bg-white rounded-lg shadow-sm border p-4 space-y-4 animate-pulse">
         <div className="h-40 w-full bg-gray-200 rounded-md"></div>
@@ -38,7 +37,7 @@ const tabs = [
 
 export default function CoursesPage() {
   const [showCreate, setShowCreate] = useState(false);
-  const [activeTab, setActiveTab] = useState("my");
+  const [activeTab, setActiveTab] = useState("all");
   const router = useRouter();
 
   // API queries based on active tab
@@ -79,7 +78,7 @@ export default function CoursesPage() {
     switch (activeTab) {
       case "all":
         return {
-          courses: allCoursesData?.data?.courses || [],
+          courses: allCoursesData?.data || [],
           isLoading: isLoadingAll,
           error: allCoursesError
         };
@@ -91,7 +90,7 @@ export default function CoursesPage() {
         };
       case "enrolled":
         return {
-          courses: enrolledCoursesData?.data?.courses || [],
+          courses: enrolledCoursesData?.data || [],
           isLoading: isLoadingEnrolled,
           error: enrolledCoursesError
         };
@@ -101,6 +100,7 @@ export default function CoursesPage() {
   };
 
   const { courses, isLoading, error } = getCurrentData();
+  console.log(courses);
 
   // Handle API errors
   if (error) {
@@ -113,7 +113,7 @@ export default function CoursesPage() {
     <>
       <PageLayout
         title="Courses"
-        actions={
+        headerActions={
           <Button
             onClick={() => setShowCreate(true)}
             className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
@@ -132,20 +132,24 @@ export default function CoursesPage() {
           {isLoading ? (
             <CoursesSkeleton />
           ) : courses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {courses.map((course, index) => (
-                <CourseCard key={`${course._id}-${index}`} course={{
-                  id: course._id,
-                  name: course.title,
-                  category: course.category,
-                  description: course.description,
-                  difficulty: course.difficulty,
-                  chapters: course.chapters?.length || 0,
-                  lessons: course.stats?.totalLessons || 0,
-                  quizzes: course.stats?.totalQuizzes || 0,
-                  image: course.thumbnail || `https://picsum.photos/400/400?random=${index + 1}`,
-                  owner: activeTab === "my" ? "me" : activeTab === "enrolled" ? "enrolled" : "all"
-                }} />
+                <CourseCard
+                  key={`${course._id}-${index}`}
+                  course={{ ...course }}
+                // course={{
+                //   id: course._id,
+                //   name: course.title,
+                //   category: course.category,
+                //   description: course.description,
+                //   difficulty: course.difficulty,
+                //   chapters: course.chapters?.length || 0,
+                //   lessons: course.stats?.totalLessons || 0,
+                //   quizzes: course.stats?.totalQuizzes || 0,
+                //   image: course.thumbnail || `https://picsum.photos/400/400?random=${index + 1}`,
+                //   owner: activeTab === "my" ? "me" : activeTab === "enrolled" ? "enrolled" : "all"
+                // }}
+                />
               ))}
             </div>
           ) : (

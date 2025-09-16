@@ -9,7 +9,7 @@ export interface QuizPopulated extends BackendQuiz {
 }
 
 // Legacy Quiz interface for backward compatibility
-export interface Quiz extends QuizPopulated {}
+export interface Quiz extends QuizPopulated { }
 
 export interface Question {
   _id: string;
@@ -144,9 +144,9 @@ export const quizApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all quizzes with filtering
     getQuizzes: builder.query<BaseApiResponse<QuizPopulated[]>, QuizListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/quizzes',
-        params,
+        params: params || {},
       }),
       providesTags: ['Quiz'],
     }),

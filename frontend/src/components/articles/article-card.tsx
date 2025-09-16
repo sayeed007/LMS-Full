@@ -45,7 +45,7 @@ export function ArticleCard({
             className="bg-white rounded-2xl border-off-white-2 shadow-1 border p-2 cursor-pointer flex flex-col justify-between hover:shadow-md transition-shadow "
             onClick={onClick}
         >
-            <div className="relative aspect-video overflow-hidden rounded-t-lg">
+            <div className="relative aspect-video overflow-hidden rounded-t-xl">
                 <Image
                     src={thumbnail}
                     alt={title}
@@ -99,8 +99,6 @@ export function ArticleCard({
                         </>
                     </>
                 }
-
-
             </div>
 
             <div className="my-2">

@@ -71,9 +71,9 @@ export interface ArticleStats {
 export const articleApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/articles',
-        params,
+        params: params || {},
       }),
       providesTags: ['Article'],
     }),
@@ -84,9 +84,9 @@ export const articleApi = baseApi.injectEndpoints({
     }),
 
     getMyArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/articles/my-articles',
-        params,
+        params: params || {},
       }),
       providesTags: ['Article'],
     }),

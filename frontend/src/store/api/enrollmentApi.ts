@@ -1,6 +1,5 @@
+import { Enrollment as BackendEnrollment, Enrollment } from '../../types/backend-models';
 import { baseApi, BaseApiResponse } from './baseApi';
-import { Enrollment as BackendEnrollment, User } from '../../types/backend-models';
-import type { CoursePopulated } from './courseApi';
 
 // API-specific interface for populated enrollments
 export interface EnrollmentPopulated extends Omit<BackendEnrollment, 'student' | 'course'> {
@@ -64,9 +63,9 @@ export interface RateCourseRequest {
 export const enrollmentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getEnrollments: builder.query<BaseApiResponse<EnrollmentPopulated[]>, EnrollmentListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/enrollments',
-        params,
+        params: params || {},
       }),
       providesTags: ['Enrollment'],
     }),
@@ -77,9 +76,9 @@ export const enrollmentApi = baseApi.injectEndpoints({
     }),
 
     getMyEnrollments: builder.query<BaseApiResponse<EnrollmentPopulated[]>, EnrollmentListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/enrollments/my-enrollments',
-        params,
+        params: params || {},
       }),
       providesTags: ['Enrollment'],
     }),

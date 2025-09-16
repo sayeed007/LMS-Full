@@ -22,7 +22,7 @@ export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'create
 }
 
 // Keep for backward compatibility
-export interface QuestionBank extends QuestionBankPopulated {}
+export interface QuestionBank extends QuestionBankPopulated { }
 
 export interface Section {
   _id: string;
@@ -85,11 +85,11 @@ export const questionBankApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all question banks with filtering
     getQuestionBanks: builder.query<QuestionBankResponse, QuestionBankFilters | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/question-banks',
         params: {
-          ...params,
-          my: params.my ? 'true' : undefined,
+          ...(params || {}),
+          my: params?.my ? 'true' : undefined,
         },
       }),
       providesTags: ['QuestionBanks'],

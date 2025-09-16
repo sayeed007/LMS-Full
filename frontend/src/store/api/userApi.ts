@@ -74,7 +74,7 @@ export const userApi = baseApi.injectEndpoints({
     getUsers: builder.query<BaseApiResponse<UserPopulated[]>, UserListParams | void>({
       query: (params) => ({
         url: '/users',
-        params,
+        params: params || {},
       }),
       providesTags: ['User'],
     }),
