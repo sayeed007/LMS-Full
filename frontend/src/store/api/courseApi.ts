@@ -1,136 +1,94 @@
 import { baseApi, BaseApiResponse } from './baseApi';
+import { Course, CourseLesson, CourseChapter } from '../../types/backend-models';
 
-export interface Course {
-  _id: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  thumbnail?: string;
+// API-specific interfaces for requests/responses
+export interface CoursePopulated extends Omit<Course, 'instructor' | 'createdBy'> {
   instructor: {
     _id: string;
-    firstName: string;
-    lastName: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  createdBy: {
+    _id: string;
+    name: string;
     email: string;
   };
-  organization?: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  duration: number;
-  language: string;
-  price: {
-    amount: number;
-    currency: string;
-  };
-  isPaid: boolean;
-  status: 'draft' | 'published' | 'archived';
-  visibility: 'public' | 'private' | 'organization';
-  requirements: string[];
-  learningOutcomes: string[];
-  settings: {
-    allowComments: boolean;
-    allowRating: boolean;
-    certificate: boolean;
-    downloadable: boolean;
-    dripContent: boolean;
-  };
-  stats: {
-    totalEnrollments: number;
-    averageRating: number;
-    totalReviews: number;
-    completionRate: number;
-  };
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Lesson {
-  _id: string;
-  title: string;
-  description: string;
-  content: string;
-  type: 'text' | 'video' | 'quiz' | 'assignment';
-  order: number;
-  duration: number;
-  resources: Array<{
-    title: string;
-    url: string;
-    type: 'pdf' | 'video' | 'link' | 'document';
-  }>;
-  isPreview: boolean;
-  settings: {
-    allowComments: boolean;
-    downloadable: boolean;
-  };
-  course: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateCourseRequest {
   title: string;
   description: string;
-  category: string;
-  tags?: string[];
-  thumbnail?: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  duration: number;
+  shortDescription?: string;
+  category: Course['category'];
+  subcategory?: string;
+  level: Course['level'];
   language: string;
-  price: {
-    amount: number;
-    currency: string;
-  };
-  isPaid: boolean;
-  visibility: 'public' | 'private' | 'organization';
+  price: number;
+  originalPrice?: number;
+  discountPrice?: number;
+  currency?: string;
+  thumbnail?: string;
+  previewVideo?: string;
+  images?: string[];
+  tags?: string[];
+  prerequisites?: string[];
+  learningObjectives?: string[];
+  targetAudience?: string[];
   requirements?: string[];
-  learningOutcomes?: string[];
-  settings?: {
-    allowComments: boolean;
-    allowRating: boolean;
-    certificate: boolean;
-    downloadable: boolean;
-    dripContent: boolean;
-  };
+  whatYouWillLearn?: string[];
+  settings?: Partial<Course['settings']>;
 }
 
 export interface UpdateCourseRequest extends Partial<CreateCourseRequest> {
-  status?: 'draft' | 'published' | 'archived';
-  isActive?: boolean;
+  isPublished?: boolean;
+  isFeatured?: boolean;
+  isApproved?: boolean;
+}
+
+export interface CreateChapterRequest {
+  title: string;
+  description?: string;
+  order: number;
+}
+
+export interface UpdateChapterRequest extends Partial<CreateChapterRequest> {
+  isPublished?: boolean;
 }
 
 export interface CreateLessonRequest {
   title: string;
-  description: string;
   content: string;
-  type: 'text' | 'video' | 'quiz' | 'assignment';
+  type: CourseLesson['type'];
+  duration?: number;
+  videoUrl?: string;
+  videoThumbnail?: string;
   order: number;
-  duration: number;
-  resources?: Array<{
-    title: string;
-    url: string;
-    type: 'pdf' | 'video' | 'link' | 'document';
-  }>;
   isPreview?: boolean;
-  settings?: {
-    allowComments: boolean;
-    downloadable: boolean;
-  };
+  resources?: CourseLesson['resources'];
+  quiz?: string;
+  assignment?: CourseLesson['assignment'];
+  completionCriteria?: CourseLesson['completionCriteria'];
+  minTimeToComplete?: number;
+  isPublished?: boolean;
 }
 
-export interface UpdateLessonRequest extends Partial<CreateLessonRequest> {}
+export interface UpdateLessonRequest extends Partial<CreateLessonRequest> { }
 
 export interface CourseListParams {
   page?: number;
   limit?: number;
   category?: string;
+  level?: string;
   instructor?: string;
-  difficulty?: string;
-  status?: string;
-  visibility?: string;
-  isPaid?: boolean;
+  isPublished?: boolean;
+  isFeatured?: boolean;
+  isApproved?: boolean;
   tags?: string;
   search?: string;
   sort?: string;
+  priceMin?: number;
+  priceMax?: number;
 }
 
 export interface CourseStatsResponse {
@@ -145,7 +103,7 @@ export interface CourseStatsResponse {
 
 export const courseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getCourses: builder.query<BaseApiResponse<Course[]>, CourseListParams | void>({
+    getCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
       query: (params) => ({
         url: '/courses',
         params,
@@ -153,12 +111,12 @@ export const courseApi = baseApi.injectEndpoints({
       providesTags: ['Course'],
     }),
 
-    getCourseById: builder.query<BaseApiResponse<{ course: Course }>, string>({
+    getCourseById: builder.query<BaseApiResponse<{ course: CoursePopulated }>, string>({
       query: (id) => `/courses/${id}`,
       providesTags: (result, error, id) => [{ type: 'Course', id }],
     }),
 
-    getMyCourses: builder.query<BaseApiResponse<Course[]>, CourseListParams | void>({
+    getMyCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
       query: (params) => ({
         url: '/courses/my-courses',
         params,
@@ -166,7 +124,7 @@ export const courseApi = baseApi.injectEndpoints({
       providesTags: ['Course'],
     }),
 
-    getEnrolledCourses: builder.query<BaseApiResponse<Course[]>, CourseListParams | void>({
+    getEnrolledCourses: builder.query<BaseApiResponse<CoursePopulated[]>, CourseListParams | void>({
       query: (params) => ({
         url: '/courses/enrolled',
         params,
@@ -174,7 +132,7 @@ export const courseApi = baseApi.injectEndpoints({
       providesTags: ['Course', 'Enrollment'],
     }),
 
-    createCourse: builder.mutation<BaseApiResponse<{ course: Course }>, CreateCourseRequest>({
+    createCourse: builder.mutation<BaseApiResponse<{ course: CoursePopulated }>, CreateCourseRequest>({
       query: (data) => ({
         url: '/courses',
         method: 'POST',
@@ -183,7 +141,7 @@ export const courseApi = baseApi.injectEndpoints({
       invalidatesTags: ['Course'],
     }),
 
-    updateCourse: builder.mutation<BaseApiResponse<{ course: Course }>, { id: string; data: UpdateCourseRequest }>({
+    updateCourse: builder.mutation<BaseApiResponse<{ course: CoursePopulated }>, { id: string; data: UpdateCourseRequest }>({
       query: ({ id, data }) => ({
         url: `/courses/${id}`,
         method: 'PATCH',

@@ -1,87 +1,63 @@
-// Type definitions for the data structures
+// Re-export backend model types for convenience
+export * from './backend-models';
+
+// Legacy/UI-specific types for compatibility (these might be used in existing components)
 export interface Learner {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-    coursesEnrolled: number;
-    yetToStart: number;
-    inProgress: number;
-    completed: number;
-    completionPercentage: number;
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  coursesEnrolled: number;
+  yetToStart: number;
+  inProgress: number;
+  completed: number;
+  completionPercentage: number;
 }
 
-export interface Course {
-    id: number;
-    name: string;
-    enrollDate: string;
-    completedDate: string;
-    timeSpent: string;
-    completionPercentage: number;
-    status: 'In Progress' | 'Complete' | 'Yet to Start';
+export interface LegacyCourse {
+  id: number;
+  name: string;
+  enrollDate: string;
+  completedDate: string;
+  timeSpent: string;
+  completionPercentage: number;
+  status: 'In Progress' | 'Complete' | 'Yet to Start';
 }
 
 export interface CourseDetails {
-    id?: string;
-    name: string;
-    category: string;
-    description: string;
-    difficulty: string;
-    chapters: number;
-    lessons: number;
-    quizzes: number;
-    image: string;
+  id?: string;
+  name: string;
+  category: string;
+  description: string;
+  difficulty: string;
+  chapters: number;
+  lessons: number;
+  quizzes: number;
+  image: string;
 }
 
-
-// If you want to be more specific about difficulty levels:
-export interface CourseWithSpecificDifficulty {
-    id: string;
-    name: string;
-    category: string;
-    description: string;
-    difficulty: "Beginner" | "Intermediate" | "Advanced";
-    chapters: number;
-    lessons: number;
-    quizzes: number;
-    image: string;
-}
-
-// If you want to make some fields optional:
-export interface OptionalCourse {
-    id: string;
-    name: string;
-    category: string;
-    description: string;
-    difficulty: string;
-    chapters: number;
-    lessons: number;
-    quizzes?: number; // Optional
-    image?: string;   // Optional
-}
-
-export interface Lesson {
-    id: number;
-    lesson: string;
-    startDate: string;
-    timeSpent: string;
-    completionPercentage: number;
-    status: 'Complete' | 'In Progress' | 'Yet to Start';
+export interface LegacyLesson {
+  id: number;
+  lesson: string;
+  startDate: string;
+  timeSpent: string;
+  completionPercentage: number;
+  status: 'Complete' | 'In Progress' | 'Yet to Start';
 }
 
 export interface SummaryStats {
-    totalLearner: number;
-    courseEnrolled: number;
-    yetToStart: number;
-    inProgress: number;
-    completed: number;
+  totalLearner: number;
+  courseEnrolled: number;
+  yetToStart: number;
+  inProgress: number;
+  completed: number;
 }
 
 export interface LearnerStats {
-    courseEnrolled: number;
-    yetToStart: number;
-    inProgress: number;
-    completed: number;
+  courseEnrolled: number;
+  yetToStart: number;
+  inProgress: number;
+  completed: number;
 }
 
 
@@ -137,34 +113,33 @@ export interface Article {
 }
 
 
-// types/index.ts
-export interface QuestionChoice {
+// Legacy question types for quiz/test UI components
+export interface LegacyQuestionChoice {
   id: string
   text: string
   isCorrect: boolean
 }
 
-export interface Question {
+export interface LegacyQuestion {
   id: string
   type: 'single-choice' | 'multiple-choice' | 'descriptive' | 'question-bank'
   text: string
-  choices: QuestionChoice[]
+  choices: LegacyQuestionChoice[]
   score: number
   timeLimit: number
   required: boolean
 }
 
-export interface Section {
+export interface LegacySection {
   id: string
   title: string
   description?: string
-  questions: Question[]
+  questions: LegacyQuestion[]
 }
-
 
 export interface CourseDummyData {
   id: string;
   title: string;
   description: string;
-  sections: Section[];
+  sections: LegacySection[];
 }

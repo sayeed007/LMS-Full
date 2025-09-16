@@ -1,34 +1,29 @@
 import { baseApi, BaseApiResponse } from './baseApi';
-import type { User } from '../slices/authSlice';
+import { User } from '../../types/backend-models';
 
-export interface UpdateProfileRequest {
-  firstName?: string;
-  lastName?: string;
-  profile?: {
-    avatar?: string;
-    bio?: string;
-    phone?: string;
-    dateOfBirth?: string;
-    address?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      country?: string;
-      zipCode?: string;
-    };
+// API-specific interfaces for populated users
+export interface UserPopulated extends Omit<User, 'organization'> {
+  organization?: {
+    _id: string;
+    name: string;
+    slug: string;
   };
 }
 
+export interface UpdateProfileRequest {
+  name?: string;
+  bio?: string;
+  avatar?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  address?: User['address'];
+  socialLinks?: User['socialLinks'];
+  skills?: string[];
+  interests?: string[];
+}
+
 export interface UpdatePreferencesRequest {
-  preferences: {
-    language: string;
-    timezone: string;
-    notifications: {
-      email: boolean;
-      push: boolean;
-      sms: boolean;
-    };
-  };
+  preferences: Partial<User['preferences']>;
 }
 
 export interface UserListParams {
@@ -41,34 +36,26 @@ export interface UserListParams {
 }
 
 export interface CreateUserRequest {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
-  password: string;
-  passwordConfirm: string;
-  role: 'student' | 'instructor' | 'org_admin' | 'super_admin';
+  password?: string;
+  role?: User['role'];
+  avatar?: string;
+  bio?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  address?: User['address'];
+  socialLinks?: User['socialLinks'];
+  skills?: string[];
+  interests?: string[];
+  preferences?: Partial<User['preferences']>;
   organization?: string;
 }
 
-export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  role?: 'student' | 'instructor' | 'org_admin' | 'super_admin';
+export interface UpdateUserRequest extends Partial<CreateUserRequest> {
   isActive?: boolean;
-  organization?: string;
-  profile?: {
-    avatar?: string;
-    bio?: string;
-    phone?: string;
-    dateOfBirth?: string;
-    address?: {
-      street?: string;
-      city?: string;
-      state?: string;
-      country?: string;
-      zipCode?: string;
-    };
-  };
+  emailVerified?: boolean;
+  twoFactorEnabled?: boolean;
 }
 
 export interface UserStatsResponse {
@@ -84,7 +71,7 @@ export interface UserStatsResponse {
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<BaseApiResponse<User[]>, UserListParams | void>({
+    getUsers: builder.query<BaseApiResponse<UserPopulated[]>, UserListParams | void>({
       query: (params) => ({
         url: '/users',
         params,
@@ -92,12 +79,12 @@ export const userApi = baseApi.injectEndpoints({
       providesTags: ['User'],
     }),
 
-    getUserById: builder.query<BaseApiResponse<{ user: User }>, string>({
+    getUserById: builder.query<BaseApiResponse<{ user: UserPopulated }>, string>({
       query: (id) => `/users/${id}`,
       providesTags: (result, error, id) => [{ type: 'User', id }],
     }),
 
-    updateProfile: builder.mutation<BaseApiResponse<{ user: User }>, UpdateProfileRequest>({
+    updateProfile: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, UpdateProfileRequest>({
       query: (data) => ({
         url: '/users/profile',
         method: 'PATCH',
@@ -106,7 +93,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: ['User', 'Auth'],
     }),
 
-    updatePreferences: builder.mutation<BaseApiResponse<{ user: User }>, UpdatePreferencesRequest>({
+    updatePreferences: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, UpdatePreferencesRequest>({
       query: (data) => ({
         url: '/users/preferences',
         method: 'PATCH',
@@ -115,7 +102,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: ['User', 'Auth'],
     }),
 
-    uploadAvatar: builder.mutation<BaseApiResponse<{ user: User }>, FormData>({
+    uploadAvatar: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, FormData>({
       query: (formData) => ({
         url: '/users/avatar',
         method: 'POST',
@@ -125,7 +112,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: ['User', 'Auth'],
     }),
 
-    deleteAvatar: builder.mutation<BaseApiResponse<{ user: User }>, void>({
+    deleteAvatar: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, void>({
       query: () => ({
         url: '/users/avatar',
         method: 'DELETE',
@@ -134,7 +121,7 @@ export const userApi = baseApi.injectEndpoints({
     }),
 
     // Admin only endpoints
-    createUser: builder.mutation<BaseApiResponse<{ user: User }>, CreateUserRequest>({
+    createUser: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, CreateUserRequest>({
       query: (data) => ({
         url: '/users',
         method: 'POST',
@@ -143,7 +130,7 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
-    updateUser: builder.mutation<BaseApiResponse<{ user: User }>, { id: string; data: UpdateUserRequest }>({
+    updateUser: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, { id: string; data: UpdateUserRequest }>({
       query: ({ id, data }) => ({
         url: `/users/${id}`,
         method: 'PATCH',

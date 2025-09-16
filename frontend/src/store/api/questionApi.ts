@@ -1,28 +1,8 @@
 import { baseApi } from './baseApi';
+import { Question, QuestionChoice, QuestionAttachment } from '../../types/backend-models';
 
-// Types
-export interface Choice {
-  _id?: string;
-  text: string;
-  isCorrect: boolean;
-}
-
-export interface Question {
-  _id: string;
-  text: string;
-  type: 'single-choice' | 'multiple-choice' | 'descriptive' | 'true-false' | 'fill-blank';
-  choices: Choice[];
-  correctAnswer?: string;
-  explanation?: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  points: number;
-  timeLimit: number;
-  tags: string[];
-  attachments?: {
-    name: string;
-    url: string;
-    type: 'image' | 'video' | 'audio' | 'document';
-  }[];
+// API-specific interfaces for populated questions
+export interface QuestionPopulated extends Omit<Question, 'questionBank' | 'course' | 'section' | 'createdBy'> {
   questionBank: {
     _id: string;
     name: string;
@@ -41,26 +21,19 @@ export interface Question {
     email: string;
     avatar?: string;
   };
-  organization?: string;
-  isActive: boolean;
-  isPublic: boolean;
-  timesUsed: number;
-  averageScore: number;
-  lastUsed?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateQuestionRequest {
   text: string;
-  type: 'single-choice' | 'multiple-choice' | 'descriptive' | 'true-false' | 'fill-blank';
-  choices?: Choice[];
+  type: Question['type'];
+  choices?: QuestionChoice[];
   correctAnswer?: string;
   explanation?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: Question['difficulty'];
   points?: number;
   timeLimit?: number;
   tags?: string[];
+  attachments?: QuestionAttachment[];
   questionBank: string;
   section?: string;
   isPublic?: boolean;
@@ -68,13 +41,15 @@ export interface CreateQuestionRequest {
 
 export interface UpdateQuestionRequest {
   text?: string;
-  choices?: Choice[];
+  type?: Question['type'];
+  choices?: QuestionChoice[];
   correctAnswer?: string;
   explanation?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  difficulty?: Question['difficulty'];
   points?: number;
   timeLimit?: number;
   tags?: string[];
+  attachments?: QuestionAttachment[];
   isPublic?: boolean;
 }
 
@@ -108,14 +83,14 @@ export interface QuestionsResponse {
   status: string;
   results: number;
   data: {
-    questions: Question[];
+    questions: QuestionPopulated[];
   };
 }
 
 export interface SingleQuestionResponse {
   status: string;
   data: {
-    question: Question;
+    question: QuestionPopulated;
   };
 }
 
