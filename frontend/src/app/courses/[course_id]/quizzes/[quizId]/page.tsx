@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Clock, ChevronLeft, ChevronRight, Flag, AlertCircle, CheckCircle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useGetQuizByIdQuery, useStartQuizAttemptMutation, useSubmitQuizMutation, useGetQuizAttemptsQuery } from "@/store/api/quizApi";
-import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
+import { useGetQuizAttemptsQuery, useGetQuizByIdQuery, useStartQuizAttemptMutation, useSubmitQuizMutation } from "@/store/api/quizApi";
+import { CheckCircle, ChevronLeft, ChevronRight, Clock, Flag, X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // Quiz Taking Interface
 export default function QuizTakingPage() {
@@ -236,9 +236,8 @@ export default function QuizTakingPage() {
 
             <div className="flex items-center space-x-4">
               {timeLeft !== null && (
-                <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${
-                  timeLeft < 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
-                }`}>
+                <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${timeLeft < 300 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
                   <Clock className="h-4 w-4" />
                   <span className="font-mono font-medium">{formatTime(timeLeft)}</span>
                 </div>
@@ -288,7 +287,7 @@ export default function QuizTakingPage() {
                         currentQuestion,
                         answers[currentQuestion._id],
                         (answer) =>
-                        handleAnswerChange(currentQuestion._id, answer)
+                          handleAnswerChange(currentQuestion._id, answer)
                       )}
                     </div>
                   </>
@@ -340,15 +339,14 @@ export default function QuizTakingPage() {
                       <button
                         key={index}
                         onClick={() => goToQuestion(index)}
-                        className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                          status === 'current'
+                        className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${status === 'current'
                             ? 'bg-blue-600 text-white'
                             : status === 'answered'
-                            ? 'bg-green-100 text-green-800 border border-green-300'
-                            : status === 'flagged'
-                            ? 'bg-orange-100 text-orange-800 border border-orange-300'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                              ? 'bg-green-100 text-green-800 border border-green-300'
+                              : status === 'flagged'
+                                ? 'bg-orange-100 text-orange-800 border border-orange-300'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
                       >
                         {index + 1}
                       </button>
@@ -588,9 +586,8 @@ function QuizResultsView({ quiz, results, onRetakeQuiz }: any) {
       <div className="max-w-2xl mx-auto p-8">
         <Card>
           <CardHeader className="text-center">
-            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-              results.isPassed ? 'bg-green-100' : 'bg-red-100'
-            }`}>
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${results.isPassed ? 'bg-green-100' : 'bg-red-100'
+              }`}>
               {results.isPassed ? (
                 <CheckCircle className="h-8 w-8 text-green-600" />
               ) : (

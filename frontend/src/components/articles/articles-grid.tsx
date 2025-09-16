@@ -24,13 +24,14 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
     isAuthenticated
 }) => {
     const router = useRouter()
-    const { openModal, closeModal } = useModalActions()
+    // const { openModal, closeModal } = useModalActions()
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(12) // Articles per page
 
     // Reset page when search query or tab changes
     useMemo(() => {
         setCurrentPage(1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchQuery, activeTab]);
 
     // Fetch articles based on active tab

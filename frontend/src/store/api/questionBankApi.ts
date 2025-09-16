@@ -1,5 +1,5 @@
+import { QuestionBank as BackendQuestionBank } from '../../types/backend-models';
 import { baseApi } from './baseApi';
-import { QuestionBank as BackendQuestionBank, User } from '../../types/backend-models';
 
 // API-specific types for populated question banks
 export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'createdBy'> {

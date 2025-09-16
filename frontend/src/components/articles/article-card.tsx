@@ -1,5 +1,4 @@
 // components/articles/article-card.tsx
-import { cn, getErrorMessage, getInitials, monthDateYearFormat } from "@/lib/utils"
 import {
     dismissToast,
     showDeleteSuccessToast,
@@ -7,10 +6,10 @@ import {
     showLoadingToast,
     showSuccessToast
 } from "@/lib/toast-utils"
+import { cn, getErrorMessage, getInitials, monthDateYearFormat } from "@/lib/utils"
 import {
     useDeleteArticleMutation,
-    useDuplicateArticleMutation,
-    useUpdateArticleMutation
+    useDuplicateArticleMutation
 } from "@/store/api/articleApi"
 import { Article } from "@/types/backend-models"
 import { Calendar, Eye, Loader2 } from "lucide-react"

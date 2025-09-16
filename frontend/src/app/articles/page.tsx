@@ -2,13 +2,13 @@
 
 import ArticlesGrid from "@/components/articles/articles-grid";
 import { CreateArticleModal } from "@/components/articles/create-article-modal";
-import { useModalActions } from "@/lib/modal-utils";
+import LoginModal from "@/components/auth/LoginModal";
 import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, SearchInput, TabNav } from "@/components/ui";
-import { useEffect, useState } from "react";
+import { useModalActions } from "@/lib/modal-utils";
 import { useGetArticlesQuery, useGetMyArticlesQuery } from "@/store/api/articleApi";
 import { useSession } from "next-auth/react";
-import LoginModal from "@/components/auth/LoginModal";
+import { useState } from "react";
 
 const tabs = [
     { key: "my", label: "My Articles" },

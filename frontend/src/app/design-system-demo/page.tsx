@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import Container from '@/components/ui/Container';
-import PageHeader from '@/components/ui/PageHeader';
 import SearchInput from '@/components/ui/SearchInput';
 import TabNav from '@/components/ui/TabNav';
 import NavigationLink from '@/components/ui/NavigationLink';
@@ -42,30 +41,30 @@ export default function DesignSystemDemo() {
         }
       >
         <div className="space-y-8">
-          
+
           {/* Component Examples Section */}
           {activeTab === 'components' && (
             <div className="grid gap-8">
-              
+
               {/* Search Input Examples */}
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="text-lg font-semibold mb-4">Search Input Variants</h3>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <SearchInput 
+                  <SearchInput
                     value=""
-                    onChange={() => {}}
+                    onChange={() => { }}
                     placeholder="Small search"
                     size="sm"
                   />
-                  <SearchInput 
+                  <SearchInput
                     value=""
-                    onChange={() => {}}
+                    onChange={() => { }}
                     placeholder="Medium search (default)"
                     size="md"
                   />
-                  <SearchInput 
+                  <SearchInput
                     value=""
-                    onChange={() => {}}
+                    onChange={() => { }}
                     placeholder="Large search"
                     size="lg"
                   />
@@ -93,7 +92,7 @@ export default function DesignSystemDemo() {
                         { key: 'contact', label: 'Contact' }
                       ]}
                       activeTab="home"
-                      onTabChange={() => {}}
+                      onTabChange={() => { }}
                       variant={activeVariant as any}
                     />
                   </div>
@@ -112,7 +111,7 @@ export default function DesignSystemDemo() {
                       <NavigationLink href="#" variant="header">Articles</NavigationLink>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-medium text-gray-600 mb-2">Sidebar Style</h4>
                     <div className="w-48 space-y-1 bg-gray-50 p-2 rounded">
@@ -151,12 +150,12 @@ export default function DesignSystemDemo() {
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="text-lg font-semibold mb-4">Usage Examples</h3>
-                
+
                 <div className="space-y-6 text-sm">
                   <div>
                     <h4 className="font-medium mb-2">1. Simple Page with Search:</h4>
                     <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-{`<PageLayout
+                      {`<PageLayout
   title="My Articles"
   searchValue={searchQuery}
   onSearchChange={setSearchQuery}
@@ -169,7 +168,7 @@ export default function DesignSystemDemo() {
                   <div>
                     <h4 className="font-medium mb-2">2. Page with Tabs and Actions:</h4>
                     <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-{`<PageLayout
+                      {`<PageLayout
   title="Course Management"
   tabs={[
     { key: 'all', label: 'All Courses' },
@@ -187,7 +186,7 @@ export default function DesignSystemDemo() {
                   <div>
                     <h4 className="font-medium mb-2">3. Custom Layout:</h4>
                     <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-{`<Container size="lg" padding="lg">
+                      {`<Container size="lg" padding="lg">
   <PageHeader title="Custom Layout">
     <SearchInput value={search} onChange={setSearch} />
   </PageHeader>

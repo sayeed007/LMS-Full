@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/header";
 import { Toaster } from '@/components/ui/sonner';
 // import ToastExample from "@/components/ToastExample";
-import ModalExample from "@/components/ModalExample";
+// import ModalExample from "@/components/ModalExample";
 import { ModalProviderWithGlobal } from "@/lib/modal-utils";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import SessionProvider from "@/components/providers/SessionProvider";
@@ -64,33 +64,33 @@ export default function RootLayout({
               {/* <main> */}
               {children}
 
-            {/* TOAST EXAMPLE */}
-            {/* <ToastExample /> */}
+              {/* TOAST EXAMPLE */}
+              {/* <ToastExample /> */}
 
-            {/* MODAL EXAMPLE */}
-            {/* <ModalExample /> */}
+              {/* MODAL EXAMPLE */}
+              {/* <ModalExample /> */}
 
-            {/* TOAST */}
-            <Toaster
-              position="top-right"
-              expand={true}
-              richColors={true}
-              closeButton={true}
-              toastOptions={{
-                style: {
-                  background: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                  padding: '16px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                },
-                className: 'sonner-toast',
-                duration: 3000,
-              }}
-            />
-            {/* </main> */}
+              {/* TOAST */}
+              <Toaster
+                position="top-right"
+                expand={true}
+                richColors={true}
+                closeButton={true}
+                toastOptions={{
+                  style: {
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    padding: '16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  },
+                  className: 'sonner-toast',
+                  duration: 3000,
+                }}
+              />
+              {/* </main> */}
             </ModalProviderWithGlobal>
           </ReduxProvider>
         </SessionProvider>

@@ -5,10 +5,10 @@ import { CourseHeaderContext } from "./layout";
 
 export default function CourseCreate() {
   const [isCreatingLesson, setIsCreatingLesson] = useState(false);
-  const [lessonName, setLessonName] = useState("");
+  // const [lessonName, setLessonName] = useState("");
   const [lessons, setLessons] = useState<string[]>([]);
   const [isCreatingChapter, setIsCreatingChapter] = useState(false);
-  const [chapterName, setChapterName] = useState("");
+  // const [chapterName, setChapterName] = useState("");
   const [chapters, setChapters] = useState<string[]>([]);
   // const [showLessonOptions, setShowLessonOptions] = useState(false); // State for popup
   // const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });

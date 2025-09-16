@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useRef, useEffect } from 'react'
+import { LogOut, Settings, UserCircle } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { User, LogOut, Settings, UserCircle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface UserMenuProps {
   user: {

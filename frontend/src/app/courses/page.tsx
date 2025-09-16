@@ -5,10 +5,9 @@ import { CreateCourseModal } from "@/components/CreateCourseModal";
 import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, TabNav } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { showErrorToast } from "@/lib/toast-utils";
 import { useModalActions } from "@/lib/modal-utils";
+import { showErrorToast } from "@/lib/toast-utils";
 import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
-import { CourseDetails } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -38,7 +37,6 @@ const tabs = [
 
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState("my");
-  const router = useRouter();
   const { openModal, closeModal } = useModalActions();
 
   // API queries based on active tab

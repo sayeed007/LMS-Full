@@ -10,21 +10,21 @@ export default function ApiExamples() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState<'courses' | 'articles' | 'users'>('courses');
 
-  const { 
-    data: coursesData, 
-    isLoading: coursesLoading, 
-    error: coursesError 
+  const {
+    data: coursesData,
+    isLoading: coursesLoading,
+    error: coursesError
   } = useGetCoursesQuery({ page: 1, limit: 5 });
 
-  const { 
-    data: articlesData, 
-    isLoading: articlesLoading, 
-    error: articlesError 
+  const {
+    data: articlesData,
+    isLoading: articlesLoading,
+    error: articlesError
   } = useGetArticlesQuery({ page: 1, limit: 5 });
 
-  const { 
-    data: usersData, 
-    isLoading: usersLoading, 
+  const {
+    data: usersData,
+    isLoading: usersLoading,
     error: usersError,
     refetch: refetchUsers
   } = useGetUsersQuery(
@@ -41,7 +41,7 @@ export default function ApiExamples() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-bold text-center mb-6">API Examples</h2>
-      
+
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
@@ -50,11 +50,10 @@ export default function ApiExamples() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
               disabled={tab.requiresAuth && !isAuthenticated}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.key
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
                   ? 'border-indigo-500 text-indigo-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } ${tab.requiresAuth && !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${tab.requiresAuth && !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {tab.label}
               {tab.requiresAuth && !isAuthenticated && ' (Login Required)'}
@@ -156,9 +155,8 @@ export default function ApiExamples() {
                       <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
                         {user.role.replace('_', ' ')}
                       </span>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`text-xs px-2 py-1 rounded ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
                         {user.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
