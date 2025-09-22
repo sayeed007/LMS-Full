@@ -18,7 +18,7 @@ export default function ContentPopup({
   onClosePopup,
 }: ContentPopupProps) {
 
-  console.log(popupTrigger);
+  console.info(popupTrigger);
   if (!showPopup) return null;
 
   const option = [

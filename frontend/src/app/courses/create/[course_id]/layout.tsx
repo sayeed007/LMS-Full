@@ -1,7 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { createContext, useState } from "react";
+import { useGetCourseByIdQuery } from "@/store/api/courseApi";
+import { useAppSelector } from "@/store/hooks";
+import { createContext, useState, useMemo } from "react";
+import { useParams } from "next/navigation";
 import CourseOutline from "./courseOutline/page";
 import Learners from "./learner/page";
 import CourseSettings from "./setting/page";
@@ -15,7 +18,7 @@ export const CourseHeaderContext = createContext<{
 });
 
 const tabs = [
-  { slug: "", label: "Course Outline" },
+  { slug: "outline", label: "Course Outline" },
   { slug: "learners", label: "Learners" },
   { slug: "evaluation", label: "Evaluation" },
   { slug: "leaderboard", label: "Leaderboard" },
@@ -25,6 +28,45 @@ const tabs = [
 export default function CourseLayout() {
   const [activeTab, setActiveTab] = useState("outline");
   const [showHeaderActions, setShowHeaderActions] = useState(false);
+
+  // Get course ID from URL params
+  const params = useParams();
+  const courseId = params.course_id as string;
+
+  console.log('extracted courseId:', courseId);
+
+  // Get current user from auth state
+  const user = useAppSelector((state) => state.auth.user);
+  console.log('extracted user:', user);
+
+  // Fetch course data
+  const { data: courseData, isLoading, error } = useGetCourseByIdQuery(courseId, {
+    skip: !courseId
+  });
+
+  console.log('extracted course:', courseData);
+  const course = courseData?.data?.course;
+
+  // Check if current user is the owner/instructor of this course
+  const isOwner = useMemo(() => {
+    if (!user || !course) return false;
+
+    // Check if user is the instructor
+    if (typeof course.instructor === 'string') {
+      return course.instructor === user._id;
+    } else if (course.instructor && typeof course.instructor === 'object') {
+      return course.instructor._id === user._id;
+    }
+
+    // Check if user is the creator (createdBy)
+    if (typeof course.createdBy === 'string') {
+      return course.createdBy === user._id;
+    } else if (course.createdBy && typeof course.createdBy === 'object') {
+      return course.createdBy._id === user._id;
+    }
+
+    return false;
+  }, [user, course]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -41,6 +83,18 @@ export default function CourseLayout() {
     }
   };
 
+  // Show error state if course fetch failed
+  if (error) {
+    return (
+      <div className="min-h-screen px-6 pt-4 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-red-600 mb-2">Course Not Found</h2>
+          <p className="text-gray-600">The course you're looking for doesn't exist or you don't have access to it.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <CourseHeaderContext.Provider
       value={{ showHeaderActions, setShowHeaderActions }}
@@ -49,9 +103,11 @@ export default function CourseLayout() {
         {/* Header */}
         <div className="relative flex items-center justify-center mb-4 h-10">
           <div className="absolute left-1/2 -translate-x-1/2 font-bold text-xl">
-            UI/UX Road Map
+            {isLoading ? (
+              <div className="animate-pulse bg-gray-200 h-6 w-48 rounded"></div>
+            ) : course?.title || "Course Title"}
           </div>
-          {showHeaderActions && (
+          {(showHeaderActions || isOwner) && (
             <div className="absolute right-0 flex gap-2">
               <Button className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm">
                 Publish

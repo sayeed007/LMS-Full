@@ -62,16 +62,29 @@ const getAllCourses = catchAsync(async (req, res, next) => {
 });
 
 const getCourse = catchAsync(async (req, res, next) => {
-  let query = Course.findById(req.params.id).populate('instructor', 'name avatar bio');
-
-  // If user is not authenticated or not the instructor, only show published courses
-  if (!req.user || req.user.id !== req.params.instructorId) {
-    query = query.find({ isPublished: true, isApproved: true, isDeleted: false });
-  }
-
-  const course = await query;
+  // First get the course to check ownership
+  const course = await Course.findById(req.params.id)
+    .populate('instructor', 'name avatar bio')
+    .populate('createdBy', 'name email');
 
   if (!course) {
+    return next(new AppError('No course found with that ID', 404));
+  }
+
+  // Check if course is deleted
+  if (course.isDeleted) {
+    return next(new AppError('No course found with that ID', 404));
+  }
+
+  // Check if user can access this course
+  const isOwner = req.user && (
+    course.instructor._id.toString() === req.user.id ||
+    course.createdBy._id.toString() === req.user.id ||
+    ['org_admin', 'super_admin'].includes(req.user.role)
+  );
+
+  // If user is not the owner and course is not published, deny access
+  if (!isOwner && (!course.isPublished || !course.isApproved)) {
     return next(new AppError('No course found with that ID', 404));
   }
 

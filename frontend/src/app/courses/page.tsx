@@ -38,6 +38,7 @@ const tabs = [
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState("my");
   const { openModal, closeModal } = useModalActions();
+  const router = useRouter();
 
   // API queries based on active tab
   const {
@@ -71,6 +72,10 @@ export default function CoursesPage() {
     openModal(
       <CreateCourseModal
         onClose={() => closeModal()}
+        onCreate={(courseId) => {
+          // Redirect to course creation page with the new course ID
+          router.push(`/courses/create/${courseId}`);
+        }}
       />,
       { size: 'md', position: 'center' }
     );

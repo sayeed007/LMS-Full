@@ -27,7 +27,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
     skip: !courseId, // Skip query if courseId is null
   });
 
-  const course = (courseData?.data?.course?.[0] || {}) as Partial<CoursePopulated>;
+  const course = (courseData?.data?.course || {}) as Partial<CoursePopulated>;
   const error = propError || (queryError ? 'Failed to fetch course data' : null);
   // const [chapters, setChapters] = useState([]);
   // const [showAdd, setShowAdd] = useState(false);
@@ -217,7 +217,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
           {/* Right Stats Card */}
           <div className="lg:w-96 flex flex-2 items-center mt-4 md:mt-0">
             <div className="text-white rounded-2xl p-4 relative overflow-hidden bg-cover bg-center min-h-[300px] w-full flex flex-col justify-between"
-              style={{ backgroundImage: `url(${course?.thumbnail})` }}
+              style={{ backgroundImage: `url(${course?.thumbnail || '/default-course-thumbnail.jpg'})` }}
             >
               {/* Category Badge */}
               <div className="flex justify-end items-start mb-4">

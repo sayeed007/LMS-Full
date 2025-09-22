@@ -1,11 +1,11 @@
 import { showErrorToast } from "@/lib/toast-utils";
-import { Course } from "@/types/backend-models";
+import { CoursePopulated } from "@/store/api/courseApi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 
 
-export function CourseCard({ course }: { course: Course }) {
+export function CourseCard({ course }: { course: CoursePopulated }) {
   const router = useRouter();
 
   const onClick = () => {

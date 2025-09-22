@@ -1,16 +1,16 @@
+import { CreateCategoryModal } from "@/components/CreateCategoryModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreateCategoryModal } from "@/components/CreateCategoryModal";
 import { useModalActions } from "@/lib/modal-utils";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
-import { useGetCategoriesQuery, getCategoryOptions } from "@/store/api/categoryApi";
+import { getErrorMessage } from "@/lib/utils";
+import { getCategoryOptions, useGetCategoriesQuery } from "@/store/api/categoryApi";
 import { useCreateCourseMutation } from "@/store/api/courseApi";
-import { CourseDetails } from "@/types";
+import { Course } from "@/types/backend-models";
 import { useFormik } from "formik";
 import { Plus } from "lucide-react";
 import Select from "react-select";
 import * as Yup from "yup";
-import { getErrorMessage } from "@/lib/utils";
 
 
 export function CreateCourseModal({
@@ -18,7 +18,7 @@ export function CreateCourseModal({
   onCreate,
 }: {
   onClose: () => void;
-  onCreate?: (course: Omit<CourseDetails, "id">) => void;
+  onCreate?: (courseId: string) => void;
 }) {
   const { openModal, closeModal } = useModalActions();
   const [createCourse, { isLoading: isCreating }] = useCreateCourseMutation();
@@ -71,7 +71,7 @@ export function CreateCourseModal({
         const result = await createCourse({
           title: values.name,
           description: values.description,
-          category: values.category?.value || "programming",
+          category: (values.category?.value as Course['category']) || "programming",
           level: values.difficulty.toLowerCase() as "beginner" | "intermediate" | "advanced",
           language: "English", // Default language
           price: 0, // Default free course
@@ -80,18 +80,9 @@ export function CreateCourseModal({
 
         showSuccessToast("Course created successfully!");
 
-        // Call optional onCreate callback
-        if (onCreate) {
-          onCreate({
-            name: values.name,
-            category: values.category?.value || "",
-            description: values.description,
-            difficulty: values.difficulty,
-            chapters: 0,
-            lessons: 0,
-            quizzes: 0,
-            image: "/Thumbnail.png",
-          });
+        // Call optional onCreate callback with the course ID
+        if (onCreate && result?.data?.course?._id) {
+          onCreate(result.data.course._id);
         }
 
         resetForm();
@@ -172,7 +163,7 @@ export function CreateCourseModal({
           </div>
           {touched.category && errors.category && (
             <p className="text-xs text-red-600 mt-1">
-              {errors?.category?.value || ''}
+              {errors.category}
             </p>
           )}
         </div>
