@@ -34,9 +34,10 @@ export interface CreateCourseRequest {
   tags?: string[];
   prerequisites?: string[];
   learningObjectives?: string[];
+  learningOutcomes?: string[];
   targetAudience?: string[];
   requirements?: string[];
-  whatYouWillLearn?: string[];
+  estimatedDuration?: number;
   settings?: Partial<Course['settings']>;
 }
 
@@ -58,9 +59,10 @@ export interface UpdateCourseRequest {
   tags?: string[];
   prerequisites?: string[];
   learningObjectives?: string[];
+  learningOutcomes?: string[];
   targetAudience?: string[];
   requirements?: string[];
-  whatYouWillLearn?: string[];
+  estimatedDuration?: number;
   settings?: Partial<Course['settings']>;
   isPublished?: boolean;
   isFeatured?: boolean;
@@ -86,14 +88,23 @@ export interface CreateLessonRequest {
   type: CourseLesson['type'];
   duration?: number;
   videoUrl?: string;
+  videoProvider?: CourseLesson['videoProvider'];
+  videoDuration?: number;
   videoThumbnail?: string;
+  transcript?: string;
   order: number;
   isPreview?: boolean;
+  isPremium?: boolean;
   resources?: CourseLesson['resources'];
   quiz?: string;
-  assignment?: CourseLesson['assignment'];
+  assignment?: string;
+  assignmentDetails?: CourseLesson['assignmentDetails'];
   completionCriteria?: CourseLesson['completionCriteria'];
   minTimeToComplete?: number;
+  settings?: CourseLesson['settings'];
+  tags?: string[];
+  language?: string;
+  thumbnail?: string;
   isPublished?: boolean;
 }
 
@@ -103,14 +114,23 @@ export interface UpdateLessonRequest {
   type?: CourseLesson['type'];
   duration?: number;
   videoUrl?: string;
+  videoProvider?: CourseLesson['videoProvider'];
+  videoDuration?: number;
   videoThumbnail?: string;
+  transcript?: string;
   order?: number;
   isPreview?: boolean;
+  isPremium?: boolean;
   resources?: CourseLesson['resources'];
   quiz?: string;
-  assignment?: CourseLesson['assignment'];
+  assignment?: string;
+  assignmentDetails?: CourseLesson['assignmentDetails'];
   completionCriteria?: CourseLesson['completionCriteria'];
   minTimeToComplete?: number;
+  settings?: CourseLesson['settings'];
+  tags?: string[];
+  language?: string;
+  thumbnail?: string;
   isPublished?: boolean;
 }
 
@@ -150,7 +170,7 @@ export const courseApi = baseApi.injectEndpoints({
       providesTags: ['Course'],
     }),
 
-    getCourseById: builder.query<BaseApiResponse<{ course: CoursePopulated }>, string>({
+    getCourseById: builder.query<BaseApiResponse<{ course: CoursePopulated[] }>, string>({
       query: (id) => `/courses/${id}`,
       providesTags: (result, error, id) => [{ type: 'Course', id }],
     }),

@@ -23,17 +23,16 @@ export function CourseCard({ course }: { course: Course }) {
       onClick={onClick}
     >
       <div className="relative aspect-video overflow-hidden rounded-t-xl">
-        {course.thumbnail ?
-          <Image
-            src={course.thumbnail}
-            alt={course.title}
-            className="object-cover"
-            fill
-          />
-          :
-          <></>
-        }
-
+        <Image
+          src={course.thumbnail || '/default-course-thumbnail.jpg'}
+          alt={course.title}
+          className="object-cover"
+          fill
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '/default-course-thumbnail.jpg';
+          }}
+        />
       </div>
 
       <div className="flex-1">

@@ -144,8 +144,8 @@ export const {
 // Export category utilities
 export const getCategoryOptions = (categories: Category[]) => {
   return categories
-    .filter(category => category.isActive)
-    .map(category => ({
+    ?.filter(category => category.isActive)
+    ?.map(category => ({
       value: category.name,
       label: category.name,
       _id: category._id

@@ -39,7 +39,8 @@ export function CreateCourseModal({
   // Show error if categories failed to load
   if (categoriesError) {
     showErrorToast("Failed to load categories");
-  }
+  };
+
   const {
     handleSubmit,
     handleChange,
@@ -67,15 +68,15 @@ export function CreateCourseModal({
     onSubmit: async (values) => {
       try {
         // Create course using API
-        // const result = await createCourse({
-        //   title: values.name,
-        //   description: values.description,
-        //   category: values.category?.value || "",
-        //   level: values.difficulty.toLowerCase() as "beginner" | "intermediate" | "advanced",
-        //   language: "English", // Default language
-        //   price: 0, // Default free course
-        //   currency: "USD"
-        // }).unwrap();
+        const result = await createCourse({
+          title: values.name,
+          description: values.description,
+          category: values.category?.value || "programming",
+          level: values.difficulty.toLowerCase() as "beginner" | "intermediate" | "advanced",
+          language: "English", // Default language
+          price: 0, // Default free course
+          currency: "USD"
+        }).unwrap();
 
         showSuccessToast("Course created successfully!");
 

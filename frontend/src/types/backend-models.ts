@@ -129,36 +129,70 @@ export interface User extends BaseDocument {
 export interface CourseResource {
   title: string;
   url: string;
-  type: 'pdf' | 'video' | 'image' | 'document' | 'link' | 'other';
-  size?: number;
-  downloadable?: boolean;
+  type: 'pdf' | 'video' | 'link' | 'document' | 'image' | 'audio';
+  size?: number; // in bytes
+  duration?: number; // for video/audio resources in seconds
+  downloadable: boolean;
   uploadedAt: string;
 }
 
-export interface CourseAssignment {
+export interface CourseAssignmentDetails {
   title?: string;
   description?: string;
+  instructions?: string;
   dueDate?: string;
   maxScore: number;
   submissionType: 'text' | 'file' | 'url' | 'code';
+  maxFileSize?: number; // in MB
+  allowedFileTypes?: string[];
+  maxFiles: number;
+}
+
+export interface CourseLessonSettings {
+  allowComments: boolean;
+  downloadable: boolean;
+  autoComplete: boolean;
+  preventSkipping: boolean;
+  showTranscript: boolean;
 }
 
 export interface CourseLesson extends BaseDocument {
   title: string;
   description?: string;
   content: string;
-  type: 'video' | 'text' | 'quiz' | 'assignment' | 'interactive';
-  duration: number; // in minutes
-  videoUrl?: string;
-  videoThumbnail?: string;
+  type: 'text' | 'video' | 'quiz' | 'assignment' | 'live' | 'download';
   order: number;
-  isPreview: boolean;
+  duration: number; // in minutes
+  // Content details
+  videoUrl?: string;
+  videoProvider: 'youtube' | 'vimeo' | 'wistia' | 'local' | 'aws-s3';
+  videoDuration?: number; // in seconds for video lessons
+  videoThumbnail?: string;
+  transcript?: string;
+  // Resources and attachments
   resources: CourseResource[];
+  // Access control
+  isPreview: boolean;
+  isPublished: boolean;
+  isPremium: boolean;
+  // References to related content
   quiz?: string; // Quiz ObjectId
-  assignment?: CourseAssignment;
+  assignment?: string; // Assignment ObjectId
+  // Assignment details (embedded)
+  assignmentDetails?: CourseAssignmentDetails;
   completionCriteria: 'view' | 'quiz_pass' | 'assignment_submit' | 'time_spent';
   minTimeToComplete: number; // in seconds
-  isPublished: boolean;
+  // Settings
+  settings: CourseLessonSettings;
+  // Analytics
+  views: number;
+  completions: number;
+  averageTimeSpent: number; // in seconds
+  likes: number;
+  // Metadata
+  tags: string[];
+  language: string;
+  thumbnail?: string;
 }
 
 export interface CourseChapter extends BaseDocument {
@@ -216,6 +250,7 @@ export interface CourseStats {
   totalRevenue: number;
   averageCompletionTime: number;
   completionRate: number;
+  totalQuizzes?: number;
 }
 
 export interface CourseSettings {
@@ -258,9 +293,10 @@ export interface Course extends BaseDocument {
   tags: string[];
   prerequisites: string[];
   learningObjectives: string[];
+  learningOutcomes: string[];
   targetAudience: string[];
   requirements: string[];
-  whatYouWillLearn: string[];
+  estimatedDuration: number; // in hours
   isPublished: boolean;
   isFeatured: boolean;
   isApproved: boolean;

@@ -5,10 +5,12 @@ import { Container } from "@/components/ui";
 import { AvatarWithDate } from "@/components/ui/AvatarWithDate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGetCourseByIdQuery } from "@/store/api/courseApi";
-import { BookOpen, ChevronRight, Clock } from "lucide-react";
+import { CoursePopulated, useGetCourseByIdQuery } from "@/store/api/courseApi";
+import { BookOpen, ChevronRight, Clock, ChevronDown, PlayCircle, FileText, Download, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Course, CourseChapter, CourseLesson, CourseResource } from '@/types/backend-models';
+
 
 interface CourseDetailClientProps {
   courseId: string | null;
@@ -25,11 +27,12 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
     skip: !courseId, // Skip query if courseId is null
   });
 
-  const course = courseData?.data?.course?.[0] || {};
+  const course = (courseData?.data?.course?.[0] || {}) as Partial<CoursePopulated>;
   const error = propError || (queryError ? 'Failed to fetch course data' : null);
   // const [chapters, setChapters] = useState([]);
   // const [showAdd, setShowAdd] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
+  const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
   const router = useRouter();
 
   // const handleAddChapter = (chapter: { name: string }) => {
@@ -55,6 +58,28 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
         ? prev.filter(id => id !== chapterId)
         : [...prev, chapterId]
     );
+  };
+
+  const toggleLesson = (lessonId: string) => {
+    setExpandedLessons(prev =>
+      prev.includes(lessonId)
+        ? prev.filter(id => id !== lessonId)
+        : [...prev, lessonId]
+    );
+  };
+
+  const handleLessonClick = (courseId: string, chapterId: string, lessonId: string) => {
+    router.push(`/courses/${courseId}/chapters/${chapterId}/lessons/${lessonId}`);
+  };
+
+  const handleResourceClick = (resource: CourseResource) => {
+    if (resource.url) {
+      window.open(resource.url, '_blank');
+    }
+  };
+
+  const handleAssignmentClick = (courseId: string, assignmentId: string) => {
+    router.push(`/courses/${courseId}/assignments/${assignmentId}`);
   };
 
   if (isLoading) {
@@ -95,7 +120,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
   }
 
   // Calculate course stats
-  const totalLessons = course.chapters?.reduce((acc, chapter) => acc + (chapter.lessons?.length || 0), 0) || 0;
+  const totalLessons = course.chapters?.reduce((acc: number, chapter: CourseChapter) => acc + (chapter.lessons?.length || 0), 0) || 0;
   const completedLessons = 0; // TODO: Calculate from enrollment data
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
@@ -231,39 +256,186 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
         <div className="flex-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Course Outline</h2>
 
-          {/* Understanding DevOps & SDLC */}
-          {/* <div className="border-b border-gray-100">
-              <div
-                className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => toggleChapter('c1')}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 text-sm font-bold">Aa</span>
-                  </div>
-                  <span className="text-gray-900 font-medium text-lg">Understanding DevOps & SDLC</span>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </div>
-            </div> */}
+          {course?.chapters?.map((chapter: CourseChapter) => {
+            const isChapterExpanded = expandedChapters.includes(chapter?._id);
+            const chapterLessons = chapter?.lessons || [];
 
-          {course?.chapters?.map((chapter) => {
             return (
-              <div
-                className="bg-off-white-1 flex items-center justify-between p-3 my-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors"
-
-                key={chapter?._id}
-                onClick={() => toggleChapter(chapter?._id)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 text-sm font-bold">Aa</span>
+              <div key={chapter?._id} className="mb-4">
+                {/* Chapter Header */}
+                <div
+                  className="bg-off-white-1 flex items-center justify-between p-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => toggleChapter(chapter?._id)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-bold">Ch</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-900 font-medium text-lg">{chapter?.title}</span>
+                      <span className="text-sm text-gray-500">{chapterLessons.length} lessons</span>
+                    </div>
                   </div>
-                  <span className="text-gray-900 font-medium text-lg">{chapter?.title}</span>
+                  {isChapterExpanded ? (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                  )}
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
+
+                {/* Lessons List */}
+                {isChapterExpanded && (
+                  <div className="ml-4 mt-2 space-y-2">
+                    {chapterLessons.map((lesson: CourseLesson) => {
+                      const isLessonExpanded = expandedLessons.includes(lesson?._id);
+                      const hasResources = lesson?.resources && lesson.resources.length > 0;
+                      const hasAssignment = lesson?.assignmentDetails || lesson?.assignment;
+                      const hasQuiz = lesson?.quiz;
+
+                      return (
+                        <div key={lesson?._id} className="bg-white border border-gray-200 rounded-lg">
+                          {/* Lesson Header */}
+                          <div
+                            className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                            onClick={() => toggleLesson(lesson?._id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
+                                {lesson?.type === 'video' ? (
+                                  <PlayCircle className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <FileText className="w-4 h-4 text-green-600" />
+                                )}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-gray-900 font-medium">{lesson?.title}</span>
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                  <span>{lesson?.duration || 0} min</span>
+                                  {lesson?.type && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="capitalize">{lesson.type}</span>
+                                    </>
+                                  )}
+                                  {(hasResources || hasAssignment || hasQuiz) && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="text-blue-600">
+                                        {[hasResources && 'Resources', hasAssignment && 'Assignment', hasQuiz && 'Quiz']
+                                          .filter(Boolean)
+                                          .join(', ')}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLessonClick(course._id || '', chapter._id, lesson._id);
+                                }}
+                                className="text-blue-600 hover:bg-blue-50"
+                              >
+                                Start
+                              </Button>
+                              {(hasResources || hasAssignment || hasQuiz) && (
+                                <>
+                                  {isLessonExpanded ? (
+                                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                                  ) : (
+                                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Lesson Content (Resources, Assignments, etc.) */}
+                          {isLessonExpanded && (
+                            <div className="border-t border-gray-100 p-3 bg-gray-50">
+
+                              {/* Resources */}
+                              {hasResources && (
+                                <div className="mb-3">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Resources</h4>
+                                  <div className="space-y-1">
+                                    {lesson.resources.map((resource: CourseResource, resourceIndex: number) => (
+                                      <div
+                                        key={resourceIndex}
+                                        className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-blue-50 transition-colors"
+                                        onClick={() => handleResourceClick(resource)}
+                                      >
+                                        {resource.type === 'pdf' ? (
+                                          <FileText className="w-4 h-4 text-red-500" />
+                                        ) : resource.type === 'video' ? (
+                                          <PlayCircle className="w-4 h-4 text-purple-500" />
+                                        ) : resource.downloadable ? (
+                                          <Download className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <ExternalLink className="w-4 h-4 text-blue-500" />
+                                        )}
+                                        <span className="text-sm text-gray-700 flex-1">{resource.title}</span>
+                                        <span className="text-xs text-gray-500 capitalize">{resource.type}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Assignment */}
+                              {hasAssignment && (
+                                <div className="mb-3">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Assignment</h4>
+                                  <div
+                                    className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-orange-50 transition-colors"
+                                    onClick={() => handleAssignmentClick(course._id || '', lesson.assignment || lesson._id)}
+                                  >
+                                    <FileText className="w-4 h-4 text-orange-500" />
+                                    <div className="flex-1">
+                                      <span className="text-sm text-gray-700 block">
+                                        {lesson.assignmentDetails?.title || 'Course Assignment'}
+                                      </span>
+                                      {lesson.assignmentDetails?.dueDate && (
+                                        <span className="text-xs text-gray-500">
+                                          Due: {new Date(lesson.assignmentDetails.dueDate).toLocaleDateString()}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-orange-600">
+                                      {lesson.assignmentDetails?.maxScore || 100} pts
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Quiz */}
+                              {hasQuiz && (
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Quiz</h4>
+                                  <div
+                                    className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-green-50 transition-colors"
+                                    onClick={() => router.push(`/courses/${course._id}/quizzes/${lesson.quiz}`)}
+                                  >
+                                    <FileText className="w-4 h-4 text-green-500" />
+                                    <span className="text-sm text-gray-700 flex-1">Lesson Quiz</span>
+                                    <span className="text-xs text-green-600">Quiz</span>
+                                  </div>
+                                </div>
+                              )}
+
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )
+            );
           })}
 
         </div>
