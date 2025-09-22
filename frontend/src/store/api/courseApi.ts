@@ -170,7 +170,7 @@ export const courseApi = baseApi.injectEndpoints({
       providesTags: ['Course'],
     }),
 
-    getCourseById: builder.query<BaseApiResponse<{ course: CoursePopulated[] }>, string>({
+    getCourseById: builder.query<BaseApiResponse<{ course: CoursePopulated }>, string>({
       query: (id) => `/courses/${id}`,
       providesTags: (result, error, id) => [{ type: 'Course', id }],
     }),

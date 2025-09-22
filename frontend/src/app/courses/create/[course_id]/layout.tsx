@@ -33,18 +33,14 @@ export default function CourseLayout() {
   const params = useParams();
   const courseId = params.course_id as string;
 
-  console.log('extracted courseId:', courseId);
-
   // Get current user from auth state
   const user = useAppSelector((state) => state.auth.user);
-  console.log('extracted user:', user);
 
   // Fetch course data
   const { data: courseData, isLoading, error } = useGetCourseByIdQuery(courseId, {
     skip: !courseId
   });
 
-  console.log('extracted course:', courseData);
   const course = courseData?.data?.course;
 
   // Check if current user is the owner/instructor of this course
@@ -52,7 +48,7 @@ export default function CourseLayout() {
     if (!user || !course) return false;
 
     // Check if user is the instructor
-    if (typeof course.instructor === 'string') {
+    if (typeof course?.instructor === 'string') {
       return course.instructor === user._id;
     } else if (course.instructor && typeof course.instructor === 'object') {
       return course.instructor._id === user._id;
@@ -79,7 +75,7 @@ export default function CourseLayout() {
       case "setting":
         return <CourseSettings />;
       default:
-        return <CourseOutline />;
+        return <CourseOutline course={course} />;
     }
   };
 
@@ -89,7 +85,9 @@ export default function CourseLayout() {
       <div className="min-h-screen px-6 pt-4 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-bold text-red-600 mb-2">Course Not Found</h2>
-          <p className="text-gray-600">The course you're looking for doesn't exist or you don't have access to it.</p>
+          <p className="text-gray-600">
+            {`The course you're looking for doesn't exist or you don't have access to it.`}
+          </p>
         </div>
       </div>
     );
@@ -100,6 +98,7 @@ export default function CourseLayout() {
       value={{ showHeaderActions, setShowHeaderActions }}
     >
       <div className="min-h-screen px-6 pt-4">
+
         {/* Header */}
         <div className="relative flex items-center justify-center mb-4 h-10">
           <div className="absolute left-1/2 -translate-x-1/2 font-bold text-xl">
