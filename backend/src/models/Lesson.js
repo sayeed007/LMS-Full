@@ -194,7 +194,11 @@ lessonSchema.index({ createdAt: -1 });
 lessonSchema.index({ title: 'text', description: 'text', content: 'text' });
 
 // Compound index for ordering within course - Keep only this one with unique constraint
-lessonSchema.index({ course: 1, order: 1 }, { unique: true });
+// Exclude soft-deleted lessons from unique constraint
+lessonSchema.index({ course: 1, order: 1 }, {
+  unique: true,
+  partialFilterExpression: { isDeleted: false }
+});
 
 // Virtual for completion rate
 lessonSchema.virtual('completionRate').get(function () {
@@ -305,8 +309,10 @@ lessonSchema.statics.findByCourse = function (courseId, options = {}) {
 };
 
 lessonSchema.statics.getNextOrder = async function (courseId) {
-  const lastLesson = await this.findOne({ course: courseId })
-    .sort({ order: -1 });
+  const lastLesson = await this.findOne({
+    course: courseId,
+    isDeleted: false
+  }).sort({ order: -1 });
 
   return lastLesson ? lastLesson.order + 1 : 1;
 };

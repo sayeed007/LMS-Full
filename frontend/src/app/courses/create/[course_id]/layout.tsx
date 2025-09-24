@@ -5,9 +5,9 @@ import { useGetCourseByIdQuery } from "@/store/api/courseApi";
 import { useAppSelector } from "@/store/hooks";
 import { createContext, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import CourseOutline from "./courseOutline/page";
 import Learners from "./learner/page";
 import CourseSettings from "./setting/page";
+import CourseOutline from "@/components/courses/course_create/CourseOutline";
 
 export const CourseHeaderContext = createContext<{
   showHeaderActions: boolean;
@@ -97,7 +97,7 @@ export default function CourseLayout() {
     <CourseHeaderContext.Provider
       value={{ showHeaderActions, setShowHeaderActions }}
     >
-      <div className="min-h-screen px-6 pt-4">
+      <div className="px-6 pt-4">
 
         {/* Header */}
         <div className="relative flex items-center justify-center mb-4 h-10">

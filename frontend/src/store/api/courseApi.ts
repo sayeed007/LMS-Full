@@ -242,7 +242,7 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     // Lessons
-    getLessons: builder.query<BaseApiResponse<CourseLesson[]>, { courseId: string; params?: { page?: number; limit?: number } }>({
+    getLessons: builder.query<BaseApiResponse<{ lessons: CourseLesson[] }>, { courseId: string; params?: { page?: number; limit?: number } }>({
       query: ({ courseId, params }) => ({
         url: `/courses/${courseId}/lessons`,
         params,
