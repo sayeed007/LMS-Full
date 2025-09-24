@@ -1,4 +1,4 @@
-import { Course, CourseLesson, CourseChapter } from '../../types/backend-models';
+import { Course, CourseLesson, CourseChapter, LessonContent } from '../../types/backend-models';
 import { baseApi, BaseApiResponse } from './baseApi';
 
 // API-specific interfaces for requests/responses
@@ -84,54 +84,79 @@ export interface UpdateChapterRequest {
 
 export interface CreateLessonRequest {
   title: string;
-  content: string;
-  type: CourseLesson['type'];
-  duration?: number;
-  videoUrl?: string;
-  videoProvider?: CourseLesson['videoProvider'];
-  videoDuration?: number;
-  videoThumbnail?: string;
-  transcript?: string;
+  description?: string;
   order: number;
+  estimatedDuration?: number;
+  resources?: CourseLesson['resources'];
   isPreview?: boolean;
   isPremium?: boolean;
-  resources?: CourseLesson['resources'];
-  quiz?: string;
-  assignment?: string;
-  assignmentDetails?: CourseLesson['assignmentDetails'];
-  completionCriteria?: CourseLesson['completionCriteria'];
-  minTimeToComplete?: number;
+  isPublished?: boolean;
   settings?: CourseLesson['settings'];
   tags?: string[];
   language?: string;
   thumbnail?: string;
-  isPublished?: boolean;
 }
 
 export interface UpdateLessonRequest {
   title?: string;
-  content?: string;
-  type?: CourseLesson['type'];
-  duration?: number;
-  videoUrl?: string;
-  videoProvider?: CourseLesson['videoProvider'];
-  videoDuration?: number;
-  videoThumbnail?: string;
-  transcript?: string;
-  order?: number;
+  description?: string;
+  estimatedDuration?: number;
+  resources?: CourseLesson['resources'];
   isPreview?: boolean;
   isPremium?: boolean;
-  resources?: CourseLesson['resources'];
-  quiz?: string;
-  assignment?: string;
-  assignmentDetails?: CourseLesson['assignmentDetails'];
-  completionCriteria?: CourseLesson['completionCriteria'];
-  minTimeToComplete?: number;
+  isPublished?: boolean;
   settings?: CourseLesson['settings'];
   tags?: string[];
   language?: string;
   thumbnail?: string;
+}
+
+// Content API interfaces
+export interface CreateContentRequest {
+  title: string;
+  description?: string;
+  type: LessonContent['type'];
+  data: LessonContent['data'];
+  order?: number;
   isPublished?: boolean;
+  isPreview?: boolean;
+  objectives?: string[];
+  tags?: string[];
+}
+
+export interface UpdateContentRequest {
+  title?: string;
+  description?: string;
+  type?: LessonContent['type'];
+  data?: Partial<LessonContent['data']>;
+  order?: number;
+  isPublished?: boolean;
+  isPreview?: boolean;
+  objectives?: string[];
+  tags?: string[];
+}
+
+export interface ContentListParams {
+  page?: number;
+  limit?: number;
+  type?: LessonContent['type'];
+  isPublished?: boolean;
+  isPreview?: boolean;
+}
+
+export interface BulkContentOperation {
+  contentId: string;
+  action: 'update' | 'delete';
+  data?: Partial<LessonContent>;
+}
+
+export interface BulkContentRequest {
+  operations: BulkContentOperation[];
+}
+
+export interface MoveContentRequest {
+  targetLessonId: string;
+  newOrder?: number;
 }
 
 export interface CourseListParams {
@@ -397,6 +422,112 @@ export const courseApi = baseApi.injectEndpoints({
         'Chapter'
       ],
     }),
+
+    // Content Management
+    getContentByLesson: builder.query<BaseApiResponse<{ content: LessonContent[] }>, { courseId: string; lessonId: string; params?: ContentListParams }>({
+      query: ({ courseId, lessonId, params }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content`,
+        params: params || {},
+      }),
+      providesTags: (result, error, { lessonId }) => [
+        { type: 'Content', id: lessonId },
+        'Content'
+      ],
+    }),
+
+    getContentById: builder.query<BaseApiResponse<{ content: LessonContent }>, { courseId: string; lessonId: string; contentId: string }>({
+      query: ({ courseId, lessonId, contentId }) => `/courses/${courseId}/lessons/${lessonId}/content/${contentId}`,
+      providesTags: (result, error, { contentId }) => [{ type: 'Content', id: contentId }],
+    }),
+
+    createContent: builder.mutation<BaseApiResponse<{ content: LessonContent }>, { courseId: string; lessonId: string; data: CreateContentRequest }>({
+      query: ({ courseId, lessonId, data }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { courseId, lessonId }) => [
+        { type: 'Content', id: lessonId },
+        'Content',
+        { type: 'Lesson', id: lessonId },
+        { type: 'Course', id: courseId }
+      ],
+    }),
+
+    updateContent: builder.mutation<BaseApiResponse<{ content: LessonContent }>, { courseId: string; lessonId: string; contentId: string; data: UpdateContentRequest }>({
+      query: ({ courseId, lessonId, contentId, data }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content/${contentId}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { lessonId, contentId }) => [
+        { type: 'Content', id: contentId },
+        { type: 'Content', id: lessonId },
+        'Content'
+      ],
+    }),
+
+    deleteContent: builder.mutation<BaseApiResponse<void>, { courseId: string; lessonId: string; contentId: string }>({
+      query: ({ courseId, lessonId, contentId }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content/${contentId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { courseId, lessonId, contentId }) => [
+        { type: 'Content', id: contentId },
+        { type: 'Content', id: lessonId },
+        'Content',
+        { type: 'Lesson', id: lessonId },
+        { type: 'Course', id: courseId }
+      ],
+    }),
+
+    reorderContent: builder.mutation<BaseApiResponse<{ content: LessonContent[] }>, { courseId: string; lessonId: string; content: Array<{ _id: string; order: number }> }>({
+      query: ({ courseId, lessonId, content }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content/reorder`,
+        method: 'PATCH',
+        body: { content },
+      }),
+      invalidatesTags: (result, error, { lessonId }) => [
+        { type: 'Content', id: lessonId },
+        'Content'
+      ],
+    }),
+
+    moveContent: builder.mutation<BaseApiResponse<{ content: LessonContent }>, { courseId: string; lessonId: string; contentId: string; data: MoveContentRequest }>({
+      query: ({ courseId, lessonId, contentId, data }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content/${contentId}/move`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { courseId, lessonId, contentId, data }) => [
+        { type: 'Content', id: contentId },
+        { type: 'Content', id: lessonId },
+        { type: 'Content', id: data.targetLessonId },
+        'Content',
+        { type: 'Course', id: courseId }
+      ],
+    }),
+
+    getContentByType: builder.query<BaseApiResponse<{ content: LessonContent[] }>, { courseId: string; type?: LessonContent['type'] }>({
+      query: ({ courseId, type }) => ({
+        url: `/courses/${courseId}/content/by-type`,
+        params: type ? { type } : {},
+      }),
+      providesTags: ['Content'],
+    }),
+
+    bulkUpdateContent: builder.mutation<BaseApiResponse<{ message: string }>, { courseId: string; lessonId: string; data: BulkContentRequest }>({
+      query: ({ courseId, lessonId, data }) => ({
+        url: `/courses/${courseId}/lessons/${lessonId}/content/bulk`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { courseId, lessonId }) => [
+        { type: 'Content', id: lessonId },
+        'Content',
+        { type: 'Course', id: courseId }
+      ],
+    }),
   }),
 });
 
@@ -426,4 +557,14 @@ export const {
   useGetCourseStatsQuery,
   useGetCategoriesQuery,
   useGetFeaturedCoursesQuery,
+  // Content hooks
+  useGetContentByLessonQuery,
+  useGetContentByIdQuery,
+  useCreateContentMutation,
+  useUpdateContentMutation,
+  useDeleteContentMutation,
+  useReorderContentMutation,
+  useMoveContentMutation,
+  useGetContentByTypeQuery,
+  useBulkUpdateContentMutation,
 } = courseApi;

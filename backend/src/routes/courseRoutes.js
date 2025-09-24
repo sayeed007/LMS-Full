@@ -596,6 +596,19 @@ const {
   reorderChapters
 } = require('../controllers/chapterController');
 
+// Import content controller functions
+const {
+  getContentByLesson,
+  getContentById,
+  createContent,
+  updateContent,
+  deleteContent,
+  reorderContent,
+  moveContent,
+  getContentByType,
+  bulkUpdateContent
+} = require('../controllers/contentController');
+
 /**
  * @swagger
  * /api/v1/courses/{id}/enrollments:
@@ -1240,5 +1253,387 @@ router.route('/:id/chapters/:chapterId')
     req.params.courseId = req.params.id;
     deleteChapter(req, res, next);
   });
+
+// Content Routes
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/content:
+ *   get:
+ *     summary: Get all content for a lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of lesson content
+ *       403:
+ *         description: No access to lesson
+ *       404:
+ *         description: Lesson not found
+ *   post:
+ *     summary: Create new content for a lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - type
+ *               - data
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [text, block, audio, video, document, quiz, assignment]
+ *               data:
+ *                 type: object
+ *               order:
+ *                 type: number
+ *               isPublished:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Content created successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.route('/:id/lessons/:lessonId/content')
+  .get((req, res, next) => {
+    req.params.courseId = req.params.id;
+    getContentByLesson(req, res, next);
+  })
+  .post(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    createContent(req, res, next);
+  });
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/content/reorder:
+ *   patch:
+ *     summary: Reorder content within a lesson
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     order:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Content reordered successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.patch('/:id/lessons/:lessonId/content/reorder', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  reorderContent(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/content/bulk:
+ *   patch:
+ *     summary: Bulk update content operations
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - operations
+ *             properties:
+ *               operations:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     action:
+ *                       type: string
+ *                       enum: [update, delete]
+ *                     contentId:
+ *                       type: string
+ *                     data:
+ *                       type: object
+ *     responses:
+ *       200:
+ *         description: Bulk operations completed successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.patch('/:id/lessons/:lessonId/content/bulk', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  bulkUpdateContent(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/content/{contentId}:
+ *   get:
+ *     summary: Get content by ID
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Content details
+ *       403:
+ *         description: No access to content
+ *       404:
+ *         description: Content not found
+ *   patch:
+ *     summary: Update content
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               data:
+ *                 type: object
+ *               isPublished:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Content updated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Content not found
+ *   delete:
+ *     summary: Delete content
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Content deleted successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Content not found
+ */
+router.route('/:id/lessons/:lessonId/content/:contentId')
+  .get((req, res, next) => {
+    req.params.courseId = req.params.id;
+    getContentById(req, res, next);
+  })
+  .patch(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    updateContent(req, res, next);
+  })
+  .delete(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    deleteContent(req, res, next);
+  });
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/lessons/{lessonId}/content/{contentId}/move:
+ *   patch:
+ *     summary: Move content between lessons
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - targetLessonId
+ *             properties:
+ *               targetLessonId:
+ *                 type: string
+ *               newOrder:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Content moved successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Content not found
+ */
+router.patch('/:id/lessons/:lessonId/content/:contentId/move', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  moveContent(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/content:
+ *   get:
+ *     summary: Get content by type across all lessons in a course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [text, block, audio, video, document, quiz, assignment]
+ *     responses:
+ *       200:
+ *         description: List of content by type
+ *       403:
+ *         description: No access to course
+ *       404:
+ *         description: Course not found
+ */
+router.get('/:id/content', (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getContentByType(req, res, next);
+});
 
 module.exports = router;

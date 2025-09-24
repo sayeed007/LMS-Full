@@ -61,16 +61,8 @@ const lessonSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Lesson description cannot exceed 500 characters']
   },
-  content: {
-    type: String,
-    required: [true, 'Lesson content is required']
-  },
-  type: {
-    type: String,
-    enum: ['text', 'video', 'quiz', 'assignment', 'live', 'download'],
-    default: 'text',
-    required: [true, 'Lesson type is required']
-  },
+  // Note: Lesson content is now managed through the Content model
+  // Each lesson can have multiple content items with different types
   // Course association
   course: {
     type: mongoose.Schema.Types.ObjectId,
@@ -87,21 +79,12 @@ const lessonSchema = new mongoose.Schema({
     required: [true, 'Lesson order is required'],
     min: [1, 'Lesson order must be at least 1']
   },
-  duration: {
-    type: Number, // in minutes
+  estimatedDuration: {
+    type: Number, // in minutes - estimated total time for all content in lesson
     default: 0,
     min: [0, 'Duration cannot be negative']
   },
-  // Content details
-  videoUrl: String,
-  videoProvider: {
-    type: String,
-    enum: ['youtube', 'vimeo', 'wistia', 'local', 'aws-s3'],
-    default: 'local'
-  },
-  videoDuration: Number, // in seconds for video lessons
-  transcript: String,
-  // Resources and attachments
+  // Resources and attachments (keeping for backward compatibility)
   resources: [resourceSchema],
   // Access control
   isPreview: {
@@ -121,15 +104,7 @@ const lessonSchema = new mongoose.Schema({
     type: lessonSettingsSchema,
     default: () => ({})
   },
-  // References to related content
-  quiz: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Quiz'
-  },
-  assignment: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Assignment'
-  },
+  // Note: Quiz and Assignment references removed - now managed through Content model
   // Creator info
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -205,16 +180,29 @@ lessonSchema.virtual('completionRate').get(function () {
   return this.views > 0 ? (this.completions / this.views) * 100 : 0;
 });
 
+// Virtual for lesson content
+lessonSchema.virtual('content', {
+  ref: 'Content',
+  localField: '_id',
+  foreignField: 'lesson',
+  match: { isDeleted: false }
+});
+
 // Virtual for resource count
 lessonSchema.virtual('resourceCount').get(function () {
   return this.resources ? this.resources.length : 0;
 });
 
+// Virtual for content count
+lessonSchema.virtual('contentCount').get(function () {
+  return this.content ? this.content.length : 0;
+});
+
 // Virtual for formatted duration
 lessonSchema.virtual('formattedDuration').get(function () {
-  if (!this.duration) return '0 min';
-  const hours = Math.floor(this.duration / 60);
-  const minutes = this.duration % 60;
+  if (!this.estimatedDuration) return '0 min';
+  const hours = Math.floor(this.estimatedDuration / 60);
+  const minutes = this.estimatedDuration % 60;
 
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
@@ -225,12 +213,6 @@ lessonSchema.virtual('formattedDuration').get(function () {
 // Pre-save middleware
 lessonSchema.pre('save', function (next) {
   this.lastModified = new Date();
-
-  // Auto-set duration for video lessons if not provided
-  if (this.type === 'video' && this.videoDuration && !this.duration) {
-    this.duration = Math.ceil(this.videoDuration / 60); // Convert seconds to minutes
-  }
-
   next();
 });
 

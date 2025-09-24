@@ -13,8 +13,12 @@ import {
     useGetLessonsQuery,
     useCreateChapterMutation,
     useDeleteChapterMutation,
-    useGetChaptersQuery
+    useGetChaptersQuery,
+    useGetContentByLessonQuery,
+    useCreateContentMutation,
+    useDeleteContentMutation
 } from "@/store/api/courseApi";
+import { LessonContent } from "@/types/backend-models";
 import {
     Clipboard,
     Edit,
@@ -39,15 +43,16 @@ interface CourseOutlineProps {
 
 interface ContentType {
     id: string;
-    type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
+    type: LessonContent['type'];
     icon: any;
     label: string;
 }
 
 const contentTypes: ContentType[] = [
     { id: 'text', type: 'text', icon: FileText, label: 'Text' },
-    { id: 'blocks', type: 'blocks', icon: Grid3X3, label: 'Blocks' },
+    { id: 'block', type: 'block', icon: Grid3X3, label: 'Block' },
     { id: 'video', type: 'video', icon: Video, label: 'Video' },
+    { id: 'audio', type: 'audio', icon: Video, label: 'Audio' },
     { id: 'document', type: 'document', icon: File, label: 'Document' },
     { id: 'quiz', type: 'quiz', icon: HelpCircle, label: 'Quiz' },
     { id: 'assignment', type: 'assignment', icon: Clipboard, label: 'Assignment' },
@@ -130,6 +135,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     const [chapterName, setChapterName] = useState("");
     const [showContentPopup, setShowContentPopup] = useState<string | null>(null);
     const [editingLesson, setEditingLesson] = useState<string | null>(null);
+    const [expandedLessons, setExpandedLessons] = useState<Set<string>>(new Set());
     const [createFirstLesson, setCreateFirstLesson] = useState<boolean>(false);
     const [createFirstChapter, setCreateFirstChapter] = useState<boolean>(false);
     // New state for dynamic creation modes
@@ -163,6 +169,8 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     const [deleteLesson, { isLoading: isDeletingLesson }] = useDeleteLessonMutation();
     const [createChapter, { isLoading: isCreatingChapter }] = useCreateChapterMutation();
     const [deleteChapter, { isLoading: isDeletingChapter }] = useDeleteChapterMutation();
+    const [createContent, { isLoading: isCreatingContent }] = useCreateContentMutation();
+    const [deleteContent, { isLoading: isDeletingContent }] = useDeleteContentMutation();
 
     const lessons = lessonsData?.data?.lessons || [];
     const chapters = chaptersData?.data?.chapters || [];
@@ -183,11 +191,21 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
             const lessonData: CreateLessonRequest = {
                 title: lessonName,
                 description: "",
-                content: JSON.stringify({ blocks: [] }),
-                type: 'text',
-                duration: 0,
                 order: lessons.length + 1,
+                estimatedDuration: 0,
                 isPreview: false,
+                isPremium: false,
+                isPublished: false,
+                resources: [],
+                settings: {
+                    allowComments: true,
+                    downloadable: false,
+                    autoComplete: false,
+                    preventSkipping: false,
+                    showTranscript: false
+                },
+                tags: [],
+                language: 'en'
             };
 
             await createLesson({
@@ -263,10 +281,110 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         }
     };
 
-    const handleAddContent = (lessonId: string, contentType: ContentType) => {
+    const handleAddContent = async (lessonId: string, contentType: ContentType) => {
         setShowContentPopup(null);
-        // Navigate to content editing page
-        router.push(`/courses/create/${course?._id}/courseOutline/${lessonId}/content?type=${contentType.type}`);
+
+        if (!course?._id) return;
+
+        try {
+            // Create basic content based on type
+            const baseData = {
+                title: `New ${contentType.label}`,
+                description: '',
+                type: contentType.type,
+                data: getDefaultContentData(contentType.type),
+                isPublished: false,
+                isPreview: false,
+                objectives: [],
+                tags: []
+            };
+
+            const result = await createContent({
+                courseId: course._id,
+                lessonId,
+                data: baseData
+            }).unwrap();
+
+            showSuccessToast(`${contentType.label} content added successfully!`);
+
+            // Navigate to content editing page
+            router.push(`/courses/create/${course._id}/courseOutline/${lessonId}/content/${result.data.content._id}/edit`);
+        } catch (error) {
+            console.error(`Error creating ${contentType.label} content:`, error);
+            showErrorToast(`Failed to create ${contentType.label} content`);
+        }
+    };
+
+    // Helper function to get default content data based on type
+    const getDefaultContentData = (type: LessonContent['type']) => {
+        switch (type) {
+            case 'text':
+                return { text: '' };
+            case 'block':
+                return { items: [] };
+            case 'audio':
+            case 'video':
+            case 'document':
+                return { url: '', filename: '', size: 0, mimeType: '' };
+            case 'quiz':
+                return {
+                    quiz: {
+                        instructions: '',
+                        timeLimit: 0,
+                        attempts: 1,
+                        shuffleQuestions: false,
+                        showFeedback: true,
+                        passingScore: 70,
+                        questions: []
+                    }
+                };
+            case 'assignment':
+                return {
+                    assignment: {
+                        title: '',
+                        description: '',
+                        submissionType: 'file' as const,
+                        maxFileSize: 10 * 1024 * 1024, // 10MB
+                        maxSubmissions: 1,
+                        maxPoints: 100,
+                        autoGrade: false,
+                        allowLateSubmission: false,
+                        lateSubmissionPenalty: 0,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+                };
+            default:
+                return {};
+        }
+    };
+
+    const handleDeleteContent = async (lessonId: string, contentId: string) => {
+        if (!course?._id) return;
+
+        try {
+            await deleteContent({
+                courseId: course._id,
+                lessonId,
+                contentId
+            }).unwrap();
+            showSuccessToast("Content deleted successfully!");
+        } catch (error) {
+            console.error("Error deleting content:", error);
+            showErrorToast("Failed to delete content");
+        }
+    };
+
+    const toggleLessonExpansion = (lessonId: string) => {
+        setExpandedLessons(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(lessonId)) {
+                newSet.delete(lessonId);
+            } else {
+                newSet.add(lessonId);
+            }
+            return newSet;
+        });
     };
 
     // Helper functions to manage creation modes
@@ -295,68 +413,162 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         setChapterName("");
     }, []);
 
-    // Reusable Lesson Display Component
-    const LessonItem = ({ lesson, isInChapter = false }: { lesson: any; isInChapter?: boolean }) => (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow relative">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+    // Content Item Component
+    const ContentItem = ({ content, lessonId }: { content: LessonContent; lessonId: string }) => {
+        const getContentIcon = (type: LessonContent['type']) => {
+            switch (type) {
+                case 'text': return FileText;
+                case 'block': return Grid3X3;
+                case 'video': return Video;
+                case 'audio': return Video;
+                case 'document': return File;
+                case 'quiz': return HelpCircle;
+                case 'assignment': return Clipboard;
+                default: return File;
+            }
+        };
+
+        const ContentIcon = getContentIcon(content.type);
+
+        return (
+            <div className="bg-gray-50 border border-gray-100 rounded-md p-3 ml-8">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <File className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">{lesson.title}</span>
+                        <ContentIcon className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-medium">{content.title}</span>
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded capitalize">
+                            {content.type}
+                        </span>
                     </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowContentPopup(lesson._id)}
-                        className="text-black border-gray-300 hover:bg-gray-50"
-                    >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Content
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingLesson(lesson._id)}
-                    >
-                        <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteLesson(lesson._id)}
-                        disabled={isDeletingLesson}
-                        className="text-red-600 hover:text-red-700"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/courses/create/${course?._id}/courseOutline/${lessonId}/content/${content._id}/edit`)}
+                            className="text-gray-600 hover:text-blue-600 p-1 h-auto"
+                        >
+                            <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteContent(lessonId, content._id)}
+                            disabled={isDeletingContent}
+                            className="text-gray-600 hover:text-red-600 p-1 h-auto"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                        </Button>
+                    </div>
                 </div>
             </div>
+        );
+    };
 
-            {/* Content Popup */}
-            {showContentPopup === lesson._id && (
-                <div className="absolute top-full right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-                    <div className="space-y-1">
-                        {contentTypes.map((contentType) => {
-                            const IconComponent = contentType.icon;
-                            return (
-                                <button
-                                    key={contentType.id}
-                                    onClick={() => handleAddContent(lesson._id, contentType)}
-                                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+    // Reusable Lesson Display Component
+    const LessonItem = ({ lesson, isInChapter = false }: { lesson: any; isInChapter?: boolean }) => {
+        const isExpanded = expandedLessons.has(lesson._id);
+
+        // Query lesson content
+        const { data: contentData } = useGetContentByLessonQuery(
+            { courseId: course?._id || "", lessonId: lesson._id },
+            { skip: !course?._id || !lesson._id }
+        );
+
+        const content = contentData?.data?.content || [];
+
+        return (
+            <div className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow relative">
+                {/* Lesson Header */}
+                <div className="p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                            <div className="flex items-center gap-2">
+                                <File className="w-4 h-4 text-gray-500" />
+                                <span className="font-medium">{lesson.title}</span>
+                                {content.length > 0 && (
+                                    <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                                        {content.length} content item{content.length > 1 ? 's' : ''}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowContentPopup(lesson._id)}
+                                className="text-black border-gray-300 hover:bg-gray-50"
+                            >
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add Content
+                            </Button>
+                            {content.length > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleLessonExpansion(lesson._id)}
+                                    className="text-gray-600 hover:text-gray-800"
                                 >
-                                    <IconComponent className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm">{contentType.label}</span>
-                                </button>
-                            );
-                        })}
+                                    {isExpanded ? 'Collapse' : 'Expand'}
+                                </Button>
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingLesson(lesson._id)}
+                            >
+                                <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteLesson(lesson._id)}
+                                disabled={isDeletingLesson}
+                                className="text-red-600 hover:text-red-700"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
-            )}
-        </div>
-    );
+
+                {/* Content List */}
+                {isExpanded && content.length > 0 && (
+                    <div className="px-4 pb-4 space-y-2">
+                        {content.map((contentItem) => (
+                            <ContentItem
+                                key={contentItem._id}
+                                content={contentItem}
+                                lessonId={lesson._id}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Content Popup */}
+                {showContentPopup === lesson._id && (
+                    <div className="absolute top-full right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
+                        <div className="space-y-1">
+                            {contentTypes.map((contentType) => {
+                                const IconComponent = contentType.icon;
+                                return (
+                                    <button
+                                        key={contentType.id}
+                                        onClick={() => handleAddContent(lesson._id, contentType)}
+                                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                                    >
+                                        <IconComponent className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm">{contentType.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     // Empty State Component
     const EmptyState = () => (
