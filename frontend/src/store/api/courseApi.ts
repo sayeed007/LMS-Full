@@ -1,4 +1,4 @@
-import { Course, CourseLesson } from '../../types/backend-models';
+import { Course, CourseLesson, CourseChapter } from '../../types/backend-models';
 import { baseApi, BaseApiResponse } from './baseApi';
 
 // API-specific interfaces for requests/responses
@@ -329,6 +329,74 @@ export const courseApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Course'],
     }),
+
+    // Chapters
+    getChapters: builder.query<BaseApiResponse<{ chapters: CourseChapter[] }>, { courseId: string; params?: { page?: number; limit?: number } }>({
+      query: ({ courseId, params }) => ({
+        url: `/courses/${courseId}/chapters`,
+        params,
+      }),
+      providesTags: (result, error, { courseId }) => [
+        { type: 'Chapter', id: courseId },
+        'Chapter'
+      ],
+    }),
+
+    getChapterById: builder.query<BaseApiResponse<{ chapter: CourseChapter }>, { courseId: string; chapterId: string }>({
+      query: ({ courseId, chapterId }) => `/courses/${courseId}/chapters/${chapterId}`,
+      providesTags: (result, error, { chapterId }) => [{ type: 'Chapter', id: chapterId }],
+    }),
+
+    createChapter: builder.mutation<BaseApiResponse<{ chapter: CourseChapter }>, { courseId: string; data: CreateChapterRequest }>({
+      query: ({ courseId, data }) => ({
+        url: `/courses/${courseId}/chapters`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: 'Chapter', id: courseId },
+        'Chapter',
+        { type: 'Course', id: courseId }
+      ],
+    }),
+
+    updateChapter: builder.mutation<BaseApiResponse<{ chapter: CourseChapter }>, { courseId: string; chapterId: string; data: UpdateChapterRequest }>({
+      query: ({ courseId, chapterId, data }) => ({
+        url: `/courses/${courseId}/chapters/${chapterId}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { courseId, chapterId }) => [
+        { type: 'Chapter', id: chapterId },
+        { type: 'Chapter', id: courseId },
+        'Chapter'
+      ],
+    }),
+
+    deleteChapter: builder.mutation<BaseApiResponse<void>, { courseId: string; chapterId: string }>({
+      query: ({ courseId, chapterId }) => ({
+        url: `/courses/${courseId}/chapters/${chapterId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { courseId, chapterId }) => [
+        { type: 'Chapter', id: chapterId },
+        { type: 'Chapter', id: courseId },
+        'Chapter',
+        { type: 'Course', id: courseId }
+      ],
+    }),
+
+    reorderChapters: builder.mutation<BaseApiResponse<CourseChapter[]>, { courseId: string; chapters: Array<{ _id: string; order: number }> }>({
+      query: ({ courseId, chapters }) => ({
+        url: `/courses/${courseId}/chapters/reorder`,
+        method: 'PATCH',
+        body: { chapters },
+      }),
+      invalidatesTags: (result, error, { courseId }) => [
+        { type: 'Chapter', id: courseId },
+        'Chapter'
+      ],
+    }),
   }),
 });
 
@@ -349,6 +417,12 @@ export const {
   useUpdateLessonMutation,
   useDeleteLessonMutation,
   useReorderLessonsMutation,
+  useGetChaptersQuery,
+  useGetChapterByIdQuery,
+  useCreateChapterMutation,
+  useUpdateChapterMutation,
+  useDeleteChapterMutation,
+  useReorderChaptersMutation,
   useGetCourseStatsQuery,
   useGetCategoriesQuery,
   useGetFeaturedCoursesQuery,

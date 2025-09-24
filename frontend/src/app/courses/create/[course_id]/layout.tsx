@@ -106,6 +106,7 @@ export default function CourseLayout() {
               <div className="animate-pulse bg-gray-200 h-6 w-48 rounded"></div>
             ) : course?.title || "Course Title"}
           </div>
+
           {(showHeaderActions || isOwner) && (
             <div className="absolute right-0 flex gap-2">
               <Button className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm">

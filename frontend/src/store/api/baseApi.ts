@@ -22,6 +22,7 @@ export const baseApi = createApi({
     'User',
     'Course',
     'Lesson',
+    'Chapter',
     'Enrollment',
     'Progress',
     'Organization',

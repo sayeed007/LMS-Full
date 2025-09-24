@@ -586,6 +586,16 @@ const {
   removeResource
 } = require('../controllers/lessonController');
 
+// Import chapter controller functions
+const {
+  getChapters,
+  getChapterById,
+  createChapter,
+  updateChapter,
+  deleteChapter,
+  reorderChapters
+} = require('../controllers/chapterController');
+
 /**
  * @swagger
  * /api/v1/courses/{id}/enrollments:
@@ -1020,5 +1030,215 @@ router.delete('/:id/lessons/:lessonId/resources/:resourceId', restrictTo('instru
   req.params.courseId = req.params.id;
   removeResource(req, res, next);
 });
+
+// Chapter Routes
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/chapters:
+ *   get:
+ *     summary: Get all chapters for a course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of course chapters
+ *       403:
+ *         description: No access to course
+ *       404:
+ *         description: Course not found
+ *   post:
+ *     summary: Create a new chapter for the course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               order:
+ *                 type: number
+ *               isPublished:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Chapter created successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.route('/:id/chapters')
+  .get((req, res, next) => {
+    req.params.courseId = req.params.id;
+    getChapters(req, res, next);
+  })
+  .post(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    createChapter(req, res, next);
+  });
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/chapters/reorder:
+ *   patch:
+ *     summary: Reorder chapters in a course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - chapters
+ *             properties:
+ *               chapters:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     order:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Chapters reordered successfully
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.patch('/:id/chapters/reorder', restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+  req.params.courseId = req.params.id;
+  reorderChapters(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/chapters/{chapterId}:
+ *   get:
+ *     summary: Get chapter by ID
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: chapterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Chapter details
+ *       403:
+ *         description: No access to chapter
+ *       404:
+ *         description: Chapter not found
+ *   patch:
+ *     summary: Update chapter
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: chapterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               isPublished:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Chapter updated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Chapter not found
+ *   delete:
+ *     summary: Delete chapter
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: chapterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Chapter deleted successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Chapter not found
+ */
+router.route('/:id/chapters/:chapterId')
+  .get((req, res, next) => {
+    req.params.courseId = req.params.id;
+    getChapterById(req, res, next);
+  })
+  .patch(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    updateChapter(req, res, next);
+  })
+  .delete(restrictTo('instructor', 'org_admin', 'super_admin'), (req, res, next) => {
+    req.params.courseId = req.params.id;
+    deleteChapter(req, res, next);
+  });
 
 module.exports = router;

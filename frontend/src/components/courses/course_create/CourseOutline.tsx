@@ -7,9 +7,13 @@ import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
 import {
     CoursePopulated,
     CreateLessonRequest,
+    CreateChapterRequest,
     useCreateLessonMutation,
     useDeleteLessonMutation,
-    useGetLessonsQuery
+    useGetLessonsQuery,
+    useCreateChapterMutation,
+    useDeleteChapterMutation,
+    useGetChaptersQuery
 } from "@/store/api/courseApi";
 import {
     Clipboard,
@@ -26,7 +30,7 @@ import {
     X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 // import { CourseHeaderContext } from "../layout";
 
 interface CourseOutlineProps {
@@ -49,12 +53,89 @@ const contentTypes: ContentType[] = [
     { id: 'assignment', type: 'assignment', icon: Clipboard, label: 'Assignment' },
 ];
 
+// Move CreationForm component outside to prevent recreation
+const CreationForm = ({
+    type,
+    value,
+    onChange,
+    onSubmit,
+    onCancel,
+    isLoading,
+    placeholder,
+    className = ""
+}: {
+    type: 'lesson' | 'chapter';
+    value: string;
+    onChange: (value: string) => void;
+    onSubmit: () => void;
+    onCancel: () => void;
+    isLoading: boolean;
+    placeholder: string;
+    className?: string;
+}) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onChange(e.target.value);
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            onSubmit();
+        }
+    };
+
+    const clearInput = () => {
+        onChange("");
+    };
+
+    return (
+        <div className={`flex items-center gap-3 mb-6 p-4 rounded-md bg-white ${className}`}>
+            <div className="flex-1 relative">
+                <Input
+                    value={value}
+                    onChange={handleInputChange}
+                    placeholder={placeholder}
+                    className="pr-20"
+                    onKeyPress={handleKeyPress}
+                    autoFocus
+                />
+                {value && (
+                    <button
+                        onClick={clearInput}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
+            <Button
+                onClick={onSubmit}
+                disabled={isLoading || !value.trim()}
+                className="bg-blue-600 text-white hover:bg-blue-700 px-6"
+            >
+                {isLoading ? "Creating..." : "Create"}
+            </Button>
+            <Button
+                variant="outline"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={onCancel}
+            >
+                <X className="w-4 h-4" />
+            </Button>
+        </div>
+    );
+};
+
 export default function CourseOutline({ course }: CourseOutlineProps) {
     const [lessonName, setLessonName] = useState("");
+    const [chapterName, setChapterName] = useState("");
     const [showContentPopup, setShowContentPopup] = useState<string | null>(null);
     const [editingLesson, setEditingLesson] = useState<string | null>(null);
     const [createFirstLesson, setCreateFirstLesson] = useState<boolean>(false);
     const [createFirstChapter, setCreateFirstChapter] = useState<boolean>(false);
+    // New state for dynamic creation modes
+    const [isCreatingNewLesson, setIsCreatingNewLesson] = useState<boolean>(false);
+    const [isCreatingNewChapter, setIsCreatingNewChapter] = useState<boolean>(false);
+
 
     const { setShowHeaderActions } = useContext(CourseHeaderContext);
     const router = useRouter();
@@ -62,23 +143,37 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     // API hooks
     const {
         data: lessonsData,
-        isLoading,
-        error
+        isLoading: isLoadingLessons,
+        error: lessonsError
     } = useGetLessonsQuery(
         { courseId: course?._id || "" },
         { skip: !course?._id }
     );
 
-    const [createLesson, { isLoading: isCreating }] = useCreateLessonMutation();
-    const [deleteLesson, { isLoading: isDeleting }] = useDeleteLessonMutation();
+    const {
+        data: chaptersData,
+        isLoading: isLoadingChapters,
+        error: chaptersError
+    } = useGetChaptersQuery(
+        { courseId: course?._id || "" },
+        { skip: !course?._id }
+    );
+
+    const [createLesson, { isLoading: isCreatingLesson }] = useCreateLessonMutation();
+    const [deleteLesson, { isLoading: isDeletingLesson }] = useDeleteLessonMutation();
+    const [createChapter, { isLoading: isCreatingChapter }] = useCreateChapterMutation();
+    const [deleteChapter, { isLoading: isDeletingChapter }] = useDeleteChapterMutation();
 
     const lessons = lessonsData?.data?.lessons || [];
+    const chapters = chaptersData?.data?.chapters || [];
+    const isLoading = isLoadingLessons || isLoadingChapters;
+    const error = lessonsError || chaptersError;
 
     useEffect(() => {
-        setShowHeaderActions(lessons.length > 0);
-    }, [lessons.length, setShowHeaderActions]);
+        setShowHeaderActions(lessons.length > 0 || chapters.length > 0);
+    }, [lessons.length, chapters.length, setShowHeaderActions]);
 
-    const handleCreateLesson = async () => {
+    const handleCreateLesson = useCallback(async () => {
         if (!course?._id || !lessonName.trim()) {
             showErrorToast("Please enter a lesson name");
             return;
@@ -103,11 +198,40 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
             showSuccessToast("Lesson created successfully!");
             setLessonName("");
             setCreateFirstLesson(false);
+            setIsCreatingNewLesson(false);
         } catch (error) {
             console.error("Error creating lesson:", error);
             showErrorToast("Failed to create lesson");
         }
-    };
+    }, [course?._id, lessonName, lessons.length, createLesson]);
+
+    const handleCreateChapter = useCallback(async () => {
+        if (!course?._id || !chapterName.trim()) {
+            showErrorToast("Please enter a chapter name");
+            return;
+        }
+
+        try {
+            const chapterData: CreateChapterRequest = {
+                title: chapterName,
+                description: "",
+                order: chapters.length + 1,
+            };
+
+            await createChapter({
+                courseId: course._id,
+                data: chapterData,
+            }).unwrap();
+
+            showSuccessToast("Chapter created successfully!");
+            setChapterName("");
+            setCreateFirstChapter(false);
+            setIsCreatingNewChapter(false);
+        } catch (error) {
+            console.error("Error creating chapter:", error);
+            showErrorToast("Failed to create chapter");
+        }
+    }, [course?._id, chapterName, chapters.length, createChapter]);
 
     const handleDeleteLesson = async (lessonId: string) => {
         if (!course?._id) return;
@@ -124,10 +248,292 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         }
     };
 
+    const handleDeleteChapter = async (chapterId: string) => {
+        if (!course?._id) return;
+
+        try {
+            await deleteChapter({
+                courseId: course._id,
+                chapterId,
+            }).unwrap();
+            showSuccessToast("Chapter deleted successfully!");
+        } catch (error) {
+            console.error("Error deleting chapter:", error);
+            showErrorToast("Failed to delete chapter");
+        }
+    };
+
     const handleAddContent = (lessonId: string, contentType: ContentType) => {
         setShowContentPopup(null);
         // Navigate to content editing page
         router.push(`/courses/create/${course?._id}/courseOutline/${lessonId}/content?type=${contentType.type}`);
+    };
+
+    // Helper functions to manage creation modes
+    const startCreatingLesson = useCallback(() => {
+        setIsCreatingNewLesson(true);
+        setIsCreatingNewChapter(false);
+        setCreateFirstLesson(false);
+        setCreateFirstChapter(false);
+        setLessonName("");
+    }, []);
+
+    const startCreatingChapter = useCallback(() => {
+        setIsCreatingNewChapter(true);
+        setIsCreatingNewLesson(false);
+        setCreateFirstLesson(false);
+        setCreateFirstChapter(false);
+        setChapterName("");
+    }, []);
+
+    const cancelCreation = useCallback(() => {
+        setIsCreatingNewLesson(false);
+        setIsCreatingNewChapter(false);
+        setCreateFirstLesson(false);
+        setCreateFirstChapter(false);
+        setLessonName("");
+        setChapterName("");
+    }, []);
+
+    // Reusable Lesson Display Component
+    const LessonItem = ({ lesson, isInChapter = false }: { lesson: any; isInChapter?: boolean }) => (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow relative">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                    <div className="flex items-center gap-2">
+                        <File className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium">{lesson.title}</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowContentPopup(lesson._id)}
+                        className="text-black border-gray-300 hover:bg-gray-50"
+                    >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Content
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingLesson(lesson._id)}
+                    >
+                        <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteLesson(lesson._id)}
+                        disabled={isDeletingLesson}
+                        className="text-red-600 hover:text-red-700"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                </div>
+            </div>
+
+            {/* Content Popup */}
+            {showContentPopup === lesson._id && (
+                <div className="absolute top-full right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
+                    <div className="space-y-1">
+                        {contentTypes.map((contentType) => {
+                            const IconComponent = contentType.icon;
+                            return (
+                                <button
+                                    key={contentType.id}
+                                    onClick={() => handleAddContent(lesson._id, contentType)}
+                                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                                >
+                                    <IconComponent className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm">{contentType.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
+    // Empty State Component
+    const EmptyState = () => (
+        <div className="flex h-[50vh] flex-col justify-center items-center">
+            <h1>Start Creating your course</h1>
+            <p>Create a lesson or a chapter to get started with building your courses</p>
+            <div className="flex gap-4 mt-2">
+                <Button
+                    variant="outline"
+                    className="border border-blue-600 text-blue-600 flex items-center gap-2"
+                    onClick={() => setCreateFirstLesson(true)}
+                >
+                    <Plus size={16} /> Add Lesson
+                </Button>
+                <Button
+                    variant="outline"
+                    className="border border-blue-600 text-blue-600 flex items-center gap-2"
+                    onClick={() => setCreateFirstChapter(true)}
+                >
+                    <List size={16} /> Add Chapter
+                </Button>
+            </div>
+        </div>
+    );
+
+    // Determine current state and what to render
+    const getCurrentState = () => {
+        if (isLoading) return 'loading';
+        if (createFirstLesson) return 'first-lesson';
+        if (createFirstChapter) return 'first-chapter';
+        if (lessons.length > 0 || chapters.length > 0) return 'has-content';
+        return 'empty';
+    };
+
+    const renderContent = () => {
+        const state = getCurrentState();
+
+        switch (state) {
+            case 'loading':
+                return (
+                    <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-gray-100 animate-pulse rounded-lg h-16"></div>
+                        ))}
+                    </div>
+                );
+
+            case 'first-lesson':
+                return (
+                    <CreationForm
+                        type="lesson"
+                        value={lessonName}
+                        onChange={setLessonName}
+                        onSubmit={handleCreateLesson}
+                        onCancel={cancelCreation}
+                        isLoading={isCreatingLesson}
+                        placeholder="Enter Lesson Name"
+                    />
+                );
+
+            case 'first-chapter':
+                return (
+                    <CreationForm
+                        type="chapter"
+                        value={chapterName}
+                        onChange={setChapterName}
+                        onSubmit={handleCreateChapter}
+                        onCancel={cancelCreation}
+                        isLoading={isCreatingChapter}
+                        placeholder="Enter Chapter Name"
+                    />
+                );
+
+            case 'has-content':
+                return (
+                    <div className="space-y-3">
+                        {/* Display chapters first */}
+                        {chapters.map((chapter) => (
+                            <div key={`chapter-${chapter._id}`} className="space-y-2">
+                                {/* Chapter Header */}
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:shadow-sm transition-shadow relative">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                                            <div className="flex items-center gap-2">
+                                                <List className="w-4 h-4 text-blue-600" />
+                                                <span className="font-semibold text-blue-800">{chapter.title}</span>
+                                                <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
+                                                    Chapter
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                                            >
+                                                <Plus className="w-4 h-4 mr-1" />
+                                                Add Lesson
+                                            </Button>
+                                            <Button variant="ghost" size="sm">
+                                                <Edit className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteChapter(chapter._id)}
+                                                disabled={isDeletingChapter}
+                                                className="text-red-600 hover:text-red-700"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Chapter Lessons */}
+                                {chapter.lessons && chapter.lessons.length > 0 && (
+                                    <div className="ml-6 space-y-2">
+                                        {chapter.lessons.map((lesson) => (
+                                            <LessonItem
+                                                key={`chapter-lesson-${lesson._id}`}
+                                                lesson={lesson}
+                                                isInChapter={true}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {/* Display standalone lessons */}
+                        {lessons.filter(lesson => !lesson.chapter).map((lesson) => (
+                            <LessonItem
+                                key={`standalone-lesson-${lesson._id}`}
+                                lesson={lesson}
+                                isInChapter={false}
+                            />
+                        ))}
+
+                        {/* Inline creation forms */}
+                        {isCreatingNewLesson && (
+                            <CreationForm
+                                type="lesson"
+                                value={lessonName}
+                                onChange={setLessonName}
+                                onSubmit={handleCreateLesson}
+                                onCancel={cancelCreation}
+                                isLoading={isCreatingLesson}
+                                placeholder="Enter Lesson Name"
+                                className="border-blue-200"
+                            />
+                        )}
+
+                        {isCreatingNewChapter && (
+                            <CreationForm
+                                type="chapter"
+                                value={chapterName}
+                                onChange={setChapterName}
+                                onSubmit={handleCreateChapter}
+                                onCancel={cancelCreation}
+                                isLoading={isCreatingChapter}
+                                placeholder="Enter Chapter Name"
+                                className="border-blue-200"
+                            />
+                        )}
+
+                        {/* Add buttons */}
+                        {showAddLessonAndChapterButtons()}
+                    </div>
+                );
+
+            case 'empty':
+            default:
+                return <EmptyState />;
+        }
     };
 
     if (error) {
@@ -140,13 +546,41 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
     {/* Add Lesson and Chapter Buttons */ }
     const showAddLessonAndChapterButtons = () => {
+        // If no lessons or chapters exist yet, trigger first-time creation
+        const hasNoContent = lessons.length === 0 && chapters.length === 0;
+
+        // Don't show buttons if user is currently creating something
+        if (isCreatingNewLesson || isCreatingNewChapter) {
+            return null;
+        }
+
         return (
             <div className="flex gap-3 mb-8">
-                <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                <Button
+                    variant="outline"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    onClick={() => {
+                        if (hasNoContent) {
+                            setCreateFirstLesson(true);
+                        } else {
+                            startCreatingLesson();
+                        }
+                    }}
+                >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Lesson
                 </Button>
-                <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                <Button
+                    variant="outline"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    onClick={() => {
+                        if (hasNoContent) {
+                            setCreateFirstChapter(true);
+                        } else {
+                            startCreatingChapter();
+                        }
+                    }}
+                >
                     <List className="w-4 h-4 mr-2" />
                     Add Chapter
                 </Button>
@@ -156,167 +590,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
     return (
         <div className="mt-6">
-
-
-
-            {createFirstLesson ?
-                <>
-                    {/* Lesson Creation Input */}
-                    <div className="flex items-center gap-3 mb-6 p-4 rounded-md bg-white">
-                        <div className="flex-1 relative">
-                            <Input
-                                value={lessonName}
-                                onChange={(e) => setLessonName(e.target.value)}
-                                placeholder="Enter Lesson Name"
-                                className="pr-20"
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        handleCreateLesson();
-                                    }
-                                }}
-                            />
-                            {lessonName && (
-                                <button
-                                    onClick={() => setLessonName("")}
-                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            )}
-                        </div>
-                        <Button
-                            onClick={handleCreateLesson}
-                            disabled={isCreating || !lessonName.trim()}
-                            className="bg-blue-600 text-white hover:bg-blue-700 px-6"
-                        >
-                            {isCreating ? "Creating..." : "Create"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </Button>
-                    </div>
-
-                    {/* {showAddLessonAndChapterButtons()} */}
-                </>
-                : createFirstChapter ?
-                    <>
-
-                    </>
-                    : lessons?.length > 0 ?
-                        <>
-
-                        </>
-                        :
-                        <div className="flex h-[50vh] flex-col justify-center items-center">
-                            <h1>Start Creating your course</h1>
-                            <p>
-                                Create a lesson or a chapter to get started with building your courses
-                            </p>
-
-                            <div className="flex gap-4 mt-2">
-                                <Button
-                                    variant="outline"
-                                    className="border border-blue-600 text-blue-600 flex items-center gap-2"
-                                    onClick={() => setCreateFirstLesson(true)}
-                                >
-                                    <Plus size={16} /> Add Lesson
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border border-blue-600 text-blue-600 flex items-center gap-2"
-                                    onClick={() => setCreateFirstChapter(true)}
-                                >
-                                    <List size={16} /> Add Chapter
-                                </Button>
-                            </div>
-                        </div>
-            }
-
-
-
-
-
-            {/* Lessons List */}
-            {isLoading ? (
-                <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-gray-100 animate-pulse rounded-lg h-16"></div>
-                    ))}
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {lessons.map((lesson) => (
-                        <div
-                            key={lesson._id}
-                            className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow relative"
-                        >
-                            <div className="flex items-center justify-between">
-                                {/* Left side - Drag handle and lesson info */}
-                                <div className="flex items-center gap-3">
-                                    <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
-                                    <div className="flex items-center gap-2">
-                                        <File className="w-4 h-4 text-gray-500" />
-                                        <span className="font-medium">{lesson.title}</span>
-                                    </div>
-                                </div>
-
-                                {/* Right side - Action buttons */}
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setShowContentPopup(lesson._id)}
-                                        className="text-black border-gray-300 hover:bg-gray-50"
-                                    >
-                                        <Plus className="w-4 h-4 mr-1" />
-                                        Add Content
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setEditingLesson(lesson._id)}
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeleteLesson(lesson._id)}
-                                        disabled={isDeleting}
-                                        className="text-red-600 hover:text-red-700"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Content Popup */}
-                            {showContentPopup === lesson._id && (
-                                <div className="absolute top-full right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-                                    <div className="space-y-1">
-                                        {contentTypes.map((contentType) => {
-                                            const IconComponent = contentType.icon;
-                                            return (
-                                                <button
-                                                    key={contentType.id}
-                                                    onClick={() => handleAddContent(lesson._id, contentType)}
-                                                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                                                >
-                                                    <IconComponent className="w-4 h-4 text-blue-600" />
-                                                    <span className="text-sm">{contentType.label}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+            {renderContent()}
 
             {/* Click outside to close popup */}
             {showContentPopup && (
