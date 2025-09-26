@@ -239,7 +239,8 @@ const deleteChapter = catchAsync(async (req, res, next) => {
     {
       isDeleted: true,
       deletedAt: new Date(),
-      isActive: false
+      isActive: false,
+      order: null // Clear order to prevent conflicts
     }
   );
 
