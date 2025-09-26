@@ -76,8 +76,12 @@ const lessonSchema = new mongoose.Schema({
   // Ordering and organization
   order: {
     type: Number,
-    required: [true, 'Lesson order is required'],
-    min: [1, 'Lesson order must be at least 1']
+    required: function() {
+      // Order is only required for active lessons
+      return !this.isDeleted;
+    },
+    min: [1, 'Lesson order must be at least 1'],
+    default: null
   },
   estimatedDuration: {
     type: Number, // in minutes - estimated total time for all content in lesson
@@ -169,10 +173,10 @@ lessonSchema.index({ createdAt: -1 });
 lessonSchema.index({ title: 'text', description: 'text', content: 'text' });
 
 // Compound index for ordering within course - Keep only this one with unique constraint
-// Exclude soft-deleted lessons from unique constraint
+// Exclude soft-deleted lessons and null orders from unique constraint
 lessonSchema.index({ course: 1, order: 1 }, {
   unique: true,
-  partialFilterExpression: { isDeleted: false }
+  partialFilterExpression: { isDeleted: false, order: { $ne: null } }
 });
 
 // Virtual for completion rate
@@ -265,6 +269,17 @@ lessonSchema.methods.softDelete = function () {
   this.isDeleted = true;
   this.deletedAt = new Date();
   this.isActive = false;
+  // Clear the order to prevent conflicts with future lessons
+  this.order = null;
+  return this.save();
+};
+
+lessonSchema.methods.restore = async function () {
+  this.isDeleted = false;
+  this.deletedAt = null;
+  this.isActive = true;
+  // Assign new order at the end of the course
+  this.order = await this.constructor.getNextOrder(this.course);
   return this.save();
 };
 
@@ -298,14 +313,64 @@ lessonSchema.statics.getNextOrder = async function (courseId) {
 };
 
 lessonSchema.statics.reorderLessons = async function (courseId, lessonOrders) {
-  const bulkOps = lessonOrders.map(({ _id, order }) => ({
-    updateOne: {
-      filter: { _id, course: courseId },
-      update: { order, lastModified: new Date() }
-    }
-  }));
+  const session = await mongoose.startSession();
 
-  return this.bulkWrite(bulkOps);
+  try {
+    await session.withTransaction(async () => {
+      // Step 1: Get all active lessons for this course
+      const existingLessons = await this.find({
+        course: courseId,
+        isDeleted: false
+      }, { _id: 1, order: 1 }, { session });
+
+      // Step 2: Move ALL active lessons to temporary negative orders first
+      // This completely clears the order space to avoid any conflicts
+      const allTempOps = existingLessons.map((lesson, index) => ({
+        updateOne: {
+          filter: { _id: lesson._id, course: courseId, isDeleted: false },
+          update: { order: -(index + 50000), lastModified: new Date() }
+        }
+      }));
+
+      if (allTempOps.length > 0) {
+        await this.bulkWrite(allTempOps, { session });
+      }
+
+      // Step 3: Set the final correct orders for the lessons being reordered
+      const finalOps = lessonOrders.map(({ _id, order }) => ({
+        updateOne: {
+          filter: { _id, course: courseId, isDeleted: false },
+          update: { order, lastModified: new Date() }
+        }
+      }));
+
+      if (finalOps.length > 0) {
+        await this.bulkWrite(finalOps, { session });
+      }
+
+      // Step 4: Fix orders for any remaining lessons that weren't in the reorder list
+      const reorderedIds = lessonOrders.map(l => l._id.toString());
+      const unprocessedLessons = existingLessons.filter(
+        lesson => !reorderedIds.includes(lesson._id.toString())
+      );
+
+      if (unprocessedLessons.length > 0) {
+        // Find the highest order from the reordered lessons
+        const maxOrder = Math.max(...lessonOrders.map(l => l.order));
+
+        const remainingOps = unprocessedLessons.map((lesson, index) => ({
+          updateOne: {
+            filter: { _id: lesson._id, course: courseId, isDeleted: false },
+            update: { order: maxOrder + index + 1, lastModified: new Date() }
+          }
+        }));
+
+        await this.bulkWrite(remainingOps, { session });
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
 };
 
 lessonSchema.statics.getCourseStats = async function (courseId) {
