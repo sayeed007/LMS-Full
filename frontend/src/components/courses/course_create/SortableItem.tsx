@@ -47,12 +47,12 @@ export function SortableItem({
       className={`${className} ${isDragging ? 'opacity-50 z-50' : ''} ${disabled ? 'cursor-not-allowed' : ''}`}
       {...attributes}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         <div
           className={`flex-shrink-0 p-1 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab active:cursor-grabbing'} hover:bg-gray-100 rounded`}
           {...listeners}
         >
-          <GripVertical className="w-4 h-4 text-gray-400" />
+          <GripVertical className="w-4 h-4 text-gray-400 mt-[22px]" />
         </div>
         <div className="flex-1">
           {children}
