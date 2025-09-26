@@ -256,9 +256,9 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
         <div className="flex-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Course Outline</h2>
 
-          {course?.chapters?.map((chapter: CourseChapter) => {
+          {course?.chapters ? [...course.chapters].sort((a: CourseChapter, b: CourseChapter) => (a.order || 0) - (b.order || 0)).map((chapter: CourseChapter) => {
             const isChapterExpanded = expandedChapters.includes(chapter?._id);
-            const chapterLessons = chapter?.lessons || [];
+            const chapterLessons = chapter?.lessons ? [...chapter.lessons].sort((a: CourseLesson, b: CourseLesson) => (a.order || 0) - (b.order || 0)) : [];
 
             return (
               <div key={chapter?._id} className="mb-4">

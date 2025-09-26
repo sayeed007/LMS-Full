@@ -41,7 +41,7 @@ export default function LessonPlayerPage() {
   const [updateProgress, { isLoading: isCompletingLesson }] = useUpdateProgressMutation();
 
   const lesson = lessonData?.data?.lesson;
-  const lessons = lessonsData?.data || [];
+  const lessons = [...(lessonsData?.data?.lessons || [])].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
   // Find current lesson index and navigation
   const currentLessonIndex = lessons.findIndex((l: any) => l._id === lessonId);

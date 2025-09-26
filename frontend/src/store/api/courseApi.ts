@@ -72,7 +72,7 @@ export interface UpdateCourseRequest {
 export interface CreateChapterRequest {
   title: string;
   description?: string;
-  order: number;
+  order?: number;
 }
 
 export interface UpdateChapterRequest {
@@ -85,7 +85,7 @@ export interface UpdateChapterRequest {
 export interface CreateLessonRequest {
   title: string;
   description?: string;
-  order: number;
+  order?: number;
   estimatedDuration?: number;
   resources?: CourseLesson['resources'];
   isPreview?: boolean;
@@ -340,8 +340,8 @@ export const courseApi = baseApi.injectEndpoints({
       providesTags: ['Course'],
     }),
 
-    // Categories
-    getCategories: builder.query<BaseApiResponse<{ categories: string[] }>, void>({
+    // Course Categories
+    getCourseCategories: builder.query<BaseApiResponse<{ categories: string[] }>, void>({
       query: () => '/courses/categories',
       providesTags: ['Course'],
     }),
@@ -555,7 +555,7 @@ export const {
   useDeleteChapterMutation,
   useReorderChaptersMutation,
   useGetCourseStatsQuery,
-  useGetCategoriesQuery,
+  useGetCourseCategoriesQuery,
   useGetFeaturedCoursesQuery,
   // Content hooks
   useGetContentByLessonQuery,
