@@ -45,6 +45,7 @@ export function SortableItem({
       ref={setNodeRef}
       style={style}
       className={`${className} ${isDragging ? 'opacity-50 z-50' : ''} ${disabled ? 'cursor-not-allowed' : ''}`}
+      data-sortable-id={id}
       {...attributes}
     >
       <div className="flex items-start gap-2">

@@ -328,6 +328,53 @@ export const courseApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { lessons },
       }),
+      async onQueryStarted({ courseId, lessons }, { dispatch, queryFulfilled }) {
+        // Optimistically update the lessons cache
+        const lessonsPatchResult = dispatch(
+          courseApi.util.updateQueryData('getLessons', { courseId }, (draft) => {
+            if (draft?.data?.lessons) {
+              // Update lesson orders based on the reorder data
+              draft.data.lessons.forEach((lesson) => {
+                const reorderItem = lessons.find(item => item._id === lesson._id);
+                if (reorderItem) {
+                  lesson.order = reorderItem.order;
+                }
+              });
+              // Sort lessons by the new order
+              draft.data.lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+            }
+          })
+        );
+
+        // Also update chapters cache for lessons within chapters
+        const chaptersPatchResult = dispatch(
+          courseApi.util.updateQueryData('getChapters', { courseId }, (draft) => {
+            if (draft?.data?.chapters) {
+              draft.data.chapters.forEach((chapter) => {
+                if (chapter.lessons) {
+                  // Update lesson orders within chapters
+                  chapter.lessons.forEach((lesson) => {
+                    const reorderItem = lessons.find(item => item._id === lesson._id);
+                    if (reorderItem) {
+                      lesson.order = reorderItem.order;
+                    }
+                  });
+                  // Sort lessons within each chapter
+                  chapter.lessons.sort((a, b) => (a.order || 0) - (b.order || 0));
+                }
+              });
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          // Revert both optimistic updates on error
+          lessonsPatchResult.undo();
+          chaptersPatchResult.undo();
+        }
+      },
       invalidatesTags: (result, error, { courseId }) => [
         { type: 'Lesson', id: courseId },
         'Lesson'
@@ -417,6 +464,31 @@ export const courseApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { chapters },
       }),
+      async onQueryStarted({ courseId, chapters }, { dispatch, queryFulfilled }) {
+        // Optimistically update the cache
+        const patchResult = dispatch(
+          courseApi.util.updateQueryData('getChapters', { courseId }, (draft) => {
+            if (draft?.data?.chapters) {
+              // Update chapter orders based on the reorder data
+              draft.data.chapters.forEach((chapter) => {
+                const reorderItem = chapters.find(item => item._id === chapter._id);
+                if (reorderItem) {
+                  chapter.order = reorderItem.order;
+                }
+              });
+              // Sort chapters by the new order
+              draft.data.chapters.sort((a, b) => (a.order || 0) - (b.order || 0));
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          // Revert the optimistic update on error
+          patchResult.undo();
+        }
+      },
       invalidatesTags: (result, error, { courseId }) => [
         { type: 'Chapter', id: courseId },
         'Chapter'

@@ -10,6 +10,7 @@ import {
   useSensors,
   closestCenter,
   DragOverEvent,
+  rectIntersection,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { ReactNode, useState } from 'react';
@@ -35,6 +36,7 @@ interface DragDropProviderProps {
 
 export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropProviderProps) {
   const [activeItem, setActiveItem] = useState<DragItem | null>(null);
+  const [activeContainer, setActiveContainer] = useState<string>('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -48,21 +50,48 @@ export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropP
     const { active } = event;
     const activeData = active.data.current as DragItem;
     setActiveItem(activeData);
+
+    // Determine active container from the active item's context
+    const container = findContainerFromElement(active.id.toString());
+    setActiveContainer(container);
+
     onDragStart?.(activeData);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    // This helps track container changes during drag
+  };
+
+  const findContainerFromElement = (id: string): string => {
+    // Use the data attributes we added
+    const element = document.querySelector(`[data-sortable-id="${id}"]`);
+    if (element) {
+      const container = element.closest('[data-container-id]');
+      return container?.getAttribute('data-container-id') || 'default';
+    }
+    return 'default';
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveItem(null);
 
-    if (!over) return;
+    if (!over) {
+      setActiveContainer('');
+      return;
+    }
 
     const activeData = active.data.current as DragItem;
     const overData = over.data.current;
 
-    // Extract container and index information
-    const activeContainer = active.data.current?.sortable?.containerId || 'default';
-    const overContainer = overData?.sortable?.containerId || over.id;
+    // Determine target container
+    let overContainer = over.id.toString();
+
+    // If dropping over an item, find its container
+    if (!overData?.type) {
+      overContainer = findContainerFromElement(over.id.toString());
+    }
+
     const activeIndex = active.data.current?.sortable?.index || 0;
     const overIndex = overData?.sortable?.index !== undefined ? overData.sortable.index : 0;
 
@@ -77,13 +106,16 @@ export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropP
       sourceIndex: activeIndex,
       targetIndex: overIndex,
     });
+
+    setActiveContainer('');
   };
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={rectIntersection}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       {children}

@@ -34,6 +34,8 @@ export function SortableContainer({
     <div
       ref={setNodeRef}
       className={`${className} ${isOver ? 'bg-blue-50 border-blue-200' : ''} transition-colors`}
+      data-sortable-context
+      data-container-id={id}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {children}
