@@ -285,8 +285,6 @@ lessonSchema.statics.findByCourse = function (courseId, options = {}) {
 
   return this.find(query)
     .populate('createdBy', 'name email')
-    .populate('quiz', 'title')
-    .populate('assignment', 'title')
     .sort({ order: 1 });
 };
 

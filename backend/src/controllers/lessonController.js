@@ -57,8 +57,6 @@ const getLessons = catchAsync(async (req, res, next) => {
 
   const lessons = await features.query
     .populate('createdBy', 'name email')
-    .populate('quiz', 'title passingScore')
-    .populate('assignment', 'title dueDate')
     .sort({ order: 1 });
 
   const total = await Lesson.countDocuments(filter);
@@ -103,9 +101,7 @@ const getLessonById = catchAsync(async (req, res, next) => {
     course: courseId,
     isDeleted: false
   })
-    .populate('createdBy', 'name email avatar')
-    .populate('quiz', 'title description passingScore timeLimit')
-    .populate('assignment', 'title description dueDate');
+    .populate('createdBy', 'name email avatar');
 
   if (!lesson) {
     return next(new AppError('Lesson not found', 404));
@@ -186,9 +182,7 @@ const createLesson = catchAsync(async (req, res, next) => {
   const lesson = await Lesson.create(lessonData);
 
   await lesson.populate([
-    { path: 'createdBy', select: 'name email' },
-    { path: 'quiz', select: 'title' },
-    { path: 'assignment', select: 'title' }
+    { path: 'createdBy', select: 'name email' }
   ]);
 
   res.status(201).json({
