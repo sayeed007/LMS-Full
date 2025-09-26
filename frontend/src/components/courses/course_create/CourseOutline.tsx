@@ -358,6 +358,53 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                 }).unwrap();
 
                 showSuccessToast('Chapters reordered successfully!');
+            } else if (active.type === 'lesson') {
+                // Handle lesson reordering
+                if (sourceContainer.startsWith('chapter-') && targetContainer.startsWith('chapter-')) {
+                    // Moving lessons within or between chapters
+                    const sourceChapterId = sourceContainer.replace('chapter-', '').replace('-lessons', '');
+                    const destChapterId = targetContainer.replace('chapter-', '').replace('-lessons', '');
+
+                    if (sourceChapterId === destChapterId) {
+                        // Reordering within same chapter
+                        const sourceChapter = chapters.find(ch => ch._id === sourceChapterId);
+                        if (sourceChapter?.lessons) {
+                            const reorderedLessons = Array.from(sourceChapter.lessons);
+                            const [removed] = reorderedLessons.splice(sourceIndex, 1);
+                            reorderedLessons.splice(targetIndex, 0, removed);
+
+                            const reorderData = reorderedLessons.map((lesson, index) => ({
+                                _id: lesson._id,
+                                order: index + 1
+                            }));
+
+                            await reorderLessons({
+                                courseId: course._id,
+                                lessons: reorderData
+                            }).unwrap();
+
+                            showSuccessToast('Lessons reordered successfully!');
+                        }
+                    }
+                } else if (sourceContainer === 'standalone-lessons' && targetContainer === 'standalone-lessons') {
+                    // Reordering standalone lessons
+                    const standaloneLessons = lessons.filter(lesson => !lesson.chapter);
+                    const reorderedLessons = Array.from(standaloneLessons);
+                    const [removed] = reorderedLessons.splice(sourceIndex, 1);
+                    reorderedLessons.splice(targetIndex, 0, removed);
+
+                    const reorderData = reorderedLessons.map((lesson, index) => ({
+                        _id: lesson._id,
+                        order: index + 1
+                    }));
+
+                    await reorderLessons({
+                        courseId: course._id,
+                        lessons: reorderData
+                    }).unwrap();
+
+                    showSuccessToast('Lessons reordered successfully!');
+                }
             }
         } catch (error) {
             console.error('Error reordering:', error);
@@ -523,28 +570,39 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
                                     {/* Chapter Lessons */}
                                     {chapter.lessons && chapter.lessons.length > 0 && (
-                                        <div className="ml-6 space-y-2">
+                                        <SortableContainer
+                                            id={`chapter-${chapter._id}-lessons`}
+                                            items={chapter.lessons.map(l => l._id)}
+                                            type="lesson"
+                                            className="ml-6 space-y-2"
+                                        >
                                             {chapter.lessons.map((lesson) => (
-                                                <LessonItem
+                                                <SortableItem
                                                     key={lesson._id}
-                                                    lesson={lesson}
-                                                    courseId={course?._id || ""}
-                                                    isInChapter={true}
-                                                    dragHandleProps={{}}
-                                                    expandedLessons={expandedLessons}
-                                                    showContentPopup={showContentPopup}
-                                                    contentTypes={contentTypes}
-                                                    isDeletingLesson={isDeletingLesson}
-                                                    isDeletingContent={isDeletingContent}
-                                                    onToggleLessonExpansion={toggleLessonExpansion}
-                                                    onSetShowContentPopup={setShowContentPopup}
-                                                    onSetEditingLesson={setEditingLesson}
-                                                    onDeleteLesson={handleDeleteLesson}
-                                                    onAddContent={handleAddContent}
-                                                    onDeleteContent={handleDeleteContent}
-                                                />
+                                                    id={lesson._id}
+                                                    type="lesson"
+                                                    data={lesson}
+                                                >
+                                                    <LessonItem
+                                                        lesson={lesson}
+                                                        courseId={course?._id || ""}
+                                                        isInChapter={true}
+                                                        dragHandleProps={{}}
+                                                        expandedLessons={expandedLessons}
+                                                        showContentPopup={showContentPopup}
+                                                        contentTypes={contentTypes}
+                                                        isDeletingLesson={isDeletingLesson}
+                                                        isDeletingContent={isDeletingContent}
+                                                        onToggleLessonExpansion={toggleLessonExpansion}
+                                                        onSetShowContentPopup={setShowContentPopup}
+                                                        onSetEditingLesson={setEditingLesson}
+                                                        onDeleteLesson={handleDeleteLesson}
+                                                        onAddContent={handleAddContent}
+                                                        onDeleteContent={handleDeleteContent}
+                                                    />
+                                                </SortableItem>
                                             ))}
-                                        </div>
+                                        </SortableContainer>
                                     )}
                                 </div>
                             </SortableItem>
