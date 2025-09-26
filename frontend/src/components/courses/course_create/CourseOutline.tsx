@@ -337,12 +337,32 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     }) => {
         const { active, over, sourceContainer, targetContainer, sourceIndex, targetIndex } = event;
 
-        if (!over) return;
-        if (sourceContainer === targetContainer && sourceIndex === targetIndex) return;
-        if (!course?._id) return;
+        console.log('onDragEnd event:', {
+            active: active,
+            over: over,
+            sourceContainer,
+            targetContainer,
+            sourceIndex,
+            targetIndex,
+            courseId: course?._id
+        });
+
+        if (!over) {
+            console.log('onDragEnd: No over target');
+            return;
+        }
+        if (sourceContainer === targetContainer && sourceIndex === targetIndex) {
+            console.log('onDragEnd: Same position, no change needed');
+            return;
+        }
+        if (!course?._id) {
+            console.log('onDragEnd: No course ID');
+            return;
+        }
 
         try {
             if (active.type === 'chapter') {
+                console.log('Reordering chapters...');
                 const reorderedChapters = Array.from(chapters);
                 const [removed] = reorderedChapters.splice(sourceIndex, 1);
                 reorderedChapters.splice(targetIndex, 0, removed);
@@ -352,23 +372,30 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                     order: index + 1
                 }));
 
+                console.log('Chapter reorder data:', reorderData);
+
                 await reorderChapters({
                     courseId: course._id,
                     chapters: reorderData
                 }).unwrap();
 
                 showSuccessToast('Chapters reordered successfully!');
+                console.log('Chapters reordered successfully');
             } else if (active.type === 'lesson') {
+                console.log('Reordering lessons...');
                 // Handle lesson reordering
                 if (sourceContainer.startsWith('chapter-') && targetContainer.startsWith('chapter-')) {
                     // Moving lessons within or between chapters
                     const sourceChapterId = sourceContainer.replace('chapter-', '').replace('-lessons', '');
                     const destChapterId = targetContainer.replace('chapter-', '').replace('-lessons', '');
 
+                    console.log('Chapter lesson reorder:', { sourceChapterId, destChapterId });
+
                     if (sourceChapterId === destChapterId) {
                         // Reordering within same chapter
                         const sourceChapter = chapters.find(ch => ch._id === sourceChapterId);
                         if (sourceChapter?.lessons) {
+                            console.log('Found source chapter with lessons:', sourceChapter.lessons.length);
                             const reorderedLessons = Array.from(sourceChapter.lessons);
                             const [removed] = reorderedLessons.splice(sourceIndex, 1);
                             reorderedLessons.splice(targetIndex, 0, removed);
@@ -378,17 +405,22 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                 order: index + 1
                             }));
 
+                            console.log('Chapter lesson reorder data:', reorderData);
+
                             await reorderLessons({
                                 courseId: course._id,
                                 lessons: reorderData
                             }).unwrap();
 
                             showSuccessToast('Lessons reordered successfully!');
+                            console.log('Chapter lessons reordered successfully');
                         }
                     }
                 } else if (sourceContainer === 'standalone-lessons' && targetContainer === 'standalone-lessons') {
                     // Reordering standalone lessons
+                    console.log('Reordering standalone lessons');
                     const standaloneLessons = lessons.filter(lesson => !lesson.chapter);
+                    console.log('Standalone lessons count:', standaloneLessons.length);
                     const reorderedLessons = Array.from(standaloneLessons);
                     const [removed] = reorderedLessons.splice(sourceIndex, 1);
                     reorderedLessons.splice(targetIndex, 0, removed);
@@ -398,12 +430,15 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                         order: index + 1
                     }));
 
+                    console.log('Standalone lesson reorder data:', reorderData);
+
                     await reorderLessons({
                         courseId: course._id,
                         lessons: reorderData
                     }).unwrap();
 
                     showSuccessToast('Lessons reordered successfully!');
+                    console.log('Standalone lessons reordered successfully');
                 }
             }
         } catch (error) {
@@ -587,7 +622,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                                         lesson={lesson}
                                                         courseId={course?._id || ""}
                                                         isInChapter={true}
-                                                        dragHandleProps={{}}
                                                         expandedLessons={expandedLessons}
                                                         showContentPopup={showContentPopup}
                                                         contentTypes={contentTypes}
@@ -629,7 +663,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                     lesson={lesson}
                                     courseId={course?._id || ""}
                                     isInChapter={false}
-                                    dragHandleProps={{}}
                                     expandedLessons={expandedLessons}
                                     showContentPopup={showContentPopup}
                                     contentTypes={contentTypes}

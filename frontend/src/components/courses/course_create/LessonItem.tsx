@@ -23,7 +23,6 @@ interface LessonItemProps {
     lesson: any;
     courseId: string;
     isInChapter?: boolean;
-    dragHandleProps?: any;
     expandedLessons: Set<string>;
     showContentPopup: string | null;
     contentTypes: ContentType[];
@@ -41,7 +40,6 @@ export const LessonItem = ({
     lesson,
     courseId,
     isInChapter = false,
-    dragHandleProps,
     expandedLessons,
     showContentPopup,
     contentTypes,
@@ -70,9 +68,6 @@ export const LessonItem = ({
             <div className="p-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        {/* <div {...dragHandleProps}>
-                            <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
-                        </div> */}
                         <div className="flex items-center gap-2">
                             <File className="w-4 h-4 text-gray-500" />
                             <span className="font-medium">{lesson.title}</span>

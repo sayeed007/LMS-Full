@@ -87,8 +87,8 @@ export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropP
     // Determine target container
     let overContainer = over.id.toString();
 
-    // If dropping over an item, find its container
-    if (!overData?.type) {
+    // If dropping over an item (not a container), find its container
+    if (overData && (overData.type === 'chapter' || overData.type === 'lesson')) {
       overContainer = findContainerFromElement(over.id.toString());
     }
 
