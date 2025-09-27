@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useGetCourseByIdQuery } from "@/store/api/courseApi";
 import { useAppSelector } from "@/store/hooks";
 import { createContext, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import Learners from "./learner/page";
 import CourseSettings from "./setting/page";
 import CourseOutline from "@/components/courses/course_create/CourseOutline";
+import SimplePageContainer from "@/components/layout/SimplePageContainer";
 
 export const CourseHeaderContext = createContext<{
   showHeaderActions: boolean;
@@ -25,12 +26,13 @@ const tabs = [
   { slug: "setting", label: "Setting" },
 ];
 
-export default function CourseLayout() {
+export default function CourseLayout({ children }: { children: React.ReactNode }) {
   const [activeTab, setActiveTab] = useState("outline");
   const [showHeaderActions, setShowHeaderActions] = useState(false);
 
-  // Get course ID from URL params
+  // Get course ID from URL params and current pathname
   const params = useParams();
+  const pathname = usePathname();
   const courseId = params.course_id as string;
 
   // Get current user from auth state
@@ -64,6 +66,11 @@ export default function CourseLayout() {
     return false;
   }, [user, course]);
 
+  // Check if we're on a nested route (like content editor)
+  const isOnNestedRoute = useMemo(() => {
+    return pathname.includes('/courseOutline/') && pathname.includes('/content');
+  }, [pathname]);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "learners":
@@ -93,11 +100,25 @@ export default function CourseLayout() {
     );
   }
 
+  // If we're on a nested route, just render the children without the tab layout
+  if (isOnNestedRoute) {
+    return (
+      <CourseHeaderContext.Provider
+        value={{ showHeaderActions, setShowHeaderActions }}
+      >
+        <SimplePageContainer containerSize="xl" containerPadding="none">
+          {children}
+        </SimplePageContainer>
+      </CourseHeaderContext.Provider>
+    );
+  }
+
   return (
     <CourseHeaderContext.Provider
       value={{ showHeaderActions, setShowHeaderActions }}
     >
-      <div className="px-6 pt-4">
+      {/* <div className="px-6 pt-4"> */}
+      <SimplePageContainer containerSize="xl" containerPadding="none">
 
         {/* Header */}
         <div className="relative flex items-center justify-center mb-4 h-10">
@@ -146,7 +167,8 @@ export default function CourseLayout() {
         </div>
 
         {renderTabContent()}
-      </div>
+        {children}
+      </SimplePageContainer>
     </CourseHeaderContext.Provider>
   );
 }

@@ -46,15 +46,19 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Rate limiting
-const limiter = rateLimit({
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api', limiter);
+// Rate limiting - disabled in development mode
+if (process.env.NODE_ENV !== 'development') {
+  const limiter = rateLimit({
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use('/api', limiter);
+} else {
+  console.log('Rate limiting disabled in development mode');
+}
 
 // Body parser middleware
 app.use(express.json({ limit: '10kb' }));

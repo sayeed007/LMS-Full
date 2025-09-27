@@ -61,6 +61,7 @@ const contentTypes: ContentType[] = [
 ];
 
 export default function CourseOutline({ course }: CourseOutlineProps) {
+
     const [lessonName, setLessonName] = useState("");
     const [chapterName, setChapterName] = useState("");
     const [createFirstLesson, setCreateFirstLesson] = useState<boolean>(false);
@@ -429,8 +430,10 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         );
     }
 
-    // Empty state
-    if (lessons.length === 0 && chapters.length === 0) {
+    // Empty state - only show if data has loaded AND there are no lessons/chapters
+    const shouldShowEmptyState = !isLoading && lessons.length === 0 && chapters.length === 0;
+
+    if (shouldShowEmptyState) {
         if (createFirstLesson) {
             return (
                 <CreationForm
