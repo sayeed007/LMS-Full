@@ -8,7 +8,6 @@ import {
     CreateChapterRequest,
     CreateLessonRequest,
     useCreateChapterMutation,
-    useCreateContentMutation,
     useCreateLessonMutation,
     useDeleteChapterMutation,
     useDeleteContentMutation,
@@ -100,7 +99,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     const [deleteLesson, { isLoading: isDeletingLesson }] = useDeleteLessonMutation();
     const [createChapter, { isLoading: isCreatingChapter }] = useCreateChapterMutation();
     const [deleteChapter, { isLoading: isDeletingChapter }] = useDeleteChapterMutation();
-    const [createContent, { isLoading: isCreatingContent }] = useCreateContentMutation();
     const [deleteContent, { isLoading: isDeletingContent }] = useDeleteContentMutation();
     const [reorderLessons, { isLoading: isReorderingLessons }] = useReorderLessonsMutation();
     const [reorderChapters, { isLoading: isReorderingChapters }] = useReorderChaptersMutation();
@@ -117,6 +115,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
             lessons: chapter.lessons ? [...chapter.lessons].sort((a, b) => (a?.order || 0) - (b?.order || 0)) : []
         }));
     }, [chaptersData?.data?.chapters]);
+
     const isLoading = isLoadingLessons || isLoadingChapters;
     const error = lessonsError || chaptersError;
 
@@ -223,80 +222,15 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         }
     };
 
-    const handleAddContent = async (lessonId: string, contentType: ContentType) => {
+    const handleAddContent = (lessonId: string, contentType: ContentType) => {
         setShowContentPopup(null);
 
         if (!course?._id) return;
 
-        try {
-            const baseData = {
-                title: `New ${contentType.label}`,
-                description: '',
-                type: contentType.type,
-                data: getDefaultContentData(contentType.type),
-                isPublished: false,
-                isPreview: false,
-                objectives: [],
-                tags: []
-            };
-
-            const result = await createContent({
-                courseId: course._id,
-                lessonId,
-                data: baseData
-            }).unwrap();
-
-            showSuccessToast(`${contentType.label} content added successfully!`);
-
-            router.push(`/courses/create/${course._id}/courseOutline/${lessonId}/content/${result?.data?.content._id}/edit`);
-        } catch (error) {
-            console.error(`Error creating ${contentType.label} content:`, error);
-            showErrorToast(`Failed to create ${contentType.label} content`);
-        }
+        // Navigate to content creation page with content type
+        router.push(`/courses/create/${course._id}/courseOutline/${lessonId}/content?type=${contentType.type}`);
     };
 
-    const getDefaultContentData = (type: LessonContent['type']) => {
-        switch (type) {
-            case 'text':
-                return { text: 'Enter your text content here...' };
-            case 'block':
-                return { items: [] };
-            case 'audio':
-            case 'video':
-            case 'document':
-                return { url: '', filename: '', size: 0, mimeType: '' };
-            case 'quiz':
-                return {
-                    quiz: {
-                        instructions: '',
-                        timeLimit: 0,
-                        attempts: 1,
-                        shuffleQuestions: false,
-                        showFeedback: true,
-                        passingScore: 70,
-                        questions: []
-                    }
-                };
-            case 'assignment':
-                return {
-                    assignment: {
-                        title: '',
-                        description: '',
-                        submissionType: 'file' as const,
-                        maxFileSize: 10 * 1024 * 1024,
-                        maxSubmissions: 1,
-                        maxPoints: 100,
-                        autoGrade: false,
-                        allowLateSubmission: false,
-                        lateSubmissionPenalty: 0,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    }
-                };
-            default:
-                return {};
-        }
-    };
 
     const handleDeleteContent = async (lessonId: string, contentId: string) => {
         if (!course?._id) return;
@@ -337,32 +271,21 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     }) => {
         const { active, over, sourceContainer, targetContainer, sourceIndex, targetIndex } = event;
 
-        console.log('onDragEnd event:', {
-            active: active,
-            over: over,
-            sourceContainer,
-            targetContainer,
-            sourceIndex,
-            targetIndex,
-            courseId: course?._id
-        });
-
         if (!over) {
-            console.log('onDragEnd: No over target');
+            console.info('onDragEnd: No over target');
             return;
         }
         if (sourceContainer === targetContainer && sourceIndex === targetIndex) {
-            console.log('onDragEnd: Same position, no change needed');
+            console.info('onDragEnd: Same position, no change needed');
             return;
         }
         if (!course?._id) {
-            console.log('onDragEnd: No course ID');
+            console.info('onDragEnd: No course ID');
             return;
         }
 
         try {
             if (active.type === 'chapter') {
-                console.log('Reordering chapters...');
                 const reorderedChapters = Array.from(chapters);
                 const [removed] = reorderedChapters.splice(sourceIndex, 1);
                 reorderedChapters.splice(targetIndex, 0, removed);
@@ -372,30 +295,23 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                     order: index + 1
                 }));
 
-                console.log('Chapter reorder data:', reorderData);
-
                 await reorderChapters({
                     courseId: course._id,
                     chapters: reorderData
                 }).unwrap();
 
                 showSuccessToast('Chapters reordered successfully!');
-                console.log('Chapters reordered successfully');
             } else if (active.type === 'lesson') {
-                console.log('Reordering lessons...');
                 // Handle lesson reordering
                 if (sourceContainer.startsWith('chapter-') && targetContainer.startsWith('chapter-')) {
                     // Moving lessons within or between chapters
                     const sourceChapterId = sourceContainer.replace('chapter-', '').replace('-lessons', '');
                     const destChapterId = targetContainer.replace('chapter-', '').replace('-lessons', '');
 
-                    console.log('Chapter lesson reorder:', { sourceChapterId, destChapterId });
-
                     if (sourceChapterId === destChapterId) {
                         // Reordering within same chapter
                         const sourceChapter = chapters.find(ch => ch._id === sourceChapterId);
                         if (sourceChapter?.lessons) {
-                            console.log('Found source chapter with lessons:', sourceChapter.lessons.length);
                             const reorderedLessons = Array.from(sourceChapter.lessons);
                             const [removed] = reorderedLessons.splice(sourceIndex, 1);
                             reorderedLessons.splice(targetIndex, 0, removed);
@@ -405,22 +321,17 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                 order: index + 1
                             }));
 
-                            console.log('Chapter lesson reorder data:', reorderData);
-
                             await reorderLessons({
                                 courseId: course._id,
                                 lessons: reorderData
                             }).unwrap();
 
                             showSuccessToast('Lessons reordered successfully!');
-                            console.log('Chapter lessons reordered successfully');
                         }
                     }
                 } else if (sourceContainer === 'standalone-lessons' && targetContainer === 'standalone-lessons') {
                     // Reordering standalone lessons
-                    console.log('Reordering standalone lessons');
                     const standaloneLessons = lessons.filter(lesson => !lesson.chapter);
-                    console.log('Standalone lessons count:', standaloneLessons.length);
                     const reorderedLessons = Array.from(standaloneLessons);
                     const [removed] = reorderedLessons.splice(sourceIndex, 1);
                     reorderedLessons.splice(targetIndex, 0, removed);
@@ -430,15 +341,12 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                         order: index + 1
                     }));
 
-                    console.log('Standalone lesson reorder data:', reorderData);
-
                     await reorderLessons({
                         courseId: course._id,
                         lessons: reorderData
                     }).unwrap();
 
                     showSuccessToast('Lessons reordered successfully!');
-                    console.log('Standalone lessons reordered successfully');
                 }
             }
         } catch (error) {
@@ -472,6 +380,36 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         setLessonName("");
         setChapterName("");
     };
+
+    // Position popup near the clicked button
+    useEffect(() => {
+        if (showContentPopup) {
+            const popupElement = document.getElementById(`lesson-popup-${showContentPopup}`);
+            const buttonElement = document.querySelector(`[data-lesson-id="${showContentPopup}"] button[aria-label="Add Content"]`);
+
+            if (popupElement && buttonElement) {
+                const buttonRect = buttonElement.getBoundingClientRect();
+                const popupRect = popupElement.getBoundingClientRect();
+
+                // Position to the right of the button, or left if not enough space
+                let left = buttonRect.right + 8;
+                let top = buttonRect.top;
+
+                // Check if popup would go off screen
+                if (left + popupRect.width > window.innerWidth) {
+                    left = buttonRect.left - popupRect.width - 8;
+                }
+
+                // Ensure popup doesn't go off bottom of screen
+                if (top + popupRect.height > window.innerHeight) {
+                    top = window.innerHeight - popupRect.height - 8;
+                }
+
+                popupElement.style.left = `${left}px`;
+                popupElement.style.top = `${top}px`;
+            }
+        }
+    }, [showContentPopup]);
 
     if (isLoading) {
         return (
@@ -727,13 +665,43 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                     </div>
                 )}
 
-                {/* Content popup overlay */}
+                {/* Content Popup */}
                 {showContentPopup && (
-                    <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setShowContentPopup(null)}
-                    />
+                    <>
+                        {/* Overlay */}
+                        <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setShowContentPopup(null)}
+                        />
+                        {/* Popup Content */}
+                        <div className="fixed inset-0 z-20 pointer-events-none">
+                            <div
+                                id={`lesson-popup-${showContentPopup}`}
+                                className="absolute bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[200px] pointer-events-auto"
+                                style={{
+                                    // Position will be calculated dynamically
+                                }}
+                            >
+                                <div className="space-y-1">
+                                    {contentTypes.map((contentType) => {
+                                        const IconComponent = contentType.icon;
+                                        return (
+                                            <button
+                                                key={contentType.id}
+                                                onClick={() => handleAddContent(showContentPopup, contentType)}
+                                                className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                                            >
+                                                <IconComponent className="w-4 h-4 text-blue-600" />
+                                                <span className="text-sm">{contentType.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
+
             </div>
         </DragDropProvider>
     );

@@ -82,7 +82,7 @@ export default function CourseLayout() {
   // Show error state if course fetch failed
   if (error) {
     return (
-      <div className="min-h-screen px-6 pt-4 flex items-center justify-center">
+      <div className="min-h-[60vh] px-6 pt-4 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-bold text-red-600 mb-2">Course Not Found</h2>
           <p className="text-gray-600">

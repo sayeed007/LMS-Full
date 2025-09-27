@@ -10,6 +10,7 @@ import {
     Plus,
     Trash2
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ContentItem } from "./ContentItem";
 
 interface ContentType {
@@ -63,7 +64,10 @@ export const LessonItem = ({
     const content = contentData?.data?.content || [];
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow relative">
+        <div
+            className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow relative"
+            data-lesson-id={lesson._id}
+        >
             {/* Lesson Header */}
             <div className="p-4">
                 <div className="flex items-center justify-between">
@@ -84,6 +88,7 @@ export const LessonItem = ({
                             size="sm"
                             onClick={() => onSetShowContentPopup(lesson._id)}
                             className="text-black border-gray-300 hover:bg-gray-50"
+                            aria-label="Add Content"
                         >
                             <Plus className="w-4 h-4 mr-1" />
                             Add Content
@@ -134,26 +139,7 @@ export const LessonItem = ({
                 </div>
             )}
 
-            {/* Content Popup */}
-            {showContentPopup === lesson._id && (
-                <div className="absolute top-full right-4 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-                    <div className="space-y-1">
-                        {contentTypes.map((contentType) => {
-                            const IconComponent = contentType.icon;
-                            return (
-                                <button
-                                    key={contentType.id}
-                                    onClick={() => onAddContent(lesson._id, contentType)}
-                                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                                >
-                                    <IconComponent className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm">{contentType.label}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };

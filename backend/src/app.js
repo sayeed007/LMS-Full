@@ -82,31 +82,45 @@ app.use(
   })
 );
 
-// CORS
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, etc.)
-      if (!origin) return callback(null, true);
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
 
-      const allowedOrigins = [
-        process.env.FRONTEND_URL || 'http://localhost:3000',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-      ];
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+    ];
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    console.log('CORS check - Origin:', origin, 'Allowed:', allowedOrigins.includes(origin));
 
-      return callback(new Error('Not allowed by CORS'), false);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  })
-);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'), false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Apply CORS
+app.use(cors(corsOptions));
 
 // Session configuration
 app.use(
