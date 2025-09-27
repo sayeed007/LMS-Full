@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, X, Paperclip } from "lucide-react";
+import { ArrowLeft, X, Paperclip, FileText, Video, File, HelpCircle, Clipboard, Grid3X3 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
@@ -31,7 +31,19 @@ export default function ContentEditor() {
   const router = useRouter();
   const courseId = params.course_id as string;
   const lessonId = params.lesson_id as string;
-  const contentType = new URLSearchParams(window.location.search).get('type') || 'text';
+
+  const [contentType, setContentType] = useState<string>('text');
+
+  useEffect(() => {
+    // Get content type from URL parameters
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeParam = urlParams.get('type');
+      if (typeParam) {
+        setContentType(typeParam);
+      }
+    }
+  }, []);
 
   const [lessonTitle, setLessonTitle] = useState("");
   const [content, setContent] = useState<LessonContent>({
@@ -93,6 +105,8 @@ export default function ContentEditor() {
     router.back();
   };
 
+
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -134,6 +148,13 @@ export default function ContentEditor() {
 
       {/* Content Area */}
       <div className="max-w-4xl mx-auto p-6">
+        {/* Debug info - remove this later */}
+        <div className="mb-4 p-4 bg-gray-100 rounded">
+          <p><strong>Debug Info:</strong></p>
+          <p>Content Type: {contentType}</p>
+          <p>Course ID: {courseId}</p>
+          <p>Lesson ID: {lessonId}</p>
+        </div>
         {contentType === 'text' && (
           <TextContentEditor
             content={content}
@@ -141,7 +162,7 @@ export default function ContentEditor() {
           />
         )}
 
-        {contentType === 'blocks' && (
+        {contentType === 'block' && (
           <BlocksContentEditor
             content={content}
             onChange={setContent}
@@ -161,6 +182,118 @@ export default function ContentEditor() {
             onChange={setContent}
           />
         )}
+
+        {['video', 'audio', 'document'].includes(contentType) && (
+          <MediaContentEditor
+            content={content}
+            onChange={setContent}
+            contentType={contentType}
+          />
+        )}
+
+        {/* Fallback if no valid content type */}
+        {!['text', 'block', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-semibold mb-4">Invalid Content Type</h2>
+            <p className="text-gray-600 mb-4">The content type "{contentType}" is not supported.</p>
+            <Button onClick={handleBack} variant="outline">
+              Go Back
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// Media Content Editor Component (for video, audio, document)
+function MediaContentEditor({
+  content,
+  onChange,
+  contentType
+}: {
+  content: LessonContent;
+  onChange: (content: LessonContent) => void;
+  contentType: string;
+}) {
+  const getMediaTypeLabel = () => {
+    switch (contentType) {
+      case 'video': return 'Video';
+      case 'audio': return 'Audio';
+      case 'document': return 'Document';
+      default: return 'Media';
+    }
+  };
+
+  const getAcceptedFileTypes = () => {
+    switch (contentType) {
+      case 'video': return 'video/*';
+      case 'audio': return 'audio/*';
+      case 'document': return '.pdf,.doc,.docx,.ppt,.pptx,.txt';
+      default: return '*/*';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Input
+          value={content.title || ""}
+          onChange={(e) => onChange({
+            ...content,
+            title: e.target.value
+          })}
+          placeholder={`Add ${getMediaTypeLabel()} Title`}
+          className="text-lg"
+        />
+      </div>
+
+      <div>
+        <textarea
+          value={content.description || ""}
+          onChange={(e) => onChange({
+            ...content,
+            description: e.target.value
+          })}
+          placeholder={`Add ${getMediaTypeLabel()} Description`}
+          className="w-full border border-gray-300 rounded-lg p-4 min-h-[120px] resize-none"
+        />
+      </div>
+
+      {/* File Upload Area */}
+      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+        <div className="text-blue-600 mb-4 text-4xl">
+          {contentType === 'video' && '🎥'}
+          {contentType === 'audio' && '🎵'}
+          {contentType === 'document' && '📄'}
+        </div>
+        <h3 className="font-semibold mb-2">Upload {getMediaTypeLabel()}</h3>
+        <p className="text-gray-600 text-sm mb-4">
+          Choose a {getMediaTypeLabel().toLowerCase()} file from your device.
+        </p>
+        <input
+          type="file"
+          accept={getAcceptedFileTypes()}
+          className="hidden"
+          id="media-upload"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              // Handle file upload here
+              console.log('File selected:', file);
+            }
+          }}
+        />
+        <label
+          htmlFor="media-upload"
+          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+        >
+          Select File
+        </label>
+        <p className="text-gray-500 text-xs mt-2">
+          Maximum file upload size: 50 MB
+        </p>
       </div>
     </div>
   );
