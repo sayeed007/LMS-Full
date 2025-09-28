@@ -220,9 +220,7 @@ const updateLesson = catchAsync(async (req, res, next) => {
     { ...req.body, lastModified: new Date() },
     { new: true, runValidators: true }
   ).populate([
-    { path: 'createdBy', select: 'name email' },
-    { path: 'quiz', select: 'title' },
-    { path: 'assignment', select: 'title' }
+    { path: 'createdBy', select: 'name email' }
   ]);
 
   res.status(200).json({

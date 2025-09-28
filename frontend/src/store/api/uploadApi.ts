@@ -22,6 +22,16 @@ export interface UploadResponse {
   uploadedAt: string;
 }
 
+export interface CloudinaryUploadResponse {
+  url: string;
+  publicId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  resourceType: string;
+  format: string;
+}
+
 export interface FileListParams {
   page?: number;
   limit?: number;
@@ -111,6 +121,27 @@ export const uploadApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [{ type: 'Upload', id }, 'Upload'],
     }),
 
+    // Cloudinary upload endpoint
+    uploadFileToCloudinary: builder.mutation<BaseApiResponse<CloudinaryUploadResponse>, FormData>({
+      query: (formData) => ({
+        url: '/upload/file',
+        method: 'POST',
+        body: formData,
+        formData: true,
+      }),
+      invalidatesTags: ['Upload'],
+    }),
+
+    // Delete file from Cloudinary
+    deleteFileFromCloudinary: builder.mutation<BaseApiResponse<void>, { publicId: string; resourceType: string }>({
+      query: (data) => ({
+        url: '/upload/file',
+        method: 'DELETE',
+        body: data,
+      }),
+      invalidatesTags: ['Upload'],
+    }),
+
     // Generic upload for backward compatibility
     upload: builder.mutation<BaseApiResponse<UploadResponse>, FormData>({
       query: (formData) => ({
@@ -134,4 +165,6 @@ export const {
   useGetFileByIdQuery,
   useDeleteFileMutation,
   useUploadMutation,
+  useUploadFileToCloudinaryMutation,
+  useDeleteFileFromCloudinaryMutation,
 } = uploadApi;

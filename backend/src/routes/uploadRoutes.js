@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
-const uploadController = require('../controllers/uploadController');
+const { upload, uploadFile, deleteFile } = require('../controllers/uploadController');
 
 const router = express.Router();
 
@@ -437,17 +437,20 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
-router.post('/image', uploadController.uploadImageHandler);
-router.post('/document', uploadController.uploadDocumentHandler);
-router.post('/video', restrictTo('instructor', 'org_admin', 'super_admin'), uploadController.uploadVideoHandler);
-router.post('/audio', restrictTo('instructor', 'org_admin', 'super_admin'), uploadController.uploadAudioHandler);
-router.post('/bulk', restrictTo('instructor', 'org_admin', 'super_admin'), uploadController.bulkUploadHandler);
+// Add debug logging middleware
+router.use((req, res, next) => {
+  console.log('Upload route - Request received:', {
+    method: req.method,
+    url: req.originalUrl,
+    contentType: req.headers['content-type'],
+    hasFile: !!req.file,
+    bodyKeys: Object.keys(req.body)
+  });
+  next();
+});
 
-router.get('/files', uploadController.getFiles);
-router.get('/files/:id', uploadController.getFileById);
-router.delete('/files/:id', uploadController.deleteFile);
-
-// Legacy route for backward compatibility
-router.post('/', uploadController.uploadImageHandler);
+// File upload routes with Cloudinary integration - temporarily removed role restriction for debugging
+router.post('/file', upload, uploadFile);
+router.delete('/file', restrictTo('instructor', 'org_admin', 'super_admin'), deleteFile);
 
 module.exports = router;

@@ -1,245 +1,149 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file uploads
+// Configure multer for temporary file storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(uploadsDir, file.fieldname + 's'); // images, documents, etc.
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
+    const uploadDir = 'uploads/temp';
+
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
-    cb(null, uploadPath);
+
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Create unique filename
+    // Generate unique filename
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
 // File filter function
-const fileFilter = (allowedTypes) => (req, file, cb) => {
-  if (allowedTypes.includes(file.mimetype)) {
+const fileFilter = (req, file, cb) => {
+  console.log('File filter - checking file:', {
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size
+  });
+
+  // Define allowed file types
+  const allowedTypes = {
+    video: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/webm'],
+    audio: ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/mpeg'],
+    document: [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain'
+    ]
+  };
+
+  const allAllowedTypes = [...allowedTypes.video, ...allowedTypes.audio, ...allowedTypes.document];
+
+  if (allAllowedTypes.includes(file.mimetype)) {
+    console.log('File filter - ACCEPTED');
     cb(null, true);
   } else {
-    cb(new AppError(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`, 400), false);
+    console.log('File filter - REJECTED, mimetype not in allowed types');
+    cb(new AppError('Invalid file type. Only video, audio, and document files are allowed.', 400), false);
   }
 };
 
-// File size limits (in bytes)
-const fileSizeLimits = {
-  image: 5 * 1024 * 1024, // 5MB
-  document: 10 * 1024 * 1024, // 10MB
-  video: 100 * 1024 * 1024, // 100MB
-  audio: 20 * 1024 * 1024, // 20MB
-};
-
-// Allowed MIME types
-const allowedMimeTypes = {
-  image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  document: [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain'
-  ],
-  video: ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-msvideo'],
-  audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac']
-};
-
-// Create multer instances for different file types
-const createUploader = (type) => multer({
+// Configure multer
+const upload = multer({
   storage: storage,
-  fileFilter: fileFilter(allowedMimeTypes[type]),
+  fileFilter: fileFilter,
   limits: {
-    fileSize: fileSizeLimits[type]
+    fileSize: 150 * 1024 * 1024, // 150MB limit
   }
-}).single(type);
+});
 
-// Upload handlers
-const uploadImage = createUploader('image');
-const uploadDocument = createUploader('document');
-const uploadVideo = createUploader('video');
-const uploadAudio = createUploader('audio');
+// Upload single file endpoint
+const uploadFile = catchAsync(async (req, res, next) => {
+  // Debug logging
+  console.log('Upload request received:');
+  console.log('- User:', req.user?.email, 'Role:', req.user?.role);
+  console.log('- Body:', req.body);
+  console.log('- File:', req.file ? {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  } : 'No file');
 
-// Generic upload response function
-const sendUploadResponse = (req, res) => {
   if (!req.file) {
-    throw new AppError('No file uploaded', 400);
+    console.log('ERROR: No file uploaded');
+    return next(new AppError('No file uploaded', 400));
   }
 
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  const fileUrl = `${baseUrl}/uploads/${req.file.fieldname}s/${req.file.filename}`;
+  try {
+    // Upload to Cloudinary
+    const cloudinaryResult = await uploadToCloudinary(req.file.path, {
+      folder: `lms-content/${req.body.contentType || 'general'}`,
+      public_id: `${Date.now()}-${req.file.originalname.split('.')[0]}`,
+    });
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      filename: req.file.originalname,
-      url: fileUrl,
-      fileSize: req.file.size,
-      mimeType: req.file.mimetype,
-      uploadedAt: new Date().toISOString()
-    }
-  });
-};
-
-// Image upload endpoint
-exports.uploadImageHandler = catchAsync(async (req, res, next) => {
-  uploadImage(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new AppError('File too large. Maximum size is 5MB', 413));
-        }
-        return next(new AppError(err.message, 400));
-      }
-      return next(err);
-    }
-    sendUploadResponse(req, res);
-  });
-});
-
-// Document upload endpoint
-exports.uploadDocumentHandler = catchAsync(async (req, res, next) => {
-  uploadDocument(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new AppError('File too large. Maximum size is 10MB', 413));
-        }
-        return next(new AppError(err.message, 400));
-      }
-      return next(err);
-    }
-    sendUploadResponse(req, res);
-  });
-});
-
-// Video upload endpoint
-exports.uploadVideoHandler = catchAsync(async (req, res, next) => {
-  uploadVideo(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new AppError('File too large. Maximum size is 100MB', 413));
-        }
-        return next(new AppError(err.message, 400));
-      }
-      return next(err);
-    }
-    sendUploadResponse(req, res);
-  });
-});
-
-// Audio upload endpoint
-exports.uploadAudioHandler = catchAsync(async (req, res, next) => {
-  uploadAudio(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new AppError('File too large. Maximum size is 20MB', 413));
-        }
-        return next(new AppError(err.message, 400));
-      }
-      return next(err);
-    }
-    sendUploadResponse(req, res);
-  });
-});
-
-// Bulk upload handler
-exports.bulkUploadHandler = catchAsync(async (req, res, next) => {
-  const upload = multer({
-    storage: storage,
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB per file
-      files: 10 // Maximum 10 files
-    }
-  }).array('files', 10);
-
-  upload(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new AppError('One or more files are too large. Maximum size is 10MB per file', 413));
-        }
-        if (err.code === 'LIMIT_FILE_COUNT') {
-          return next(new AppError('Too many files. Maximum is 10 files', 400));
-        }
-        return next(new AppError(err.message, 400));
-      }
-      return next(err);
-    }
-
-    if (!req.files || req.files.length === 0) {
-      return next(new AppError('No files uploaded', 400));
-    }
-
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const successful = req.files.map(file => ({
-      filename: file.originalname,
-      url: `${baseUrl}/uploads/${file.fieldname}s/${file.filename}`,
-      fileSize: file.size,
-      mimeType: file.mimetype,
-      uploadedAt: new Date().toISOString()
-    }));
+    // Delete temporary file
+    fs.unlinkSync(req.file.path);
 
     res.status(200).json({
       status: 'success',
       data: {
-        successful,
-        failed: []
+        url: cloudinaryResult.url,
+        publicId: cloudinaryResult.publicId,
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        resourceType: cloudinaryResult.resourceType,
+        format: cloudinaryResult.format
       }
     });
-  });
+  } catch (error) {
+    // Clean up temporary file if upload fails
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    console.error('Upload error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      http_code: error.http_code
+    });
+    return next(new AppError(`File upload failed: ${error.message}`, 500));
+  }
 });
 
-// Get files endpoint (placeholder - would need a database model for file metadata)
-exports.getFiles = catchAsync(async (req, res, next) => {
-  // This would typically query a database for file metadata
-  res.status(200).json({
-    status: 'success',
-    results: 0,
-    pagination: {
-      currentPage: 1,
-      totalPages: 1,
-      totalResults: 0,
-      limit: 20,
-      hasNextPage: false,
-      hasPrevPage: false,
-      nextPage: null,
-      prevPage: null
-    },
-    data: []
-  });
+// Delete file endpoint
+const deleteFile = catchAsync(async (req, res, next) => {
+  const { publicId, resourceType } = req.body;
+
+  if (!publicId) {
+    return next(new AppError('Public ID is required', 400));
+  }
+
+  try {
+    await deleteFromCloudinary(publicId, resourceType || 'auto');
+
+    res.status(200).json({
+      status: 'success',
+      message: 'File deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete error:', error);
+    return next(new AppError('File deletion failed', 500));
+  }
 });
 
-// Get file by ID endpoint (placeholder)
-exports.getFileById = catchAsync(async (req, res, next) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'File not found'
-  });
-});
-
-// Delete file endpoint (placeholder)
-exports.deleteFile = catchAsync(async (req, res, next) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'File not found'
-  });
-});
+module.exports = {
+  upload: upload.single('file'), // Middleware for single file upload
+  uploadFile,
+  deleteFile
+};

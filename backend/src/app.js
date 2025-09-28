@@ -44,6 +44,17 @@ app.use(helmet());
 // Development logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
+
+  // Additional debug logging for troubleshooting
+  app.use((req, res, next) => {
+    console.log(`\n🔍 ${req.method} ${req.originalUrl}`);
+    console.log('Headers:', {
+      origin: req.headers.origin,
+      contentType: req.headers['content-type'],
+      authorization: req.headers.authorization ? 'Bearer ***' : 'none'
+    });
+    next();
+  });
 }
 
 // Rate limiting - disabled in development mode
@@ -61,8 +72,8 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 // Body parser middleware
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());

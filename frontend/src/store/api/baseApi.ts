@@ -6,7 +6,7 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers, { getState, endpoint }) => {
       // Get token from Redux state (synced by SessionSync component)
       const token = (getState() as RootState).auth.token;
 
@@ -14,7 +14,19 @@ export const baseApi = createApi({
         headers.set('authorization', `Bearer ${token}`);
       }
 
-      headers.set('Content-Type', 'application/json');
+      // Don't set Content-Type for file uploads - let browser set multipart boundary
+      const isFileUpload = endpoint === 'uploadFileToCloudinary' ||
+                          endpoint === 'uploadImage' ||
+                          endpoint === 'uploadDocument' ||
+                          endpoint === 'uploadVideo' ||
+                          endpoint === 'uploadAudio' ||
+                          endpoint === 'bulkUpload' ||
+                          endpoint === 'upload';
+
+      if (!isFileUpload) {
+        headers.set('Content-Type', 'application/json');
+      }
+
       return headers;
     },
   }),

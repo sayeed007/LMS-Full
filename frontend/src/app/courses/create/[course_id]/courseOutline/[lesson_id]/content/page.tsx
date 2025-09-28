@@ -2,14 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, X, Paperclip, FileText, Video, File, HelpCircle, Clipboard, Grid3X3 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  useGetLessonByIdQuery,
-  useUpdateLessonMutation
-} from "@/store/api/courseApi";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
+import {
+  useCreateContentMutation,
+  useGetLessonByIdQuery
+} from "@/store/api/courseApi";
+import { ArrowLeft, X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import TextContentEditor from "@/components/content-editors/TextContentEditor";
+import MediaContentEditor from "@/components/content-editors/MediaContentEditor";
+import { useUploadFileToCloudinaryMutation, useDeleteFileFromCloudinaryMutation } from "@/store/api/uploadApi";
+import BlocksContentEditor from "@/components/content-editors/BlocksContentEditor";
+import AssignmentContentEditor from "@/components/content-editors/AssignmentContentEditor";
+import QuizContentEditor from "@/components/content-editors/QuizContentEditor";
 
 interface ContentBlock {
   id: string;
@@ -52,13 +58,23 @@ export default function ContentEditor() {
     textContent: "",
   });
 
+  // File upload state - lifted up from MediaContentEditor
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+
+  // Loading states
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+
   // API hooks
   const { data: lessonData, isLoading } = useGetLessonByIdQuery(
     { courseId, lessonId },
     { skip: !courseId || !lessonId }
   );
 
-  const [updateLesson, { isLoading: isUpdating }] = useUpdateLessonMutation();
+  const [createContent, { isLoading: isCreating }] = useCreateContentMutation();
+  const [uploadFileToCloudinary] = useUploadFileToCloudinaryMutation();
+  const [deleteFileFromCloudinary] = useDeleteFileFromCloudinaryMutation();
 
   const lesson = lessonData?.data?.lesson;
 
@@ -80,23 +96,172 @@ export default function ContentEditor() {
     }
   }, [lesson, contentType]);
 
+  // File handling functions - moved from MediaContentEditor
+  const handleFileSelect = (file: File) => {
+    // Check file size (150MB limit)
+    const maxSize = 150 * 1024 * 1024; // 150MB in bytes
+    if (file.size > maxSize) {
+      showErrorToast('File size exceeds 150MB limit');
+      return;
+    }
+
+    // Store file locally and create preview URL
+    setSelectedFile(file);
+
+    // Create preview URL for display
+    const previewUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(previewUrl);
+
+    // Update content with local file info (no upload yet)
+    setContent(prevContent => ({
+      ...prevContent,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      // Clear any existing uploaded file data
+      fileUrl: undefined,
+      publicId: undefined,
+      resourceType: undefined
+    }));
+  };
+
+  const handleFileRemove = async () => {
+    // If there's an uploaded file, delete it from Cloudinary
+    if (content.publicId && content.resourceType) {
+      try {
+        await deleteFileFromCloudinary({
+          publicId: content.publicId,
+          resourceType: content.resourceType
+        }).unwrap();
+        showSuccessToast('File removed successfully!');
+      } catch (error: any) {
+        console.error('Error deleting file:', error);
+        showErrorToast(error?.data?.message || 'Error removing file. Please try again.');
+      }
+    }
+
+    // Clean up file state
+    if (filePreviewUrl) {
+      URL.revokeObjectURL(filePreviewUrl);
+      setFilePreviewUrl(null);
+    }
+    setSelectedFile(null);
+
+    // Clear file data from content
+    setContent(prevContent => ({
+      ...prevContent,
+      fileName: undefined,
+      fileSize: undefined,
+      fileType: undefined,
+      fileUrl: undefined,
+      publicId: undefined,
+      resourceType: undefined
+    }));
+  };
+
   const handleSave = async () => {
     if (!courseId || !lessonId) return;
 
+    let currentContent = content; // Use local variable to track current content
+
+    // For media content, upload file if selected
+    if (['video', 'audio', 'document'].includes(contentType)) {
+      // Check if there's a file selected or already uploaded
+      if (!currentContent.fileUrl && !selectedFile) {
+        showErrorToast("Please select a file before saving");
+        return;
+      }
+
+      // If there's a selected file but no URL, upload it first
+      if (selectedFile && !currentContent.fileUrl) {
+        setIsUploading(true);
+        setUploadProgress("Uploading file...");
+
+        try {
+          // Create FormData for upload
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          formData.append('contentType', contentType);
+
+          // Upload to Cloudinary via backend
+          const response = await uploadFileToCloudinary(formData).unwrap();
+
+          setUploadProgress("Processing upload...");
+
+          // Update content with Cloudinary response
+          const updatedContent = {
+            ...currentContent,
+            fileUrl: response.data.url,
+            fileName: response.data.fileName,
+            fileSize: response.data.fileSize,
+            fileType: response.data.fileType,
+            publicId: response.data.publicId,
+            resourceType: response.data.resourceType
+          };
+
+          setContent(updatedContent);
+          currentContent = updatedContent; // Update local variable
+
+          // Clean up local file references
+          setSelectedFile(null);
+          if (filePreviewUrl) {
+            URL.revokeObjectURL(filePreviewUrl);
+            setFilePreviewUrl(null);
+          }
+
+          console.log('Upload successful, content updated with URL:', response.data.url);
+
+        } catch (error: any) {
+          setIsUploading(false);
+          setUploadProgress("");
+          showErrorToast(error?.data?.message || "Failed to upload file. Please try again.");
+          return;
+        }
+      }
+    }
+
     try {
-      await updateLesson({
+      // Update progress for saving
+      setUploadProgress("Saving content...");
+
+      // Prepare data based on content type
+      let saveData: any = {
+        text: currentContent.textContent || "",
+        ...currentContent
+      };
+
+      // For media content, ensure URL is included
+      if (['video', 'audio', 'document'].includes(contentType) && currentContent.fileUrl) {
+        saveData.url = currentContent.fileUrl;
+      }
+
+      console.log('Save data being sent:', saveData);
+      console.log('Current content fileUrl:', currentContent.fileUrl);
+
+      // Create content using the proper RTK Query mutation
+      await createContent({
         courseId,
         lessonId,
         data: {
           title: lessonTitle,
-          content: JSON.stringify(content),
           type: contentType as any,
+          data: saveData
         },
       }).unwrap();
 
+      // Clear loading state
+      setIsUploading(false);
+      setUploadProgress("");
+
       showSuccessToast("Content saved successfully!");
+
+      // Navigate back to course outline after successful save
+      router.push(`/courses/create/${courseId}`);
     } catch (error) {
       console.error("Error saving content:", error);
+      // Clear loading state on error
+      setIsUploading(false);
+      setUploadProgress("");
       showErrorToast("Failed to save content");
     }
   };
@@ -138,10 +303,10 @@ export default function ContentEditor() {
           </div>
           <Button
             onClick={handleSave}
-            disabled={isUpdating}
+            disabled={isCreating}
             className="bg-blue-600 text-white hover:bg-blue-700"
           >
-            {isUpdating ? "Saving..." : "Save"}
+            {isCreating ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
@@ -188,6 +353,11 @@ export default function ContentEditor() {
             content={content}
             onChange={setContent}
             contentType={contentType}
+            selectedFile={selectedFile}
+            filePreviewUrl={filePreviewUrl}
+            onFileSelect={handleFileSelect}
+            onFileRemove={handleFileRemove}
+            isUploading={isUploading}
           />
         )}
 
@@ -202,346 +372,34 @@ export default function ContentEditor() {
           </div>
         )}
       </div>
-    </div>
-  );
-}
 
-
-// Media Content Editor Component (for video, audio, document)
-function MediaContentEditor({
-  content,
-  onChange,
-  contentType
-}: {
-  content: LessonContent;
-  onChange: (content: LessonContent) => void;
-  contentType: string;
-}) {
-  const getMediaTypeLabel = () => {
-    switch (contentType) {
-      case 'video': return 'Video';
-      case 'audio': return 'Audio';
-      case 'document': return 'Document';
-      default: return 'Media';
-    }
-  };
-
-  const getAcceptedFileTypes = () => {
-    switch (contentType) {
-      case 'video': return 'video/*';
-      case 'audio': return 'audio/*';
-      case 'document': return '.pdf,.doc,.docx,.ppt,.pptx,.txt';
-      default: return '*/*';
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <Input
-          value={content.title || ""}
-          onChange={(e) => onChange({
-            ...content,
-            title: e.target.value
-          })}
-          placeholder={`Add ${getMediaTypeLabel()} Title`}
-          className="text-lg"
-        />
-      </div>
-
-      <div>
-        <textarea
-          value={content.description || ""}
-          onChange={(e) => onChange({
-            ...content,
-            description: e.target.value
-          })}
-          placeholder={`Add ${getMediaTypeLabel()} Description`}
-          className="w-full border border-gray-300 rounded-lg p-4 min-h-[120px] resize-none"
-        />
-      </div>
-
-      {/* File Upload Area */}
-      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-        <div className="text-blue-600 mb-4 text-4xl">
-          {contentType === 'video' && '🎥'}
-          {contentType === 'audio' && '🎵'}
-          {contentType === 'document' && '📄'}
-        </div>
-        <h3 className="font-semibold mb-2">Upload {getMediaTypeLabel()}</h3>
-        <p className="text-gray-600 text-sm mb-4">
-          Choose a {getMediaTypeLabel().toLowerCase()} file from your device.
-        </p>
-        <input
-          type="file"
-          accept={getAcceptedFileTypes()}
-          className="hidden"
-          id="media-upload"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              // Handle file upload here
-              console.log('File selected:', file);
-            }
-          }}
-        />
-        <label
-          htmlFor="media-upload"
-          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
-        >
-          Select File
-        </label>
-        <p className="text-gray-500 text-xs mt-2">
-          Maximum file upload size: 50 MB
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Text Content Editor Component
-function TextContentEditor({
-  content,
-  onChange
-}: {
-  content: LessonContent;
-  onChange: (content: LessonContent) => void;
-}) {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200">
-      {/* Toolbar */}
-      <div className="border-b border-gray-200 p-4">
-        <div className="flex items-center gap-4">
-          <select className="border border-gray-300 rounded px-3 py-1 text-sm">
-            <option>Roboto</option>
-          </select>
-          <select className="border border-gray-300 rounded px-3 py-1 text-sm">
-            <option>12pt</option>
-          </select>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">A</Button>
-            <Button variant="ghost" size="sm" className="font-bold">B</Button>
-            <Button variant="ghost" size="sm" className="underline">U</Button>
-          </div>
-          <select className="border border-gray-300 rounded px-3 py-1 text-sm">
-            <option>Style</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Editor */}
-      <div className="p-6">
-        <textarea
-          value={content.textContent || ""}
-          onChange={(e) => onChange({
-            ...content,
-            textContent: e.target.value
-          })}
-          placeholder="Type here"
-          className="w-full min-h-[400px] border-none outline-none resize-none text-gray-700"
-        />
-      </div>
-
-      {/* Add Attachment */}
-      <div className="border-t border-gray-200 p-4">
-        <Button variant="outline" className="text-blue-600 border-blue-200">
-          <Paperclip className="w-4 h-4 mr-2" />
-          Add Attachment
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// Blocks Content Editor Component
-function BlocksContentEditor({
-  content,
-  onChange
-}: {
-  content: LessonContent;
-  onChange: (content: LessonContent) => void;
-}) {
-  const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
-
-  const addContentBlock = (type: ContentBlock['type']) => {
-    const newBlock: ContentBlock = {
-      id: `block-${Date.now()}`,
-      type,
-      content: {},
-      order: content.blocks.length + 1,
-    };
-
-    onChange({
-      ...content,
-      blocks: [...content.blocks, newBlock]
-    });
-    setShowBlockTypeSelector(false);
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold mb-8">Add content to your blocks</h2>
-      </div>
-
-      {/* Content Blocks */}
-      {content.blocks.map((block, index) => (
-        <ContentBlockRenderer
-          key={block.id}
-          block={block}
-          onChange={(updatedBlock) => {
-            const updatedBlocks = [...content.blocks];
-            updatedBlocks[index] = updatedBlock;
-            onChange({ ...content, blocks: updatedBlocks });
-          }}
-          onDelete={() => {
-            const updatedBlocks = content.blocks.filter(b => b.id !== block.id);
-            onChange({ ...content, blocks: updatedBlocks });
-          }}
-        />
-      ))}
-
-      {/* Add Content Button */}
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center relative">
-        <Button
-          onClick={() => setShowBlockTypeSelector(!showBlockTypeSelector)}
-          className="bg-black text-white hover:bg-gray-800"
-        >
-          + Add Content
-        </Button>
-
-        {/* Block Type Selector */}
-        {showBlockTypeSelector && (
-          <div className="absolute right-4 top-4 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-            <div className="space-y-1">
-              {[
-                { type: 'text', label: 'Text', icon: FileText },
-                { type: 'image', label: 'Image', icon: '🖼️' },
-                { type: 'video', label: 'Video', icon: Video },
-                { type: 'audio', label: 'Audio', icon: '🎵' },
-                { type: 'document', label: 'Document', icon: File },
-              ].map((blockType) => (
-                <button
-                  key={blockType.type}
-                  onClick={() => addContentBlock(blockType.type as ContentBlock['type'])}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                >
-                  {typeof blockType.icon === 'string' ? (
-                    <span>{blockType.icon}</span>
-                  ) : (
-                    <blockType.icon className="w-4 h-4 text-blue-600" />
-                  )}
-                  <span className="text-sm">{blockType.label}</span>
-                </button>
-              ))}
+      {/* Full Page Upload Loader */}
+      {isUploading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Processing...
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {uploadProgress || "Please wait while we process your request"}
+            </p>
+            <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div className="bg-blue-600 h-full rounded-full animate-pulse w-full"></div>
             </div>
+            <p className="text-sm text-gray-500 mt-3">
+              Please don't close or refresh this page
+            </p>
           </div>
-        )}
-      </div>
-
-      {/* Click outside to close selector */}
-      {showBlockTypeSelector && (
-        <div
-          className="fixed inset-0 z-5"
-          onClick={() => setShowBlockTypeSelector(false)}
-        />
+        </div>
       )}
     </div>
   );
 }
 
-// Assignment Content Editor Component
-function AssignmentContentEditor({
-  content,
-  onChange
-}: {
-  content: LessonContent;
-  onChange: (content: LessonContent) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <Input
-          value={content.title || ""}
-          onChange={(e) => onChange({
-            ...content,
-            title: e.target.value
-          })}
-          placeholder="Add Assignment Title"
-          className="text-lg"
-        />
-      </div>
 
-      <div>
-        <textarea
-          value={content.description || ""}
-          onChange={(e) => onChange({
-            ...content,
-            description: e.target.value
-          })}
-          placeholder="Add Assignment Description"
-          className="w-full border border-gray-300 rounded-lg p-4 min-h-[200px] resize-none"
-        />
-      </div>
 
-      {/* File Upload Area */}
-      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-        <div className="text-blue-600 mb-4">
-          📄
-        </div>
-        <h3 className="font-semibold mb-2">Upload File</h3>
-        <p className="text-gray-600 text-sm mb-2">
-          Choose docx, txt, pdf or ppt file from your device.
-        </p>
-        <p className="text-gray-500 text-xs">
-          Maximum file upload size: 10 MB
-        </p>
-      </div>
-    </div>
-  );
-}
 
-// Quiz Content Editor Component (Simplified for now)
-function QuizContentEditor({
-  content,
-  onChange
-}: {
-  content: LessonContent;
-  onChange: (content: LessonContent) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold">Quiz Editor</h2>
-        <p className="text-gray-600 mt-2">Quiz functionality will be integrated here</p>
-      </div>
-    </div>
-  );
-}
 
-// Content Block Renderer
-function ContentBlockRenderer({
-  block,
-  onChange,
-  onDelete
-}: {
-  block: ContentBlock;
-  onChange: (block: ContentBlock) => void;
-  onDelete: () => void;
-}) {
-  // This would render different block types based on block.type
-  return (
-    <div className="border border-gray-200 rounded-lg p-4">
-      <div className="flex justify-between items-center mb-4">
-        <span className="font-medium capitalize">{block.type} Block</span>
-        <Button variant="ghost" size="sm" onClick={onDelete}>
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
-      {/* Block content would be rendered here based on type */}
-      <div className="text-gray-500">
-        {block.type} content editor will be implemented here
-      </div>
-    </div>
-  );
-}
+
+
