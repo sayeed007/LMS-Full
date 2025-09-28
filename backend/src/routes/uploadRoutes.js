@@ -437,20 +437,8 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
-// Add debug logging middleware
-router.use((req, res, next) => {
-  console.log('Upload route - Request received:', {
-    method: req.method,
-    url: req.originalUrl,
-    contentType: req.headers['content-type'],
-    hasFile: !!req.file,
-    bodyKeys: Object.keys(req.body)
-  });
-  next();
-});
-
-// File upload routes with Cloudinary integration - temporarily removed role restriction for debugging
-router.post('/file', upload, uploadFile);
+// File upload routes with Cloudinary integration
+router.post('/file', restrictTo('instructor', 'org_admin', 'super_admin'), upload, uploadFile);
 router.delete('/file', restrictTo('instructor', 'org_admin', 'super_admin'), deleteFile);
 
 module.exports = router;

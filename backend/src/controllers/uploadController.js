@@ -26,12 +26,6 @@ const storage = multer.diskStorage({
 
 // File filter function
 const fileFilter = (req, file, cb) => {
-  console.log('File filter - checking file:', {
-    originalname: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size
-  });
-
   // Define allowed file types
   const allowedTypes = {
     video: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/webm'],
@@ -49,10 +43,8 @@ const fileFilter = (req, file, cb) => {
   const allAllowedTypes = [...allowedTypes.video, ...allowedTypes.audio, ...allowedTypes.document];
 
   if (allAllowedTypes.includes(file.mimetype)) {
-    console.log('File filter - ACCEPTED');
     cb(null, true);
   } else {
-    console.log('File filter - REJECTED, mimetype not in allowed types');
     cb(new AppError('Invalid file type. Only video, audio, and document files are allowed.', 400), false);
   }
 };
@@ -68,18 +60,7 @@ const upload = multer({
 
 // Upload single file endpoint
 const uploadFile = catchAsync(async (req, res, next) => {
-  // Debug logging
-  console.log('Upload request received:');
-  console.log('- User:', req.user?.email, 'Role:', req.user?.role);
-  console.log('- Body:', req.body);
-  console.log('- File:', req.file ? {
-    originalname: req.file.originalname,
-    mimetype: req.file.mimetype,
-    size: req.file.size
-  } : 'No file');
-
   if (!req.file) {
-    console.log('ERROR: No file uploaded');
     return next(new AppError('No file uploaded', 400));
   }
 
@@ -111,13 +92,8 @@ const uploadFile = catchAsync(async (req, res, next) => {
       fs.unlinkSync(req.file.path);
     }
 
-    console.error('Upload error details:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      http_code: error.http_code
-    });
-    return next(new AppError(`File upload failed: ${error.message}`, 500));
+    console.error('Upload error:', error);
+    return next(new AppError('File upload failed', 500));
   }
 });
 

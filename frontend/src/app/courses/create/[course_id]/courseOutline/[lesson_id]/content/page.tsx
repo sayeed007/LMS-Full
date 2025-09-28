@@ -209,7 +209,6 @@ export default function ContentEditor() {
             setFilePreviewUrl(null);
           }
 
-          console.log('Upload successful, content updated with URL:', response.data.url);
 
         } catch (error: any) {
           setIsUploading(false);
@@ -235,8 +234,6 @@ export default function ContentEditor() {
         saveData.url = currentContent.fileUrl;
       }
 
-      console.log('Save data being sent:', saveData);
-      console.log('Current content fileUrl:', currentContent.fileUrl);
 
       // Create content using the proper RTK Query mutation
       await createContent({

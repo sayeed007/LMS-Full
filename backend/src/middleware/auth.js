@@ -5,12 +5,6 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
 const protect = catchAsync(async (req, res, next) => {
-  console.log('Auth middleware - protecting route:', req.method, req.originalUrl);
-  console.log('Auth middleware - headers:', {
-    authorization: req.headers.authorization ? 'Bearer ***' : 'missing',
-    contentType: req.headers['content-type']
-  });
-
   // 1) Getting token and check if it's there
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -18,7 +12,6 @@ const protect = catchAsync(async (req, res, next) => {
   }
 
   if (!token) {
-    console.log('Auth middleware - No token found');
     return next(new AppError('You are not logged in! Please log in to get access.', 401));
   }
 

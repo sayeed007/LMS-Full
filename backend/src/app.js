@@ -44,17 +44,6 @@ app.use(helmet());
 // Development logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
-
-  // Additional debug logging for troubleshooting
-  app.use((req, res, next) => {
-    console.log(`\n🔍 ${req.method} ${req.originalUrl}`);
-    console.log('Headers:', {
-      origin: req.headers.origin,
-      contentType: req.headers['content-type'],
-      authorization: req.headers.authorization ? 'Bearer ***' : 'none'
-    });
-    next();
-  });
 }
 
 // Rate limiting - disabled in development mode
@@ -109,8 +98,6 @@ const corsOptions = {
       'http://localhost:3001',
       'http://localhost:3002',
     ];
-
-    console.log('CORS check - Origin:', origin, 'Allowed:', allowedOrigins.includes(origin));
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
