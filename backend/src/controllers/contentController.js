@@ -178,9 +178,9 @@ const createContent = catchAsync(async (req, res, next) => {
       }
       break;
 
-    case 'block':
-      if (!req.body.data || !req.body.data.items || !Array.isArray(req.body.data.items)) {
-        return next(new AppError('Block items array is required for block type', 400));
+    case 'blocks':
+      if (!req.body.data || !req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
+        return next(new AppError('Blocks array is required for blocks type', 400));
       }
       break;
 

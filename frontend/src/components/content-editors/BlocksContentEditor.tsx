@@ -1,14 +1,26 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { File, FileText, Video, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { File, FileText, Video, X, GripVertical, Image, Music } from "lucide-react";
 import { useState } from "react";
+import TextContentEditor from "./TextContentEditor";
+import MediaContentEditor from "./MediaContentEditor";
 
 interface ContentBlock {
   id: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
   content: any;
   order: number;
+  title?: string;
+  description?: string;
+  textContent?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  publicId?: string;
+  resourceType?: string;
 }
 
 interface LessonContent {
@@ -22,11 +34,21 @@ interface LessonContent {
 interface BlocksContentEditorProps {
   content: LessonContent;
   onChange: (content: LessonContent) => void;
+  selectedFiles: { [blockId: string]: File | null };
+  filePreviewUrls: { [blockId: string]: string | null };
+  onFileSelect: (blockId: string, file: File) => void;
+  onFileRemove: (blockId: string) => void;
+  isUploading: boolean;
 }
 
 export default function BlocksContentEditor({
   content,
-  onChange
+  onChange,
+  selectedFiles,
+  filePreviewUrls,
+  onFileSelect,
+  onFileRemove,
+  isUploading
 }: BlocksContentEditorProps) {
   const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
 
@@ -36,6 +58,9 @@ export default function BlocksContentEditor({
       type,
       content: {},
       order: content.blocks.length + 1,
+      title: '',
+      description: '',
+      textContent: '',
     };
 
     onChange({
@@ -43,6 +68,22 @@ export default function BlocksContentEditor({
       blocks: [...content.blocks, newBlock]
     });
     setShowBlockTypeSelector(false);
+  };
+
+  const moveBlock = (index: number, direction: 'up' | 'down') => {
+    const newBlocks = [...content.blocks];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (targetIndex >= 0 && targetIndex < newBlocks.length) {
+      [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
+
+      // Update order
+      newBlocks.forEach((block, idx) => {
+        block.order = idx + 1;
+      });
+
+      onChange({ ...content, blocks: newBlocks });
+    }
   };
 
   return (
@@ -56,6 +97,8 @@ export default function BlocksContentEditor({
         <ContentBlockRenderer
           key={block.id}
           block={block}
+          index={index}
+          totalBlocks={content.blocks.length}
           onChange={(updatedBlock) => {
             const updatedBlocks = [...content.blocks];
             updatedBlocks[index] = updatedBlock;
@@ -65,6 +108,12 @@ export default function BlocksContentEditor({
             const updatedBlocks = content.blocks.filter(b => b.id !== block.id);
             onChange({ ...content, blocks: updatedBlocks });
           }}
+          onMove={(direction) => moveBlock(index, direction)}
+          selectedFile={selectedFiles[block.id] || null}
+          filePreviewUrl={filePreviewUrls[block.id] || null}
+          onFileSelect={(file: File) => onFileSelect(block.id, file)}
+          onFileRemove={() => onFileRemove(block.id)}
+          isUploading={isUploading}
         />
       ))}
 
@@ -120,23 +169,171 @@ export default function BlocksContentEditor({
 // Content Block Renderer
 function ContentBlockRenderer({
   block,
+  index,
+  totalBlocks,
   onChange,
-  onDelete
+  onDelete,
+  onMove,
+  selectedFile,
+  filePreviewUrl,
+  onFileSelect,
+  onFileRemove,
+  isUploading
 }: {
   block: ContentBlock;
+  index: number;
+  totalBlocks: number;
   onChange: (block: ContentBlock) => void;
   onDelete: () => void;
+  onMove: (direction: 'up' | 'down') => void;
+  selectedFile: File | null;
+  filePreviewUrl: string | null;
+  onFileSelect: (file: File) => void;
+  onFileRemove: () => void;
+  isUploading: boolean;
 }) {
+  const updateBlockContent = (field: string, value: any) => {
+    onChange({
+      ...block,
+      [field]: value
+    });
+  };
+
+  const renderBlockEditor = () => {
+    switch (block.type) {
+      case 'text':
+        return (
+          <div className="space-y-4">
+            <Input
+              value={block.title || ""}
+              onChange={(e) => updateBlockContent('title', e.target.value)}
+              placeholder="Block title"
+              className="font-medium"
+            />
+            <textarea
+              value={block.textContent || ""}
+              onChange={(e) => updateBlockContent('textContent', e.target.value)}
+              placeholder="Enter your text content here..."
+              className="w-full border border-gray-300 rounded-lg p-4 min-h-[200px] resize-none"
+            />
+          </div>
+        );
+
+      case 'image':
+      case 'video':
+      case 'audio':
+      case 'document':
+        return (
+          <div className="space-y-4">
+            <Input
+              value={block.title || ""}
+              onChange={(e) => updateBlockContent('title', e.target.value)}
+              placeholder={`${block.type} title`}
+              className="font-medium"
+            />
+            <Input
+              value={block.description || ""}
+              onChange={(e) => updateBlockContent('description', e.target.value)}
+              placeholder={`${block.type} description`}
+            />
+            <MediaContentEditor
+              content={{
+                type: block.type as any,
+                blocks: [],
+                title: block.title,
+                description: block.description,
+                textContent: block.textContent,
+                fileUrl: block.fileUrl,
+                fileName: block.fileName,
+                fileSize: block.fileSize,
+                fileType: block.fileType,
+                publicId: block.publicId,
+                resourceType: block.resourceType
+              }}
+              onChange={(mediaContent) => {
+                onChange({
+                  ...block,
+                  title: mediaContent.title,
+                  description: mediaContent.description,
+                  fileUrl: mediaContent.fileUrl,
+                  fileName: mediaContent.fileName,
+                  fileSize: mediaContent.fileSize,
+                  fileType: mediaContent.fileType,
+                  publicId: mediaContent.publicId,
+                  resourceType: mediaContent.resourceType
+                });
+              }}
+              contentType={block.type}
+              selectedFile={selectedFile}
+              filePreviewUrl={filePreviewUrl}
+              onFileSelect={onFileSelect}
+              onFileRemove={onFileRemove}
+              isUploading={isUploading}
+            />
+          </div>
+        );
+
+      default:
+        return (
+          <div className="text-gray-500 text-center py-8">
+            Unsupported block type: {block.type}
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4">
+    <div className="border border-gray-200 rounded-lg p-6 bg-white">
+      {/* Block Header */}
       <div className="flex justify-between items-center mb-4">
-        <span className="font-medium capitalize">{block.type} Block</span>
-        <Button variant="ghost" size="sm" onClick={onDelete}>
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+            <span className="font-medium capitalize text-gray-700">
+              {block.type} Block
+            </span>
+          </div>
+          <span className="text-sm text-gray-500">#{block.order}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Move buttons */}
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onMove('up')}
+              disabled={index === 0}
+              className="h-8 w-8 p-0"
+            >
+              ↑
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onMove('down')}
+              disabled={index === totalBlocks - 1}
+              className="h-8 w-8 p-0"
+            >
+              ↓
+            </Button>
+          </div>
+
+          {/* Delete button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-      <div className="text-gray-500">
-        {block.type} content editor will be implemented here
+
+      {/* Block Content Editor */}
+      <div className="mt-4">
+        {renderBlockEditor()}
       </div>
     </div>
   );

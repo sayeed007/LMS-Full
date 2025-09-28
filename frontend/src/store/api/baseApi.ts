@@ -5,7 +5,7 @@ import type { RootState } from '../index';
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1',
     prepareHeaders: (headers, { getState, endpoint }) => {
       // Get token from Redux state (synced by SessionSync component)
       const token = (getState() as RootState).auth.token;

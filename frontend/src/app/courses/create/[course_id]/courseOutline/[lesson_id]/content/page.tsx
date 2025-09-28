@@ -62,6 +62,10 @@ export default function ContentEditor() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
 
+  // Multiple file management for blocks content
+  const [selectedFiles, setSelectedFiles] = useState<{ [blockId: string]: File | null }>({});
+  const [filePreviewUrls, setFilePreviewUrls] = useState<{ [blockId: string]: string | null }>({});
+
   // Loading states
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
@@ -159,10 +163,169 @@ export default function ContentEditor() {
     }));
   };
 
+  // File handling functions for blocks content
+  const handleBlockFileSelect = (blockId: string, file: File) => {
+    // Check file size (150MB limit)
+    const maxSize = 150 * 1024 * 1024; // 150MB in bytes
+    if (file.size > maxSize) {
+      showErrorToast('File size exceeds 150MB limit');
+      return;
+    }
+
+    // Store file locally and create preview URL
+    setSelectedFiles(prev => ({ ...prev, [blockId]: file }));
+
+    // Create preview URL for display
+    const previewUrl = URL.createObjectURL(file);
+    setFilePreviewUrls(prev => ({ ...prev, [blockId]: previewUrl }));
+
+    // Update the specific block with local file info
+    setContent(prevContent => ({
+      ...prevContent,
+      blocks: prevContent.blocks.map(block =>
+        block.id === blockId
+          ? {
+              ...block,
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              // Clear any existing uploaded file data
+              fileUrl: undefined,
+              publicId: undefined,
+              resourceType: undefined
+            }
+          : block
+      )
+    }));
+  };
+
+  const handleBlockFileRemove = async (blockId: string) => {
+    // Find the block to get cloudinary info
+    const block = content.blocks.find(b => b.id === blockId);
+
+    // If there's an uploaded file, delete it from Cloudinary
+    if (block?.publicId && block?.resourceType) {
+      try {
+        await deleteFileFromCloudinary({
+          publicId: block.publicId,
+          resourceType: block.resourceType
+        }).unwrap();
+        showSuccessToast('File removed successfully!');
+      } catch (error: any) {
+        console.error('Error deleting file:', error);
+        showErrorToast(error?.data?.message || 'Error removing file. Please try again.');
+      }
+    }
+
+    // Clean up file state
+    const previewUrl = filePreviewUrls[blockId];
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setFilePreviewUrls(prev => {
+        const newUrls = { ...prev };
+        delete newUrls[blockId];
+        return newUrls;
+      });
+    }
+
+    setSelectedFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[blockId];
+      return newFiles;
+    });
+
+    // Clear file data from the specific block
+    setContent(prevContent => ({
+      ...prevContent,
+      blocks: prevContent.blocks.map(block =>
+        block.id === blockId
+          ? {
+              ...block,
+              fileName: undefined,
+              fileSize: undefined,
+              fileType: undefined,
+              fileUrl: undefined,
+              publicId: undefined,
+              resourceType: undefined
+            }
+          : block
+      )
+    }));
+  };
+
   const handleSave = async () => {
     if (!courseId || !lessonId) return;
 
     let currentContent = content; // Use local variable to track current content
+
+    // For blocks content, upload files for each block that needs it
+    if (contentType === 'blocks') {
+      setIsUploading(true);
+      setUploadProgress("Processing blocks...");
+
+      const updatedBlocks = [...currentContent.blocks];
+
+      for (let i = 0; i < updatedBlocks.length; i++) {
+        const block = updatedBlocks[i];
+        const selectedBlockFile = selectedFiles[block.id];
+
+        // Skip text blocks or blocks that already have uploaded files
+        if (block.type === 'text' || block.fileUrl) continue;
+
+        // Skip blocks without selected files
+        if (!selectedBlockFile) continue;
+
+        try {
+          setUploadProgress(`Uploading ${block.type} file ${i + 1}...`);
+
+          // Create FormData for upload
+          const formData = new FormData();
+          formData.append('file', selectedBlockFile);
+          formData.append('contentType', block.type);
+
+          // Upload to Cloudinary via backend
+          const response = await uploadFileToCloudinary(formData).unwrap();
+
+          // Update the block with Cloudinary response
+          updatedBlocks[i] = {
+            ...block,
+            fileUrl: response.data.url,
+            fileName: response.data.fileName,
+            fileSize: response.data.fileSize,
+            fileType: response.data.fileType,
+            publicId: response.data.publicId,
+            resourceType: response.data.resourceType
+          };
+
+          // Clean up local file references
+          setSelectedFiles(prev => {
+            const newFiles = { ...prev };
+            delete newFiles[block.id];
+            return newFiles;
+          });
+
+          const previewUrl = filePreviewUrls[block.id];
+          if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setFilePreviewUrls(prev => {
+              const newUrls = { ...prev };
+              delete newUrls[block.id];
+              return newUrls;
+            });
+          }
+
+        } catch (error: any) {
+          setIsUploading(false);
+          setUploadProgress("");
+          showErrorToast(error?.data?.message || `Failed to upload ${block.type} file. Please try again.`);
+          return;
+        }
+      }
+
+      // Update current content with all uploaded blocks
+      currentContent = { ...currentContent, blocks: updatedBlocks };
+      setContent(currentContent);
+    }
 
     // For media and assignment content, upload file if selected
     if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
@@ -324,10 +487,15 @@ export default function ContentEditor() {
           />
         )}
 
-        {contentType === 'block' && (
+        {contentType === 'blocks' && (
           <BlocksContentEditor
             content={content}
             onChange={setContent}
+            selectedFiles={selectedFiles}
+            filePreviewUrls={filePreviewUrls}
+            onFileSelect={handleBlockFileSelect}
+            onFileRemove={handleBlockFileRemove}
+            isUploading={isUploading}
           />
         )}
 
@@ -364,7 +532,7 @@ export default function ContentEditor() {
         )}
 
         {/* Fallback if no valid content type */}
-        {!['text', 'block', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
+        {!['text', 'blocks', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-4">Invalid Content Type</h2>
             <p className="text-gray-600 mb-4">The content type "{contentType}" is not supported.</p>
