@@ -164,8 +164,8 @@ export default function ContentEditor() {
 
     let currentContent = content; // Use local variable to track current content
 
-    // For media content, upload file if selected
-    if (['video', 'audio', 'document'].includes(contentType)) {
+    // For media and assignment content, upload file if selected
+    if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
       // Check if there's a file selected or already uploaded
       if (!currentContent.fileUrl && !selectedFile) {
         showErrorToast("Please select a file before saving");
@@ -229,8 +229,8 @@ export default function ContentEditor() {
         ...currentContent
       };
 
-      // For media content, ensure URL is included
-      if (['video', 'audio', 'document'].includes(contentType) && currentContent.fileUrl) {
+      // For media and assignment content, ensure URL is included
+      if (['video', 'audio', 'document', 'assignment'].includes(contentType) && currentContent.fileUrl) {
         saveData.url = currentContent.fileUrl;
       }
 
@@ -335,6 +335,11 @@ export default function ContentEditor() {
           <AssignmentContentEditor
             content={content}
             onChange={setContent}
+            selectedFile={selectedFile}
+            filePreviewUrl={filePreviewUrl}
+            onFileSelect={handleFileSelect}
+            onFileRemove={handleFileRemove}
+            isUploading={isUploading}
           />
         )}
 

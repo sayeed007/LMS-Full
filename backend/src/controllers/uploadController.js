@@ -36,6 +36,8 @@ const fileFilter = (req, file, cb) => {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-powerpoint',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'text/plain'
     ]
   };
@@ -45,7 +47,7 @@ const fileFilter = (req, file, cb) => {
   if (allAllowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new AppError('Invalid file type. Only video, audio, and document files are allowed.', 400), false);
+    cb(new AppError('Invalid file type. Only video, audio, document, and assignment files are allowed.', 400), false);
   }
 };
 

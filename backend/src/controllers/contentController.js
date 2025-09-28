@@ -187,20 +187,15 @@ const createContent = catchAsync(async (req, res, next) => {
     case 'audio':
     case 'video':
     case 'document':
+    case 'assignment':
       if (!req.body.data || !req.body.data.url) {
-        return next(new AppError('URL is required for media content', 400));
+        return next(new AppError('URL is required for media/assignment content', 400));
       }
       break;
 
     case 'quiz':
       if (!req.body.data || !req.body.data.quiz || !req.body.data.quiz.questions) {
         return next(new AppError('Quiz questions are required for quiz type', 400));
-      }
-      break;
-
-    case 'assignment':
-      if (!req.body.data || !req.body.data.assignment || !req.body.data.assignment.title) {
-        return next(new AppError('Assignment title is required for assignment type', 400));
       }
       break;
 
