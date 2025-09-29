@@ -49,18 +49,41 @@ export function LessonItemRenderer({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg">
+    <div className={`bg-white border rounded-lg ${
+      isInChapter
+        ? 'border-gray-200 ml-2'
+        : 'border-gray-300 shadow-sm'
+    }`}>
       {/* Lesson Header */}
       <div
-        className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+          isInChapter ? 'pl-4' : 'pl-3'
+        }`}
         onClick={() => toggleLesson(lesson._id)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
-            <PlayCircle className="w-4 h-4 text-green-600" />
+          {/* Different icon styling based on chapter context */}
+          <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
+            isInChapter
+              ? 'bg-blue-100'
+              : 'bg-green-100'
+          }`}>
+            <PlayCircle className={`w-4 h-4 ${
+              isInChapter
+                ? 'text-blue-600'
+                : 'text-green-600'
+            }`} />
           </div>
           <div className="flex flex-col">
-            <span className="text-gray-900 font-medium">{lesson.title}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-900 font-medium">{lesson.title}</span>
+              {/* Chapter indicator badge */}
+              {isInChapter && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  Chapter
+                </span>
+              )}
+            </div>
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span>{lesson.estimatedDuration || 0} min</span>
@@ -86,10 +109,14 @@ export function LessonItemRenderer({
           <Button
             size="sm"
             onClick={handleStartLesson}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md"
+            className={`text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md ${
+              isInChapter
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-green-600 hover:bg-green-700'
+            }`}
           >
             <PlayCircle className="w-4 h-4 mr-1" />
-            Start Lesson
+            {isInChapter ? 'Start Chapter Lesson' : 'Start Lesson'}
           </Button>
           {/* Show expand/collapse when there's content or additional items */}
           {(hasContent || hasResources || hasAssignment || hasQuiz) && (
