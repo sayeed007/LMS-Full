@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { useGetContentByLessonQuery } from "@/store/api/courseApi";
-import { CourseResource } from '@/types/backend-models';
+import { CourseResource, CourseLesson } from '@/types/backend-models';
 import { ChevronDown, ChevronRight, Download, ExternalLink, FileText, PlayCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LessonContentDetails } from "./LessonContentDetails";
 import { LessonContentSummary } from "./LessonContentSummary";
 
 interface LessonItemRendererProps {
-  lesson: any;
+  lesson: CourseLesson & { chapterId?: string };
   courseId: string;
   isInChapter?: boolean;
   expandedLessons: string[];
@@ -123,7 +123,7 @@ export function LessonItemRenderer({
             <div className="mb-3">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Resources</h4>
               <div className="space-y-1">
-                {lesson.resources.map((resource: any, resourceIndex: number) => (
+                {lesson.resources.map((resource: CourseResource, resourceIndex: number) => (
                   <div
                     key={resourceIndex}
                     className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-blue-50 transition-colors"

@@ -1,15 +1,15 @@
 "use client";
 
-import { AddChapterModal } from "@/components/AddChapterModal";
+// import { AddChapterModal } from "@/components/AddChapterModal";
 import { Container } from "@/components/ui";
 import { AvatarWithDate } from "@/components/ui/AvatarWithDate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CoursePopulated, useGetCourseByIdQuery } from "@/store/api/courseApi";
-import { BookOpen, ChevronRight, Clock, ChevronDown, PlayCircle, FileText, Download, ExternalLink } from "lucide-react";
+import { CourseChapter, CourseLesson, CourseResource } from '@/types/backend-models';
+import { BookOpen, ChevronDown, ChevronRight, Clock, Download, ExternalLink, FileText, PlayCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Course, CourseChapter, CourseLesson, CourseResource } from '@/types/backend-models';
 
 
 interface CourseDetailClientProps {
@@ -256,7 +256,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
         <div className="flex-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Course Outline</h2>
 
-          {course?.chapters ? [...course.chapters].sort((a: CourseChapter, b: CourseChapter) => (a.order || 0) - (b.order || 0)).map((chapter: CourseChapter) => {
+          {course?.chapters && [...course.chapters].sort((a: CourseChapter, b: CourseChapter) => (a.order || 0) - (b.order || 0)).map((chapter: CourseChapter) => {
             const isChapterExpanded = expandedChapters.includes(chapter?._id);
             const chapterLessons = chapter?.lessons ? [...chapter.lessons].sort((a: CourseLesson, b: CourseLesson) => (a.order || 0) - (b.order || 0)) : [];
 

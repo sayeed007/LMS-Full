@@ -3,16 +3,14 @@
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  DragOverEvent,
   rectIntersection,
+  useSensor,
+  useSensors
 } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import { ReactNode, useState } from 'react';
 
 export interface DragItem {

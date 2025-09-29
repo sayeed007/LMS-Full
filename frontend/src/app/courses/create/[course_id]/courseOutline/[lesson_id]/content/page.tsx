@@ -390,7 +390,7 @@ export default function ContentEditor() {
       setUploadProgress("Saving content...");
 
       // Prepare data based on content type
-      let saveData: any = {
+      const saveData: any = {
         text: currentContent.textContent || "",
         ...currentContent
       };

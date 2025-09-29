@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetContentByLessonQuery } from "@/store/api/courseApi";
-import { BookOpen, ChevronDown, ChevronRight, Clipboard, Clock, Download, ExternalLink, FileText, Grid3X3, Headphones, HelpCircle, Image, PlayCircle } from "lucide-react";
+import { Clipboard, FileText, Grid3X3, Headphones, HelpCircle, Image, PlayCircle } from "lucide-react";
 
 interface LessonContentDetailsProps {
   lessonId: string;

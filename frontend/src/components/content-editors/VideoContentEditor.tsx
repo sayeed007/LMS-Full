@@ -2,8 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Upload, Link, FileText, Download } from "lucide-react";
-import { showErrorToast } from "@/lib/toast-utils";
+import { Link, Upload, X } from "lucide-react";
 import { useState } from "react";
 
 interface LessonContent {
@@ -175,11 +174,10 @@ export default function VideoContentEditor({
               />
               <label
                 htmlFor="video-upload"
-                className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${
-                  isUploading
+                className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${isUploading
                     ? 'bg-gray-400 text-white cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
+                  }`}
               >
                 {isUploading ? 'Processing...' : 'Select Video File'}
               </label>
@@ -237,11 +235,10 @@ export default function VideoContentEditor({
                 />
                 <label
                   htmlFor="video-replace-selected"
-                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
-                    isUploading
+                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${isUploading
                       ? 'bg-gray-400 text-white cursor-not-allowed'
                       : 'bg-gray-600 text-white hover:bg-gray-700'
-                  }`}
+                    }`}
                 >
                   {isUploading ? 'Processing...' : 'Replace File'}
                 </label>
@@ -293,11 +290,10 @@ export default function VideoContentEditor({
                 />
                 <label
                   htmlFor="video-replace"
-                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
-                    isUploading
+                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${isUploading
                       ? 'bg-gray-400 text-white cursor-not-allowed'
                       : 'bg-gray-600 text-white hover:bg-gray-700'
-                  }`}
+                    }`}
                 >
                   {isUploading ? 'Processing...' : 'Replace File'}
                 </label>

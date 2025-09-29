@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LessonContentRenderer } from "./learning/LessonContentRenderer";
 import { CourseProgress } from "./learning/CourseProgress";
+import { CourseLesson, CourseChapter } from "@/types/backend-models";
 
 interface CourseLearningClientProps {
   courseId: string | null;
@@ -72,7 +73,7 @@ export function CourseLearningClient({
 
   // Get all lessons in order (chapters first, then standalone)
   const allLessons = useMemo(() => {
-    const orderedLessons: any[] = [];
+    const orderedLessons: (CourseLesson & { chapterTitle: string | null; chapterId: string | null })[] = [];
 
     // Add lessons from chapters
     chapters.forEach(chapter => {

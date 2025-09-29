@@ -6,11 +6,9 @@ import { LessonContent } from "@/types/backend-models";
 import {
     Edit,
     File,
-    GripVertical,
     Plus,
     Trash2
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { ContentItem } from "./ContentItem";
 
 interface ContentType {

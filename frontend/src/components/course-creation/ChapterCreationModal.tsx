@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
+import { useState } from "react";
 
 interface ChapterCreationModalProps {
   isOpen: boolean;

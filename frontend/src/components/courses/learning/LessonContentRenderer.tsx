@@ -1,19 +1,19 @@
 "use client";
 
-import { useGetContentByLessonQuery } from "@/store/api/courseApi";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useGetContentByLessonQuery } from "@/store/api/courseApi";
+import { LessonContent } from "@/types/backend-models";
 import {
   BookOpen,
   CheckCircle,
+  ChevronRight,
   Clock,
   Download,
   FileText,
   Headphones,
   Play,
-  Video,
-  ExternalLink,
-  ChevronRight
+  Video
 } from "lucide-react";
 import { useState } from "react";
 
@@ -87,14 +87,14 @@ export function LessonContentRenderer({
             No content available
           </h3>
           <p className="text-gray-600">
-            This lesson doesn't have any content yet.
+            This lesson doesn&apos;t have any content yet.
           </p>
         </div>
       </div>
     );
   }
 
-  const renderContentItem = (item: any) => {
+  const renderContentItem = (item: LessonContent) => {
     const isCompleted = Array.from(completedItems).includes(item._id);
 
     const getContentIcon = (type: string) => {
@@ -120,7 +120,7 @@ export function LessonContentRenderer({
           return (
             <div className="prose max-w-none">
               <div
-                dangerouslySetInnerHTML={{ __html: item.content || '' }}
+                dangerouslySetInnerHTML={{ __html: item.data.text || '' }}
                 className="text-gray-700 leading-relaxed"
               />
             </div>
@@ -129,13 +129,13 @@ export function LessonContentRenderer({
         case 'video':
           return (
             <div className="bg-black rounded-lg overflow-hidden aspect-video">
-              {item.videoUrl ? (
+              {item.data.url ? (
                 <video
                   controls
                   className="w-full h-full"
                   onEnded={() => markItemComplete(item._id)}
                 >
-                  <source src={item.videoUrl} type="video/mp4" />
+                  <source src={item.data.url} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
               ) : (
@@ -152,13 +152,13 @@ export function LessonContentRenderer({
         case 'audio':
           return (
             <div className="bg-gray-50 rounded-lg p-6">
-              {item.audioUrl ? (
+              {item.data.url ? (
                 <audio
                   controls
                   className="w-full"
                   onEnded={() => markItemComplete(item._id)}
                 >
-                  <source src={item.audioUrl} type="audio/mpeg" />
+                  <source src={item.data.url} type="audio/mpeg" />
                   Your browser does not support the audio element.
                 </audio>
               ) : (
@@ -185,11 +185,11 @@ export function LessonContentRenderer({
                     </p>
                   </div>
                 </div>
-                {item.documentUrl && (
+                {item.data.url && (
                   <Button
                     variant="outline"
                     onClick={() => {
-                      window.open(item.documentUrl, '_blank');
+                      window.open(item.data.url, '_blank');
                       markItemComplete(item._id);
                     }}
                   >
@@ -204,13 +204,38 @@ export function LessonContentRenderer({
         case 'block':
           return (
             <div className="space-y-4">
-              {item.blocks?.map((block: any, index: number) => (
-                <div key={index} className="border-l-4 border-blue-200 pl-4">
-                  <h4 className="font-medium text-gray-900 mb-2">{block.title}</h4>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: block.content || '' }}
-                    className="text-gray-700 leading-relaxed"
-                  />
+              {item.data.items?.map((blockItem, index: number) => (
+                <div key={blockItem._id || index} className="border-l-4 border-blue-200 pl-4">
+                  <h4 className="font-medium text-gray-900 mb-2">{blockItem.data.title || `Block Item ${index + 1}`}</h4>
+                  <div className="text-gray-700 leading-relaxed">
+                    {blockItem.type === 'text' && blockItem.data.text && (
+                      <div dangerouslySetInnerHTML={{ __html: blockItem.data.text }} />
+                    )}
+                    {(blockItem.type === 'image' || blockItem.type === 'video' || blockItem.type === 'audio') && blockItem.data.url && (
+                      <div className="mb-2">
+                        {blockItem.type === 'image' && (
+                          <img
+                            src={blockItem.data.url}
+                            alt={blockItem.data.alt || blockItem.data.title || 'Block content'}
+                            className="max-w-full h-auto rounded-lg"
+                          />
+                        )}
+                        {blockItem.type === 'video' && (
+                          <video controls className="w-full rounded-lg">
+                            <source src={blockItem.data.url} type={blockItem.data.mimeType || 'video/mp4'} />
+                          </video>
+                        )}
+                        {blockItem.type === 'audio' && (
+                          <audio controls className="w-full">
+                            <source src={blockItem.data.url} type={blockItem.data.mimeType || 'audio/mpeg'} />
+                          </audio>
+                        )}
+                      </div>
+                    )}
+                    {blockItem.data.description && (
+                      <p className="text-sm text-gray-600 mt-2">{blockItem.data.description}</p>
+                    )}
+                  </div>
                 </div>
               )) || (
                 <p className="text-gray-600">No block content available</p>
@@ -250,7 +275,7 @@ export function LessonContentRenderer({
                       <span className="text-gray-300">•</span>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />
-                        {item.estimatedDuration} min
+                        {item.data.duration ? Math.ceil(item.data.duration / 60) : 0} min
                       </div>
                     </>
                   )}

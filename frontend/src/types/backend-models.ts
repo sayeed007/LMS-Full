@@ -179,7 +179,7 @@ export interface ContentBlockItem {
     alt?: string; // for images
     duration?: number; // for audio/video in seconds
     // Additional properties can be added as needed
-    metadata?: any;
+    metadata?: Record<string, unknown>;
   };
   createdAt: string;
   updatedAt: string;
@@ -205,7 +205,7 @@ export interface ContentQuizQuestion {
   maxLength?: number;
   // For pick_from_db questions
   dbCollectionRef?: string;
-  dbQuery?: any;
+  dbQuery?: Record<string, unknown>;
   // Common question properties
   points: number;
   explanation?: string;
