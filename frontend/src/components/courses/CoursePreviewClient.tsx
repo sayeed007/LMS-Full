@@ -230,13 +230,22 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
               </Badge>
             </div>
 
-            {/* Enroll Button */}
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium"
-              disabled
-            >
-              Enroll Now (Preview Mode)
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium"
+                disabled
+              >
+                Enroll Now (Preview Mode)
+              </Button>
+              <Button
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-xl font-medium"
+                onClick={() => router.push(`/courses/${courseId}/learn`)}
+              >
+                Test Learning Experience
+              </Button>
+            </div>
           </div>
 
           {/* Right Stats Card */}
@@ -314,7 +323,7 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
                     {chapterLessons.map((lesson) => (
                       <LessonItemRenderer
                         key={lesson._id}
-                        lesson={lesson}
+                        lesson={{...lesson, chapterId: chapter._id}}
                         courseId={courseId || ""}
                         isInChapter={true}
                         expandedLessons={expandedLessons}

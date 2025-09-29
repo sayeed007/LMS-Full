@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useGetContentByLessonQuery } from "@/store/api/courseApi";
 import { CourseResource } from '@/types/backend-models';
 import { ChevronDown, ChevronRight, Download, ExternalLink, FileText, PlayCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { LessonContentDetails } from "./LessonContentDetails";
 import { LessonContentSummary } from "./LessonContentSummary";
 
@@ -22,6 +23,8 @@ export function LessonItemRenderer({
   expandedLessons,
   toggleLesson
 }: LessonItemRendererProps) {
+  const router = useRouter();
+
   const { data: contentData } = useGetContentByLessonQuery(
     { courseId, lessonId: lesson._id },
     { skip: !courseId || !lesson._id }
@@ -37,6 +40,12 @@ export function LessonItemRenderer({
     if (resource.url) {
       window.open(resource.url, '_blank');
     }
+  };
+
+  const handleStartLesson = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the expand/collapse
+    const chapterParam = lesson.chapterId ? `&chapter=${lesson.chapterId}` : '';
+    router.push(`/courses/${courseId}/learn?lesson=${lesson._id}${chapterParam}`);
   };
 
   return (
@@ -76,11 +85,11 @@ export function LessonItemRenderer({
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant="ghost"
-            disabled
-            className="text-blue-600 hover:bg-blue-50"
+            onClick={handleStartLesson}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-md"
           >
-            Start (Preview)
+            <PlayCircle className="w-4 h-4 mr-1" />
+            Start Lesson
           </Button>
           {/* Show expand/collapse when there's content or additional items */}
           {(hasContent || hasResources || hasAssignment || hasQuiz) && (
