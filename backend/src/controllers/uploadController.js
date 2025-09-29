@@ -30,6 +30,7 @@ const fileFilter = (req, file, cb) => {
   const allowedTypes = {
     video: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/webm'],
     audio: ['audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/mpeg'],
+    image: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
     document: [
       'application/pdf',
       'application/msword',
@@ -42,12 +43,12 @@ const fileFilter = (req, file, cb) => {
     ]
   };
 
-  const allAllowedTypes = [...allowedTypes.video, ...allowedTypes.audio, ...allowedTypes.document];
+  const allAllowedTypes = [...allowedTypes.video, ...allowedTypes.audio, ...allowedTypes.image, ...allowedTypes.document];
 
   if (allAllowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new AppError('Invalid file type. Only video, audio, document, and assignment files are allowed.', 400), false);
+    cb(new AppError('Invalid file type. Only video, audio, image, document, and assignment files are allowed.', 400), false);
   }
 };
 

@@ -179,17 +179,25 @@ const createContent = catchAsync(async (req, res, next) => {
       break;
 
     case 'blocks':
+    case 'block':
       if (!req.body.data || !req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
-        return next(new AppError('Blocks array is required for blocks type', 400));
+        return next(new AppError('Blocks array is required for blocks/block type', 400));
       }
       break;
 
     case 'audio':
-    case 'video':
+    case 'image':
     case 'document':
     case 'assignment':
       if (!req.body.data || !req.body.data.url) {
         return next(new AppError('URL is required for media/assignment content', 400));
+      }
+      break;
+
+    case 'video':
+      // Video can have either uploaded file URL or embed URL
+      if (!req.body.data || (!req.body.data.url && !req.body.data.embedUrl)) {
+        return next(new AppError('Either upload URL or embed URL is required for video content', 400));
       }
       break;
 

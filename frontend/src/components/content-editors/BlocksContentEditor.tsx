@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { File, FileText, Video, X, GripVertical, Image, Music } from "lucide-react";
 import { useState } from "react";
 import TextContentEditor from "./TextContentEditor";
+import BlockTextEditor from "./BlockTextEditor";
 import MediaContentEditor from "./MediaContentEditor";
+import VideoContentEditor from "./VideoContentEditor";
 
 interface ContentBlock {
   id: string;
@@ -21,6 +23,8 @@ interface ContentBlock {
   fileType?: string;
   publicId?: string;
   resourceType?: string;
+  embedUrl?: string;
+  videoType?: 'upload' | 'embed';
 }
 
 interface LessonContent {
@@ -210,38 +214,80 @@ function ContentBlockRenderer({
               placeholder="Block title"
               className="font-medium"
             />
-            <textarea
-              value={block.textContent || ""}
-              onChange={(e) => updateBlockContent('textContent', e.target.value)}
-              placeholder="Enter your text content here..."
-              className="w-full border border-gray-300 rounded-lg p-4 min-h-[200px] resize-none"
+            <BlockTextEditor
+              content={{
+                type: 'text',
+                blocks: [],
+                textContent: block.textContent,
+                title: block.title,
+                description: block.description
+              }}
+              onChange={(textContent) => {
+                onChange({
+                  ...block,
+                  textContent: textContent.textContent,
+                  title: block.title, // Keep the block title separate from content title
+                  description: block.description
+                });
+              }}
             />
           </div>
         );
 
-      case 'image':
       case 'video':
-      case 'audio':
-      case 'document':
         return (
           <div className="space-y-4">
-            <Input
-              value={block.title || ""}
-              onChange={(e) => updateBlockContent('title', e.target.value)}
-              placeholder={`${block.type} title`}
-              className="font-medium"
-            />
-            <Input
-              value={block.description || ""}
-              onChange={(e) => updateBlockContent('description', e.target.value)}
-              placeholder={`${block.type} description`}
-            />
-            <MediaContentEditor
+            <VideoContentEditor
               content={{
                 type: block.type as any,
                 blocks: [],
                 title: block.title,
                 description: block.description,
+                textContent: block.textContent,
+                fileUrl: block.fileUrl,
+                fileName: block.fileName,
+                fileSize: block.fileSize,
+                fileType: block.fileType,
+                publicId: block.publicId,
+                resourceType: block.resourceType,
+                embedUrl: block.embedUrl,
+                videoType: block.videoType
+              }}
+              onChange={(videoContent) => {
+                onChange({
+                  ...block,
+                  title: videoContent.title,
+                  description: videoContent.description,
+                  fileUrl: videoContent.fileUrl,
+                  fileName: videoContent.fileName,
+                  fileSize: videoContent.fileSize,
+                  fileType: videoContent.fileType,
+                  publicId: videoContent.publicId,
+                  resourceType: videoContent.resourceType,
+                  embedUrl: videoContent.embedUrl,
+                  videoType: videoContent.videoType
+                });
+              }}
+              selectedFile={selectedFile}
+              filePreviewUrl={filePreviewUrl}
+              onFileSelect={onFileSelect}
+              onFileRemove={onFileRemove}
+              isUploading={isUploading}
+            />
+          </div>
+        );
+
+      case 'image':
+      case 'audio':
+      case 'document':
+        return (
+          <div className="space-y-4">
+            <MediaContentEditor
+              content={{
+                type: block.type as any,
+                blocks: [],
+                title: block.title || '',
+                description: block.description || '',
                 textContent: block.textContent,
                 fileUrl: block.fileUrl,
                 fileName: block.fileName,

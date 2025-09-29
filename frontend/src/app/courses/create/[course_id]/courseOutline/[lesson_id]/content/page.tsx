@@ -259,7 +259,7 @@ export default function ContentEditor() {
     let currentContent = content; // Use local variable to track current content
 
     // For blocks content, upload files for each block that needs it
-    if (contentType === 'blocks') {
+    if (contentType === 'blocks' || contentType === 'block') {
       setIsUploading(true);
       setUploadProgress("Processing blocks...");
 
@@ -271,6 +271,9 @@ export default function ContentEditor() {
 
         // Skip text blocks or blocks that already have uploaded files
         if (block.type === 'text' || block.fileUrl) continue;
+
+        // Skip embed videos (they don't need file upload)
+        if (block.type === 'video' && block.videoType === 'embed') continue;
 
         // Skip blocks without selected files
         if (!selectedBlockFile) continue;
@@ -487,7 +490,7 @@ export default function ContentEditor() {
           />
         )}
 
-        {contentType === 'blocks' && (
+        {(contentType === 'blocks' || contentType === 'block') && (
           <BlocksContentEditor
             content={content}
             onChange={setContent}
@@ -532,7 +535,7 @@ export default function ContentEditor() {
         )}
 
         {/* Fallback if no valid content type */}
-        {!['text', 'blocks', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
+        {!['text', 'blocks', 'block', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-4">Invalid Content Type</h2>
             <p className="text-gray-600 mb-4">The content type "{contentType}" is not supported.</p>
