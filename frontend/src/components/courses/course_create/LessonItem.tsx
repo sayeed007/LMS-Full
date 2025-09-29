@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useGetContentByLessonQuery } from "@/store/api/courseApi";
 import { LessonContent } from "@/types/backend-models";
 import {
+    ChevronsDownUp,
+    ChevronsUpDown,
     Edit,
     File,
     Plus,
@@ -14,17 +16,16 @@ import { ContentItem } from "./ContentItem";
 interface ContentType {
     id: string;
     type: LessonContent['type'];
-    icon: any;
+    icon: string;
     label: string;
 }
 
 interface LessonItemProps {
-    lesson: any;
+    lesson: { _id: string; title: string; description?: string; order?: number; chapterId?: string; resources?: unknown[] };
     courseId: string;
     isInChapter?: boolean;
     expandedLessons: Set<string>;
     showContentPopup: string | null;
-    contentTypes: ContentType[];
     isDeletingLesson: boolean;
     isDeletingContent: boolean;
     onToggleLessonExpansion: (lessonId: string) => void;
@@ -41,7 +42,6 @@ export const LessonItem = ({
     isInChapter = false,
     expandedLessons,
     showContentPopup,
-    contentTypes,
     isDeletingLesson,
     isDeletingContent,
     onToggleLessonExpansion,
@@ -63,9 +63,21 @@ export const LessonItem = ({
 
     return (
         <div
-            className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow relative"
+            className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow relative mb-6"
             data-lesson-id={lesson._id}
         >
+
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSetShowContentPopup(lesson._id)}
+                className="text-black font-bold bg-white border-grey-1 hover:bg-off-white-1 absolute bottom-[-15px] left-[45%] rounded-2xl "
+                aria-label="Add Content"
+            >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Content
+            </Button>
+
             {/* Lesson Header */}
             <div className="p-4">
                 <div className="flex items-center justify-between">
@@ -80,27 +92,24 @@ export const LessonItem = ({
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onSetShowContentPopup(lesson._id)}
-                            className="text-black border-gray-300 hover:bg-gray-50"
-                            aria-label="Add Content"
-                        >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add Content
-                        </Button>
+                    <div className="flex items-center gap-1">
+
                         {content.length > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onToggleLessonExpansion(lesson._id)}
-                                className="text-gray-600 hover:text-gray-800"
-                            >
-                                {isExpanded ? 'Collapse' : 'Expand'}
-                            </Button>
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => onToggleLessonExpansion(lesson._id)}
+                                >
+                                    {isExpanded ?
+                                        <ChevronsUpDown className="w-4 h-4" />
+                                        :
+                                        <ChevronsDownUp className="w-4 h-4" />
+                                    }
+                                </Button>
+                            </>
                         )}
+
                         <Button
                             variant="ghost"
                             size="sm"
@@ -108,6 +117,7 @@ export const LessonItem = ({
                         >
                             <Edit className="w-4 h-4" />
                         </Button>
+
                         <Button
                             variant="ghost"
                             size="sm"
@@ -138,6 +148,6 @@ export const LessonItem = ({
             )}
 
 
-        </div>
+        </div >
     );
 };

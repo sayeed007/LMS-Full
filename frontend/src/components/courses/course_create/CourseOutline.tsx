@@ -38,26 +38,28 @@ import { SortableItem } from './SortableItem';
 import { EmptyState } from './EmptyState';
 import { CreationForm } from './CreationForm';
 import { LessonItem } from './LessonItem';
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface CourseOutlineProps {
     course?: CoursePopulated;
 }
 
-interface ContentType {
+export interface ContentType {
     id: string;
     type: LessonContent['type'];
-    icon: any;
+    icon: string;
     label: string;
 }
 
 const contentTypes: ContentType[] = [
-    { id: 'text', type: 'text', icon: FileText, label: 'Text' },
-    { id: 'block', type: 'block', icon: Grid3X3, label: 'Block' },
-    { id: 'video', type: 'video', icon: Video, label: 'Video' },
-    { id: 'audio', type: 'audio', icon: Video, label: 'Audio' },
-    { id: 'document', type: 'document', icon: File, label: 'Document' },
-    { id: 'quiz', type: 'quiz', icon: HelpCircle, label: 'Quiz' },
-    { id: 'assignment', type: 'assignment', icon: Clipboard, label: 'Assignment' },
+    { id: 'text', type: 'text', icon: '/icons/TextAa.png', label: 'Text' },
+    { id: 'block', type: 'block', icon: '/icons/Blocks.png', label: 'Block' },
+    { id: 'video', type: 'video', icon: '/icons/Video.png', label: 'Video' },
+    { id: 'audio', type: 'audio', icon: '/icons/Audio.png', label: 'Audio' },
+    { id: 'document', type: 'document', icon: '/icons/Document.png', label: 'Document' },
+    { id: 'quiz', type: 'quiz', icon: '/icons/Quiz.png', label: 'Quiz' },
+    { id: 'assignment', type: 'assignment', icon: '/icons/Assignment.png', label: 'Assignment' },
 ];
 
 export default function CourseOutline({ course }: CourseOutlineProps) {
@@ -263,7 +265,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
     // Drag and Drop handlers
     const onDragEnd = useCallback(async (event: {
-        active: any;
+        active: { id: string; data?: { current?: { type?: string; data?: unknown } } };
         over: { id: string; type?: string } | null;
         sourceContainer: string;
         targetContainer: string;
@@ -565,7 +567,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                                         isInChapter={true}
                                                         expandedLessons={expandedLessons}
                                                         showContentPopup={showContentPopup}
-                                                        contentTypes={contentTypes}
                                                         isDeletingLesson={isDeletingLesson}
                                                         isDeletingContent={isDeletingContent}
                                                         onToggleLessonExpansion={toggleLessonExpansion}
@@ -606,7 +607,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                     isInChapter={false}
                                     expandedLessons={expandedLessons}
                                     showContentPopup={showContentPopup}
-                                    contentTypes={contentTypes}
                                     isDeletingLesson={isDeletingLesson}
                                     isDeletingContent={isDeletingContent}
                                     onToggleLessonExpansion={toggleLessonExpansion}
@@ -686,15 +686,25 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                 }}
                             >
                                 <div className="space-y-1">
-                                    {contentTypes.map((contentType) => {
-                                        const IconComponent = contentType.icon;
+                                    {contentTypes.map((contentType, index) => {
+                                        // const IconComponent = contentType.icon;
                                         return (
                                             <button
                                                 key={contentType.id}
                                                 onClick={() => handleAddContent(showContentPopup, contentType)}
-                                                className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
+                                                className={cn(
+                                                    "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors mb-0",
+                                                    index !== 0 && "border-t-1 border-off-white-4"
+                                                )}
                                             >
-                                                <IconComponent className="w-4 h-4 text-blue-600" />
+                                                <Image
+                                                    width={20}
+                                                    height={20}
+                                                    src={contentType.icon}
+                                                    alt={contentType.type}
+                                                    className="w-5 h-5 text-blue-600"
+                                                />
+                                                {/* <IconComponent  /> */}
                                                 <span className="text-sm">{contentType.label}</span>
                                             </button>
                                         );

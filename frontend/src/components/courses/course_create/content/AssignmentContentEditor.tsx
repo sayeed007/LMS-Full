@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 interface AssignmentContentEditorProps {
     data: { assignment?: ContentAssignment };
-    onChange: (data: any) => void;
+    onChange: (data: { assignment?: ContentAssignment }) => void;
 }
 
 export default function AssignmentContentEditor({ data, onChange }: AssignmentContentEditorProps) {

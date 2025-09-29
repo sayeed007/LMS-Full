@@ -355,7 +355,7 @@ export default function LessonPlayerPage() {
 
 // Helper function to render lesson content based on type
 function renderLessonContent(
-  lesson: { content?: string; title: string; description?: string },
+  lesson: { content?: string | LessonContent[]; title: string; description?: string },
   isPlaying: boolean,
   setIsPlaying: (playing: boolean) => void,
   currentTime: number,

@@ -7,7 +7,7 @@ import { useState } from "react";
 
 interface LessonContent {
   type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
-  blocks: any[];
+  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;

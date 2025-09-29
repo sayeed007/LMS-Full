@@ -15,6 +15,7 @@ import {
   Play,
   Video
 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 interface LessonContentRendererProps {
@@ -214,7 +215,7 @@ export function LessonContentRenderer({
                     {(blockItem.type === 'image' || blockItem.type === 'video' || blockItem.type === 'audio') && blockItem.data.url && (
                       <div className="mb-2">
                         {blockItem.type === 'image' && (
-                          <img
+                          <Image
                             src={blockItem.data.url}
                             alt={blockItem.data.alt || blockItem.data.title || 'Block content'}
                             className="max-w-full h-auto rounded-lg"
@@ -238,8 +239,8 @@ export function LessonContentRenderer({
                   </div>
                 </div>
               )) || (
-                <p className="text-gray-600">No block content available</p>
-              )}
+                  <p className="text-gray-600">No block content available</p>
+                )}
             </div>
           );
 
@@ -270,7 +271,7 @@ export function LessonContentRenderer({
                   <Badge variant="secondary" className="text-xs">
                     {item.type}
                   </Badge>
-                  {item.estimatedDuration && (
+                  {item?.estimatedDuration && (
                     <>
                       <span className="text-gray-300">•</span>
                       <div className="flex items-center gap-1 text-xs text-gray-500">

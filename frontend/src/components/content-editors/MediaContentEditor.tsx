@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, FileText, Download } from "lucide-react";
-import { showErrorToast } from "@/lib/toast-utils";
 
 interface LessonContent {
   type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
-  blocks: any[];
+  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;

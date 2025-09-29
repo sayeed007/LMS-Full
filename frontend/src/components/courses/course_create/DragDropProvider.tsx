@@ -16,7 +16,7 @@ import { ReactNode, useState } from 'react';
 export interface DragItem {
   id: string;
   type: 'chapter' | 'lesson';
-  data: any;
+  data: Record<string, unknown>;
 }
 
 interface DragDropProviderProps {

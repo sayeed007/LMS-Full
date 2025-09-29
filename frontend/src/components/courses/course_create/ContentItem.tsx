@@ -12,6 +12,7 @@ import {
     Trash2,
     Video
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 interface ContentItemProps {
@@ -27,24 +28,31 @@ export const ContentItem = ({ content, lessonId, courseId, isDeletingContent, on
 
     const getContentIcon = (type: LessonContent['type']) => {
         switch (type) {
-            case 'text': return FileText;
-            case 'block': return Grid3X3;
-            case 'video': return Video;
-            case 'audio': return Video;
-            case 'document': return File;
-            case 'quiz': return HelpCircle;
-            case 'assignment': return Clipboard;
-            default: return File;
+            case 'text': return { ContentIcon: '/icons/TextAa.png', ContentIconName: 'TextAa' };
+            case 'block': return { ContentIcon: '/icons/Blocks.png', ContentIconName: 'Blocks' };
+            case 'video': return { ContentIcon: '/icons/Video.png', ContentIconName: 'Video' };
+            case 'audio': return { ContentIcon: '/icons/Audio.png', ContentIconName: 'Audio' };
+            case 'document': return { ContentIcon: '/icons/Document.png', ContentIconName: 'Document' };
+            case 'quiz': return { ContentIcon: '/icons/Quiz.png', ContentIconName: 'Quiz' };
+            case 'assignment': return { ContentIcon: '/icons/Assignment.png', ContentIconName: 'Assignment' };
+            default: return { ContentIcon: '/icons/Document.png', ContentIconName: 'Document' };
         }
     };
 
-    const ContentIcon = getContentIcon(content.type);
+    const { ContentIcon, ContentIconName } = getContentIcon(content.type);
+    console.log(ContentIcon, ContentIconName);
 
     return (
         <div className="bg-gray-50 border border-gray-100 rounded-md p-3 ml-8">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <ContentIcon className="w-4 h-4 text-gray-500" />
+                    <Image
+                        width={20}
+                        height={20}
+                        src={ContentIcon}
+                        alt={ContentIconName}
+                        className="w-5 h-5 text-gray-500"
+                    />
                     <span className="text-sm font-medium">{content.title}</span>
                     <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded capitalize">
                         {content.type}

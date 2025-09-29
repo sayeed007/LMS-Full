@@ -2,9 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { File, FileText, Video, X, GripVertical, Image, Music } from "lucide-react";
+import { File, FileText, Video, X, GripVertical } from "lucide-react";
 import { useState } from "react";
-import TextContentEditor from "./TextContentEditor";
 import BlockTextEditor from "./BlockTextEditor";
 import MediaContentEditor from "./MediaContentEditor";
 import VideoContentEditor from "./VideoContentEditor";
@@ -12,7 +11,7 @@ import VideoContentEditor from "./VideoContentEditor";
 interface ContentBlock {
   id: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
-  content: any;
+  content: string | { url?: string; text?: string; [key: string]: unknown };
   order: number;
   title?: string;
   description?: string;
@@ -196,7 +195,7 @@ function ContentBlockRenderer({
   onFileRemove: () => void;
   isUploading: boolean;
 }) {
-  const updateBlockContent = (field: string, value: any) => {
+  const updateBlockContent = (field: string, value: string) => {
     onChange({
       ...block,
       [field]: value
@@ -239,7 +238,7 @@ function ContentBlockRenderer({
           <div className="space-y-4">
             <VideoContentEditor
               content={{
-                type: block.type as any,
+                type: block.type as 'video',
                 blocks: [],
                 title: block.title,
                 description: block.description,
@@ -284,7 +283,7 @@ function ContentBlockRenderer({
           <div className="space-y-4">
             <MediaContentEditor
               content={{
-                type: block.type as any,
+                type: block.type as 'image' | 'audio' | 'document',
                 blocks: [],
                 title: block.title || '',
                 description: block.description || '',

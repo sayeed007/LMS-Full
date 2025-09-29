@@ -25,12 +25,12 @@ export default function QuizTakingPage() {
 
   // Quiz state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [quizResults, setQuizResults] = useState<any>(null);
+  const [quizResults, setQuizResults] = useState<{ score: number; maxScore: number; percentage: number; isPassed: boolean; timeSpent: number } | null>(null);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
 
   // API queries and mutations
@@ -45,7 +45,7 @@ export default function QuizTakingPage() {
   } = useGetQuizAttemptsQuery(quizId);
 
   const [startQuizAttempt, { isLoading: isStartingQuiz }] = useStartQuizAttemptMutation();
-  const [submitQuiz, { isLoading: isSubmittingQuiz }] = useSubmitQuizMutation();
+  const [submitQuiz] = useSubmitQuizMutation();
 
   const quiz = quizData?.data?.quiz;
   const questions = quiz?.questions || [];
@@ -79,13 +79,14 @@ export default function QuizTakingPage() {
         setTimeLeft(response.data.timeRemaining);
       }
       showSuccessToast("Quiz started successfully!");
-    } catch (error: any) {
-      showErrorToast(error?.data?.message || "Failed to start quiz");
+    } catch (error) {
+      const apiError = error as { data?: { message?: string } };
+      showErrorToast(apiError?.data?.message || "Failed to start quiz");
     }
   };
 
   // Handle answer change
-  const handleAnswerChange = (questionId: string, answer: any) => {
+  const handleAnswerChange = (questionId: string, answer: string | string[]) => {
     setAnswers(prev => ({
       ...prev,
       [questionId]: answer
@@ -150,8 +151,9 @@ export default function QuizTakingPage() {
       } else {
         showSuccessToast("Quiz submitted successfully!");
       }
-    } catch (error: any) {
-      showErrorToast(error?.data?.message || "Failed to submit quiz");
+    } catch (error) {
+      const apiError = error as { data?: { message?: string } };
+      showErrorToast(apiError?.data?.message || "Failed to submit quiz");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,7 +192,7 @@ export default function QuizTakingPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
-          <p className="text-gray-600 mb-4">The quiz you're looking for doesn't exist or you don't have access.</p>
+          <p className="text-gray-600 mb-4">The quiz you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.</p>
           <Button onClick={() => router.back()}>
             Go Back
           </Button>
@@ -412,7 +414,11 @@ export default function QuizTakingPage() {
 }
 
 // Helper function to render different question types
-function renderQuestionInput(question: any, currentAnswer: any, onChange: (answer: any) => void) {
+function renderQuestionInput(
+  question: { questionType: string; options?: string[]; _id: string },
+  currentAnswer: string | string[] | undefined,
+  onChange: (answer: string | string[]) => void
+) {
   switch (question.questionType) {
     case 'multiple_choice':
       return (
@@ -497,7 +503,23 @@ function renderQuestionInput(question: any, currentAnswer: any, onChange: (answe
 }
 
 // Quiz intro view component
-function QuizIntroView({ quiz, attempts, onStartQuiz, isStarting }: any) {
+function QuizIntroView({
+  quiz,
+  attempts,
+  onStartQuiz,
+  isStarting
+}: {
+  quiz: {
+    title: string;
+    description?: string;
+    questions?: unknown[];
+    settings?: { timeLimit?: string | number };
+    instructions?: string;
+  };
+  attempts: Array<{ percentage: number; isPassed: boolean }>;
+  onStartQuiz: () => void;
+  isStarting: boolean;
+}) {
   const router = useRouter();
 
   return (
@@ -538,7 +560,7 @@ function QuizIntroView({ quiz, attempts, onStartQuiz, isStarting }: any) {
               <div>
                 <h4 className="font-medium mb-2">Previous Attempts:</h4>
                 <div className="space-y-2">
-                  {attempts.slice(0, 3).map((attempt: any, index: number) => (
+                  {attempts.slice(0, 3).map((attempt: { percentage: number; isPassed: boolean }, index: number) => (
                     <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                       <span className="text-sm">Attempt {index + 1}</span>
                       <div className="flex items-center space-x-2">
@@ -578,7 +600,21 @@ function QuizIntroView({ quiz, attempts, onStartQuiz, isStarting }: any) {
 }
 
 // Quiz results view component
-function QuizResultsView({ quiz, results, onRetakeQuiz }: any) {
+function QuizResultsView({
+  quiz,
+  results,
+  onRetakeQuiz
+}: {
+  quiz: { passingScore?: number };
+  results: {
+    isPassed: boolean;
+    percentage: number;
+    score: number;
+    maxScore: number;
+    timeSpent: number;
+  };
+  onRetakeQuiz: () => void;
+}) {
   const router = useRouter();
 
   return (

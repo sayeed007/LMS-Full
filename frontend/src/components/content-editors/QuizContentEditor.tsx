@@ -2,7 +2,7 @@
 
 interface LessonContent {
   type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
-  blocks: any[];
+  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;
@@ -14,8 +14,8 @@ interface QuizContentEditorProps {
 }
 
 export default function QuizContentEditor({
-  content,
-  onChange
+  content: _content,
+  onChange: _onChange
 }: QuizContentEditorProps) {
   return (
     <div className="space-y-6">

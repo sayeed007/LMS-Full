@@ -16,7 +16,8 @@ export default function UserProfile() {
       await logoutMutation().unwrap();
       dispatch(logout());
       toast.success('Logged out successfully');
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Logout error:", error);
       // Even if server logout fails, clear local state
       dispatch(logout());
       toast.success('Logged out');

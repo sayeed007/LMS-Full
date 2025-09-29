@@ -25,8 +25,9 @@ export default function LoginForm() {
         }));
         toast.success('Login successful!');
       }
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Login failed');
+    } catch (error) {
+      const apiError = error as { data?: { message?: string } };
+      toast.error(apiError?.data?.message || 'Login failed');
     }
   };
 
