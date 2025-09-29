@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useGetCourseByIdQuery } from "@/store/api/courseApi";
 import { useAppSelector } from "@/store/hooks";
 import { createContext, useState, useMemo } from "react";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import Learners from "./learner/page";
 import CourseSettings from "./setting/page";
 import CourseOutline from "@/components/courses/course_create/CourseOutline";
@@ -33,6 +33,7 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
   // Get course ID from URL params and current pathname
   const params = useParams();
   const pathname = usePathname();
+  const router = useRouter();
   const courseId = params.course_id as string;
 
   // Get current user from auth state
@@ -66,9 +67,10 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
     return false;
   }, [user, course]);
 
-  // Check if we're on a nested route (like content editor)
+  // Check if we're on a nested route (like content editor or preview)
   const isOnNestedRoute = useMemo(() => {
-    return pathname.includes('/courseOutline/') && pathname.includes('/content');
+    return (pathname.includes('/courseOutline/') && pathname.includes('/content')) ||
+           pathname.includes('/preview');
   }, [pathname]);
 
   const renderTabContent = () => {
@@ -136,6 +138,7 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
               <Button
                 variant="outline"
                 className="border border-blue-600 text-blue-600"
+                onClick={() => router.push(`/courses/create/${courseId}/preview`)}
               >
                 Preview
               </Button>
