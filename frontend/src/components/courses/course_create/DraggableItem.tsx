@@ -7,7 +7,7 @@ import { GripVertical } from 'lucide-react';
 interface DraggableItemProps {
   id: string;
   type: 'chapter' | 'lesson';
-  data: any;
+  data: Record<string, unknown>;
   children: ReactNode;
   className?: string;
   disabled?: boolean;

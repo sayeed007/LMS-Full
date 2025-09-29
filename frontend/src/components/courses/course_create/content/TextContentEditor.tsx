@@ -7,7 +7,7 @@ import { Bold, Italic, List, ListOrdered, Eye } from 'lucide-react';
 
 interface TextContentEditorProps {
     data: { text?: string };
-    onChange: (data: any) => void;
+    onChange: (data: { text: string }) => void;
 }
 
 export default function TextContentEditor({ data, onChange }: TextContentEditorProps) {

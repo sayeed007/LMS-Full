@@ -12,6 +12,13 @@ interface CreateCategoryModalProps {
   onClose: () => void;
 }
 
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+  message?: string;
+}
+
 export function CreateCategoryModal({ onClose }: CreateCategoryModalProps) {
   const [createCategory, { isLoading }] = useCreateCategoryMutation();
 
@@ -56,9 +63,10 @@ export function CreateCategoryModal({ onClose }: CreateCategoryModalProps) {
         showSuccessToast(result.message || "Category created successfully");
         resetForm();
         onClose();
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error creating category:", error);
-        showErrorToast(error?.data?.message || "Failed to create category");
+        const apiError = error as ApiError;
+        showErrorToast(apiError?.data?.message || "Failed to create category");
       }
     },
   });

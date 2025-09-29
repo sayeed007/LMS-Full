@@ -6,6 +6,13 @@ import { useGetArticlesQuery } from '@/store/api/articleApi';
 import { useGetUsersQuery } from '@/store/api/userApi';
 import { useAppSelector } from '@/store/hooks';
 
+interface ApiError {
+  data?: {
+    message?: string;
+  };
+  message?: string;
+}
+
 export default function ApiExamples() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState<'courses' | 'articles' | 'users'>('courses');
@@ -48,7 +55,7 @@ export default function ApiExamples() {
           {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key as 'courses' | 'articles' | 'users')}
               disabled={tab.requiresAuth && !isAuthenticated}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
                   ? 'border-indigo-500 text-indigo-600'
@@ -70,7 +77,7 @@ export default function ApiExamples() {
             {coursesLoading && <p>Loading courses...</p>}
             {coursesError && (
               <p className="text-red-600">
-                Error: {(coursesError as any)?.data?.message || 'Failed to load courses'}
+                Error: {(coursesError as ApiError)?.data?.message || 'Failed to load courses'}
               </p>
             )}
             {coursesData?.data && (
@@ -100,7 +107,7 @@ export default function ApiExamples() {
             {articlesLoading && <p>Loading articles...</p>}
             {articlesError && (
               <p className="text-red-600">
-                Error: {(articlesError as any)?.data?.message || 'Failed to load articles'}
+                Error: {(articlesError as ApiError)?.data?.message || 'Failed to load articles'}
               </p>
             )}
             {articlesData?.data && (
@@ -142,7 +149,7 @@ export default function ApiExamples() {
             {usersLoading && <p>Loading users...</p>}
             {usersError && (
               <p className="text-red-600">
-                Error: {(usersError as any)?.data?.message || 'Failed to load users'}
+                Error: {(usersError as ApiError)?.data?.message || 'Failed to load users'}
               </p>
             )}
             {usersData?.data && (
