@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Play, Pause, Download, FileText, ExternalLink, CheckCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Download, FileText, ExternalLink, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -41,10 +41,10 @@ export default function LessonPlayerPage() {
   const [updateProgress, { isLoading: isCompletingLesson }] = useUpdateProgressMutation();
 
   const lesson = lessonData?.data?.lesson;
-  const lessons = [...(lessonsData?.data?.lessons || [])].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+  const lessons = [...(lessonsData?.data?.lessons || [])].sort((a: { order?: number }, b: { order?: number }) => (a.order || 0) - (b.order || 0));
 
   // Find current lesson index and navigation
-  const currentLessonIndex = lessons.findIndex((l: any) => l._id === lessonId);
+  const currentLessonIndex = lessons.findIndex((l: { _id: string }) => l._id === lessonId);
   const previousLesson = currentLessonIndex > 0 ? lessons[currentLessonIndex - 1] : null;
   const nextLesson = currentLessonIndex < lessons.length - 1 ? lessons[currentLessonIndex + 1] : null;
 
@@ -75,6 +75,7 @@ export default function LessonPlayerPage() {
       setIsCompleted(true);
       showSuccessToast("Lesson completed successfully!");
     } catch (error) {
+      console.error("Error completing lesson:", error);
       showErrorToast("Failed to mark lesson as complete");
     }
   };
@@ -103,7 +104,7 @@ export default function LessonPlayerPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Lesson Not Found</h2>
-          <p className="text-gray-600 mb-4">The lesson you're looking for doesn't exist or you don't have access.</p>
+          <p className="text-gray-600 mb-4">The lesson you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.</p>
           <Button onClick={() => router.back()}>
             Go Back
           </Button>
@@ -313,7 +314,7 @@ export default function LessonPlayerPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {lessons.map((l: any, index: number) => (
+                  {lessons.map((l: { _id: string; title: string; estimatedDuration?: number }, index: number) => (
                     <button
                       key={l._id}
                       onClick={() => router.push(`/courses/${courseId}/lessons/${l._id}`)}
@@ -354,7 +355,7 @@ export default function LessonPlayerPage() {
 
 // Helper function to render lesson content based on type
 function renderLessonContent(
-  lesson: any,
+  lesson: { content?: string; title: string; description?: string },
   isPlaying: boolean,
   setIsPlaying: (playing: boolean) => void,
   currentTime: number,

@@ -9,7 +9,7 @@ import {
 } from "@/store/api/courseApi";
 import { ArrowLeft, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import TextContentEditor from "@/components/content-editors/TextContentEditor";
 import MediaContentEditor from "@/components/content-editors/MediaContentEditor";
 import { useUploadFileToCloudinaryMutation, useDeleteFileFromCloudinaryMutation } from "@/store/api/uploadApi";
@@ -20,7 +20,7 @@ import QuizContentEditor from "@/components/content-editors/QuizContentEditor";
 interface ContentBlock {
   id: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
-  content: any;
+  content: string | { url?: string; text?: string; [key: string]: unknown };
   order: number;
 }
 
@@ -53,7 +53,7 @@ export default function ContentEditor() {
 
   const [lessonTitle, setLessonTitle] = useState("");
   const [content, setContent] = useState<LessonContent>({
-    type: contentType as any,
+    type: (contentType as 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment') || 'text',
     blocks: [],
     textContent: "",
   });
@@ -88,7 +88,7 @@ export default function ContentEditor() {
       try {
         const parsedContent = JSON.parse(lesson.content || '{}');
         setContent({
-          type: contentType as any,
+          type: (contentType as 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment') || 'text',
           blocks: parsedContent.blocks || [],
           textContent: parsedContent.textContent || "",
           title: parsedContent.title || "",
@@ -138,9 +138,10 @@ export default function ContentEditor() {
           resourceType: content.resourceType
         }).unwrap();
         showSuccessToast('File removed successfully!');
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error deleting file:', error);
-        showErrorToast(error?.data?.message || 'Error removing file. Please try again.');
+        const apiError = error as { data?: { message?: string } };
+        showErrorToast(apiError?.data?.message || 'Error removing file. Please try again.');
       }
     }
 
@@ -211,9 +212,10 @@ export default function ContentEditor() {
           resourceType: block.resourceType
         }).unwrap();
         showSuccessToast('File removed successfully!');
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error deleting file:', error);
-        showErrorToast(error?.data?.message || 'Error removing file. Please try again.');
+        const apiError = error as { data?: { message?: string } };
+        showErrorToast(apiError?.data?.message || 'Error removing file. Please try again.');
       }
     }
 
@@ -317,10 +319,11 @@ export default function ContentEditor() {
             });
           }
 
-        } catch (error: any) {
+        } catch (error) {
           setIsUploading(false);
           setUploadProgress("");
-          showErrorToast(error?.data?.message || `Failed to upload ${block.type} file. Please try again.`);
+          const apiError = error as { data?: { message?: string } };
+          showErrorToast(apiError?.data?.message || `Failed to upload ${block.type} file. Please try again.`);
           return;
         }
       }
@@ -376,10 +379,11 @@ export default function ContentEditor() {
           }
 
 
-        } catch (error: any) {
+        } catch (error) {
           setIsUploading(false);
           setUploadProgress("");
-          showErrorToast(error?.data?.message || "Failed to upload file. Please try again.");
+          const apiError = error as { data?: { message?: string } };
+          showErrorToast(apiError?.data?.message || "Failed to upload file. Please try again.");
           return;
         }
       }
@@ -390,7 +394,7 @@ export default function ContentEditor() {
       setUploadProgress("Saving content...");
 
       // Prepare data based on content type
-      const saveData: any = {
+      const saveData: Record<string, unknown> = {
         text: currentContent.textContent || "",
         ...currentContent
       };
@@ -407,7 +411,7 @@ export default function ContentEditor() {
         lessonId,
         data: {
           title: lessonTitle,
-          type: contentType as any,
+          type: (contentType as 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment') || 'text',
           data: saveData
         },
       }).unwrap();
@@ -538,7 +542,7 @@ export default function ContentEditor() {
         {!['text', 'blocks', 'block', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-4">Invalid Content Type</h2>
-            <p className="text-gray-600 mb-4">The content type "{contentType}" is not supported.</p>
+            <p className="text-gray-600 mb-4">The content type &quot;{contentType}&quot; is not supported.</p>
             <Button onClick={handleBack} variant="outline">
               Go Back
             </Button>
@@ -561,7 +565,7 @@ export default function ContentEditor() {
               <div className="bg-blue-600 h-full rounded-full animate-pulse w-full"></div>
             </div>
             <p className="text-sm text-gray-500 mt-3">
-              Please don't close or refresh this page
+              Please don&apos;t close or refresh this page
             </p>
           </div>
         </div>
