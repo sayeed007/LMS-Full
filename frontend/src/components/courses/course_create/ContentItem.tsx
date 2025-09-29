@@ -3,14 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { LessonContent } from "@/types/backend-models";
 import {
-    Clipboard,
     Edit,
-    File,
-    FileText,
-    Grid3X3,
-    HelpCircle,
-    Trash2,
-    Video
+    Trash2
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

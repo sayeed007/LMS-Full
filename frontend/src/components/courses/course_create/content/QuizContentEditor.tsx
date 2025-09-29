@@ -7,19 +7,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { ContentQuizQuestion } from '@/types/backend-models';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 
+interface QuizData {
+    instructions?: string;
+    timeLimit?: number;
+    attempts: number;
+    shuffleQuestions: boolean;
+    showFeedback: boolean;
+    passingScore: number;
+    questions: ContentQuizQuestion[];
+}
+
+interface QuizContentData {
+    quiz?: QuizData;
+}
+
 interface QuizContentEditorProps {
-    data: {
-        quiz?: {
-            instructions?: string;
-            timeLimit?: number;
-            attempts: number;
-            shuffleQuestions: boolean;
-            showFeedback: boolean;
-            passingScore: number;
-            questions: ContentQuizQuestion[];
-        };
-    };
-    onChange: (data: any) => void;
+    data: QuizContentData;
+    onChange: (data: QuizContentData) => void;
 }
 
 export default function QuizContentEditor({ data, onChange }: QuizContentEditorProps) {
@@ -39,7 +43,7 @@ export default function QuizContentEditor({ data, onChange }: QuizContentEditorP
     const [passingScore, setPassingScore] = useState(quiz.passingScore || 70);
     const [questions, setQuestions] = useState<ContentQuizQuestion[]>(quiz.questions || []);
 
-    const updateQuiz = (updates: any) => {
+    const updateQuiz = (updates: Partial<QuizData>) => {
         const newQuiz = { ...quiz, ...updates };
         onChange({ quiz: newQuiz });
     };

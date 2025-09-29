@@ -3,6 +3,7 @@
 import { CourseHeaderContext } from "@/app/courses/create/[course_id]/layout";
 import { Button } from "@/components/ui/button";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
+import { cn } from "@/lib/utils";
 import {
     CoursePopulated,
     CreateChapterRequest,
@@ -19,27 +20,20 @@ import {
 } from "@/store/api/courseApi";
 import { LessonContent } from "@/types/backend-models";
 import {
-    Clipboard,
     Edit,
-    File,
-    FileText,
-    Grid3X3,
-    HelpCircle,
     List,
     Plus,
-    Trash2,
-    Video
+    Trash2
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { CreationForm } from './CreationForm';
 import { DragDropProvider } from './DragDropProvider';
+import { EmptyState } from './EmptyState';
+import { LessonItem } from './LessonItem';
 import { SortableContainer } from './SortableContainer';
 import { SortableItem } from './SortableItem';
-import { EmptyState } from './EmptyState';
-import { CreationForm } from './CreationForm';
-import { LessonItem } from './LessonItem';
-import Image from "next/image";
-import { cn } from "@/lib/utils";
 
 interface CourseOutlineProps {
     course?: CoursePopulated;

@@ -84,8 +84,8 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                                     </h1>
 
                                     <ArticleAuthorInfo
-                                        authorName={name}
-                                        authorAvatar={avatar}
+                                        authorName={name || "Anonymous"}
+                                        authorAvatar={avatar || ""}
                                         publishDate={publishDate}
                                         publishTime={publishTime}
                                         views={views}
@@ -165,8 +165,8 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                                     {comments.map((comment) => (
                                         <div key={comment.id} className="flex flex-col gap-3">
                                             <ArticleAuthorInfo
-                                                authorName={comment.author.name}
-                                                authorAvatar={comment.author.avatar}
+                                                authorName={comment.author.name || "Anonymous"}
+                                                authorAvatar={comment.author.avatar || ""}
                                                 publishDate={comment.date}
                                                 publishTime={comment.time}
                                                 comment={comment.content}

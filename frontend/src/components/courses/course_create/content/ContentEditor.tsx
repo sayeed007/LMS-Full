@@ -11,7 +11,6 @@ import {
     useUpdateContentMutation,
     UpdateContentRequest
 } from '@/store/api/courseApi';
-import { LessonContent } from '@/types/backend-models';
 import { Save, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import TextContentEditor from './TextContentEditor';
 import BlockContentEditor from './BlockContentEditor';
@@ -34,7 +33,7 @@ export default function ContentEditor({ courseId, lessonId, contentId }: Content
     const [isPreview, setIsPreview] = useState(false);
     const [objectives, setObjectives] = useState<string[]>([]);
     const [tags, setTags] = useState<string[]>([]);
-    const [contentData, setContentData] = useState<any>({});
+    const [contentData, setContentData] = useState<Record<string, unknown>>({});
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // API hooks
@@ -131,15 +130,15 @@ export default function ContentEditor({ courseId, lessonId, contentId }: Content
                 return (
                     <MediaContentEditor
                         type={content.type}
-                        data={contentData}
-                        onChange={setContentData}
+                        data={contentData as { url?: string; filename?: string; size?: number; mimeType?: string; duration?: number }}
+                        onChange={(data) => setContentData(data as Record<string, unknown>)}
                     />
                 );
             case 'quiz':
                 return (
                     <QuizContentEditor
                         data={contentData}
-                        onChange={setContentData}
+                        onChange={(data: { quiz?: unknown }) => setContentData(data as Record<string, unknown>)}
                     />
                 );
             case 'assignment':

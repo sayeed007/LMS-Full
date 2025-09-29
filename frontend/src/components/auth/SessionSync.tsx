@@ -21,7 +21,7 @@ export default function SessionSync() {
             firstName: session.user.name?.split(' ')[0] || '',
             lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
             email: session.user.email || '',
-            role: (session.user.role as string) || 'student',
+            role: (session.user.role as "student" | "instructor" | "org_admin" | "super_admin") || 'student',
             isActive: true,
             isEmailVerified: true,
             createdAt: new Date().toISOString(),

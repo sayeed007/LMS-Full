@@ -2,7 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ArrowLeft } from "lucide-react";
-import { ContentBlock } from "./page";
+interface ContentBlock {
+  id: string;
+  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  content: string | { url?: string; text?: string; [key: string]: unknown };
+  order: number;
+}
 
 interface BlocksModalProps {
   showBlocksModal: boolean;

@@ -9,7 +9,7 @@ import { Plus, Trash2, GripVertical, FileText, Image, Video, File } from 'lucide
 
 interface BlockContentEditorProps {
     data: { items?: ContentBlockItem[] };
-    onChange: (data: any) => void;
+    onChange: (data: { items?: ContentBlockItem[] }) => void;
 }
 
 const blockItemTypes = [
@@ -86,7 +86,7 @@ export default function BlockContentEditor({ data, onChange }: BlockContentEdito
     };
 
     const renderItemEditor = (item: ContentBlockItem, index: number) => {
-        const updateItemData = (dataUpdates: any) => {
+        const updateItemData = (dataUpdates: Record<string, unknown>) => {
             updateItem(index, {
                 data: { ...item.data, ...dataUpdates }
             });

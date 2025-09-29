@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button';
 import { LessonContent } from '@/types/backend-models';
 import { Upload, ExternalLink } from 'lucide-react';
 
+interface MediaContentData {
+    url?: string;
+    filename?: string;
+    size?: number;
+    mimeType?: string;
+    duration?: number;
+}
+
 interface MediaContentEditorProps {
     type: 'video' | 'audio' | 'document';
-    data: {
-        url?: string;
-        filename?: string;
-        size?: number;
-        mimeType?: string;
-        duration?: number;
-    };
-    onChange: (data: any) => void;
+    data: MediaContentData;
+    onChange: (data: MediaContentData) => void;
 }
 
 export default function MediaContentEditor({ type, data, onChange }: MediaContentEditorProps) {
@@ -29,7 +31,7 @@ export default function MediaContentEditor({ type, data, onChange }: MediaConten
         setDuration(data?.duration || 0);
     }, [data]);
 
-    const handleUpdate = (updates: any) => {
+    const handleUpdate = (updates: Partial<MediaContentData>) => {
         const newData = { ...data, ...updates };
         onChange(newData);
     };

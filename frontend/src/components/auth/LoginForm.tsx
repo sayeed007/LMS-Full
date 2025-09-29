@@ -20,7 +20,15 @@ export default function LoginForm() {
       
       if (result.data) {
         dispatch(setCredentials({
-          user: result.data.user,
+          user: {
+            ...result.data.user,
+            firstName: (result.data.user as { firstName?: string }).firstName || '',
+            lastName: (result.data.user as { lastName?: string }).lastName || '',
+            isEmailVerified: (result.data.user as { isEmailVerified?: boolean }).isEmailVerified || false,
+            isActive: (result.data.user as { isActive?: boolean }).isActive || true,
+            createdAt: (result.data.user as { createdAt?: string }).createdAt || new Date().toISOString(),
+            updatedAt: (result.data.user as { updatedAt?: string }).updatedAt || new Date().toISOString()
+          },
           token: result.data.token
         }));
         toast.success('Login successful!');

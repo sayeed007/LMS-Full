@@ -49,20 +49,32 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
 
   const createQuestion = (type: string): Question => {
     const baseQuestion: Question = {
-      id: `question-${Date.now()}`,
+      _id: `question-${Date.now()}`,
       type: type as Question['type'],
       text: '',
       choices: [],
-      score: 2,
+      difficulty: 'medium',
+      points: 2,
       timeLimit: 0,
-      required: false
+      tags: [],
+      attachments: [],
+      questionBank: '',
+      course: '',
+      section: '',
+      createdBy: '',
+      isActive: true,
+      isPublic: false,
+      timesUsed: 0,
+      averageScore: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     // Add default choices for choice-based questions
     if (type === 'single-choice' || type === 'multiple-choice') {
       baseQuestion.choices = [
-        { id: `choice-${Date.now()}-1`, text: '', isCorrect: false },
-        { id: `choice-${Date.now()}-2`, text: '', isCorrect: false }
+        { _id: `choice-${Date.now()}-1`, text: '', isCorrect: false },
+        { _id: `choice-${Date.now()}-2`, text: '', isCorrect: false }
       ];
     }
 
@@ -82,7 +94,7 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
     setQuizData({
       ...quizData,
       questions: quizData.questions.map(q =>
-        q.id === updatedQuestion.id ? updatedQuestion : q
+        q._id === updatedQuestion._id ? updatedQuestion : q
       )
     });
   };
@@ -90,7 +102,7 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
   const handleDeleteQuestion = (questionId: string) => {
     setQuizData({
       ...quizData,
-      questions: quizData.questions.filter(q => q.id !== questionId)
+      questions: quizData.questions.filter(q => q._id !== questionId)
     });
   };
 
@@ -256,7 +268,7 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
             {/* Questions List */}
             <div className="space-y-4">
               {quizData.questions.map((question, index) => (
-                <div key={question.id} className="border rounded-lg p-4">
+                <div key={question._id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-medium text-sm text-gray-600">
                       Question {index + 1} - {question.type}
@@ -264,7 +276,7 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteQuestion(question.id)}
+                      onClick={() => handleDeleteQuestion(question._id)}
                       className="text-red-600 hover:text-red-700"
                     >
                       <X className="w-4 h-4" />
@@ -273,14 +285,14 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
                   <QuestionEditor
                     question={question}
                     onUpdate={handleUpdateQuestion}
-                    onDelete={() => handleDeleteQuestion(question.id)}
+                    onDelete={() => handleDeleteQuestion(question._id)}
                   />
                 </div>
               ))}
 
               {quizData.questions.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No questions added yet. Click "Add Question" to get started.</p>
+                  <p>No questions added yet. Click &quot;Add Question&quot; to get started.</p>
                 </div>
               )}
             </div>

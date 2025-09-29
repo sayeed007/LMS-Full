@@ -1,7 +1,6 @@
 // components/articles/articles-grid.tsx
 "use client"
 
-import { useModalActions } from "@/lib/modal-utils";
 import { useGetArticlesQuery, useGetMyArticlesQuery } from "@/store/api/articleApi";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";

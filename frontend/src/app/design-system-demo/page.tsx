@@ -93,7 +93,7 @@ export default function DesignSystemDemo() {
                       ]}
                       activeTab="home"
                       onTabChange={() => { }}
-                      variant={activeVariant as any}
+                      variant={activeVariant === "default" ? "contained" : activeVariant as "pills" | "underline"}
                     />
                   </div>
                 </div>

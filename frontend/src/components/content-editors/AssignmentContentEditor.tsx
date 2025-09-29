@@ -31,7 +31,6 @@ export default function AssignmentContentEditor({
   content,
   onChange,
   selectedFile,
-  filePreviewUrl,
   onFileSelect,
   onFileRemove,
   isUploading

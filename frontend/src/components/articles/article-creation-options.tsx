@@ -41,7 +41,7 @@ export function ArticleCreationOptions() {
     const [articleCategory, setArticleCategory] = useState('General');
     const [articleTags, setArticleTags] = useState<string[]>([]);
     const [articleThumbnail, setArticleThumbnail] = useState<string>('');
-    const [articleStatus, setArticleStatus] = useState<'draft' | 'published'>('draft');
+    const [, ] = useState<'draft' | 'published'>('draft');
     const [articleVisibility, setArticleVisibility] = useState<'public' | 'private' | 'organization'>('public');
 
     // UI state
@@ -113,11 +113,12 @@ export function ArticleCreationOptions() {
             } else {
                 showSaveSuccessToast('Article saved as draft! You can continue editing anytime.');
             }
-        } catch (error: any) {
+        } catch (error) {
+            const apiError = error as { data?: { message?: string } };
             dismissToast(loadingToastId);
             console.error('Error saving article:', error);
 
-            const errorMessage = error?.data?.message || 'Failed to save article. Please try again.';
+            const errorMessage = apiError?.data?.message || 'Failed to save article. Please try again.';
             showFormErrorToast(errorMessage, () => saveArticle(status));
         }
         setIsLoading(false);
@@ -168,11 +169,12 @@ export function ArticleCreationOptions() {
 
                 dismissToast(uploadToastId);
                 showFileUploadSuccessToast(file.name);
-            } catch (error: any) {
+            } catch (error) {
+                const apiError = error as { data?: { message?: string } };
                 dismissToast(uploadToastId);
                 console.error('Error uploading thumbnail:', error);
 
-                const errorMessage = error?.data?.message || 'Failed to upload thumbnail. Please check file size and format.';
+                const errorMessage = apiError?.data?.message || 'Failed to upload thumbnail. Please check file size and format.';
                 showFileUploadErrorToast(errorMessage, () => handleSaveThumbnail(file));
             }
         } else if (url) {
@@ -383,7 +385,7 @@ export function ArticleCreationOptions() {
                         <div className="mb-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="text-sm text-gray-600">
-                                    Status: <span className="font-semibold">{articleStatus}</span>
+                                    Status: <span className="font-semibold">draft</span>
                                 </div>
                                 <div className="text-sm text-gray-600">
                                     Category: <span className="font-semibold">{articleCategory}</span>
@@ -416,8 +418,7 @@ export function ArticleCreationOptions() {
                 <ArticleAddThumbnailModal
                     open={showAddThumbnailModal}
                     onOpenChange={setShowAddThumbnailModal}
-                    onSave={handleSaveThumbnail}
-                    currentThumbnail={articleThumbnail}
+                    onSave={(file: File | null) => handleSaveThumbnail(file || undefined)}
                 />
             }
 
@@ -426,13 +427,7 @@ export function ArticleCreationOptions() {
                 <ArticleAdvancedSettingModal
                     open={showAdvanceSettingModal}
                     onOpenChange={setShowAdvanceSettingModal}
-                    onSave={handleAdvancedSettingsSave}
-                    currentSettings={{
-                        category: articleCategory,
-                        tags: articleTags,
-                        visibility: articleVisibility
-                    }}
-                    availableCategories={categoriesData?.data?.categories || []}
+                    onSave={(settings) => handleAdvancedSettingsSave(settings as unknown as { category: string; tags: string[]; visibility: "public" | "private" | "organization" })}
                 />
             }
 

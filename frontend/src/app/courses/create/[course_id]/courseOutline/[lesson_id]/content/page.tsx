@@ -86,9 +86,9 @@ export default function ContentEditor() {
     if (lesson) {
       setLessonTitle(lesson.title);
       try {
-        const parsedContent = JSON.parse(lesson.content || '{}');
+        const parsedContent = typeof lesson.content === 'string' ? JSON.parse(lesson.content || '{}') : {};
         setContent({
-          type: (contentType as 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment') || 'text',
+          type: (contentType as 'text' | 'document' | 'video' | 'quiz' | 'assignment' | 'blocks') || 'text',
           blocks: parsedContent.blocks || [],
           textContent: parsedContent.textContent || "",
           title: parsedContent.title || "",
@@ -131,11 +131,11 @@ export default function ContentEditor() {
 
   const handleFileRemove = async () => {
     // If there's an uploaded file, delete it from Cloudinary
-    if (content.publicId && content.resourceType) {
+    if ((content as { publicId?: string; resourceType?: string }).publicId && (content as { publicId?: string; resourceType?: string }).resourceType) {
       try {
         await deleteFileFromCloudinary({
-          publicId: content.publicId,
-          resourceType: content.resourceType
+          publicId: (content as { publicId?: string; resourceType?: string }).publicId!,
+          resourceType: (content as { publicId?: string; resourceType?: string }).resourceType!
         }).unwrap();
         showSuccessToast('File removed successfully!');
       } catch (error) {
@@ -205,11 +205,11 @@ export default function ContentEditor() {
     const block = content.blocks.find(b => b.id === blockId);
 
     // If there's an uploaded file, delete it from Cloudinary
-    if (block?.publicId && block?.resourceType) {
+    if ((block as { publicId?: string; resourceType?: string })?.publicId && (block as { publicId?: string; resourceType?: string })?.resourceType) {
       try {
         await deleteFileFromCloudinary({
-          publicId: block.publicId,
-          resourceType: block.resourceType
+          publicId: (block as { publicId?: string; resourceType?: string }).publicId!,
+          resourceType: (block as { publicId?: string; resourceType?: string }).resourceType!
         }).unwrap();
         showSuccessToast('File removed successfully!');
       } catch (error) {
@@ -272,10 +272,10 @@ export default function ContentEditor() {
         const selectedBlockFile = selectedFiles[block.id];
 
         // Skip text blocks or blocks that already have uploaded files
-        if (block.type === 'text' || block.fileUrl) continue;
+        if (block.type === 'text' || (block as { fileUrl?: string }).fileUrl) continue;
 
         // Skip embed videos (they don't need file upload)
-        if (block.type === 'video' && block.videoType === 'embed') continue;
+        if (block.type === 'video' && (block as { videoType?: string }).videoType === 'embed') continue;
 
         // Skip blocks without selected files
         if (!selectedBlockFile) continue;
@@ -294,13 +294,8 @@ export default function ContentEditor() {
           // Update the block with Cloudinary response
           updatedBlocks[i] = {
             ...block,
-            fileUrl: response.data.url,
-            fileName: response.data.fileName,
-            fileSize: response.data.fileSize,
-            fileType: response.data.fileType,
-            publicId: response.data.publicId,
-            resourceType: response.data.resourceType
-          };
+            ...response.data
+          } as ContentBlock;
 
           // Clean up local file references
           setSelectedFiles(prev => {
@@ -336,13 +331,13 @@ export default function ContentEditor() {
     // For media and assignment content, upload file if selected
     if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
       // Check if there's a file selected or already uploaded
-      if (!currentContent.fileUrl && !selectedFile) {
+      if (!(currentContent as { fileUrl?: string }).fileUrl && !selectedFile) {
         showErrorToast("Please select a file before saving");
         return;
       }
 
       // If there's a selected file but no URL, upload it first
-      if (selectedFile && !currentContent.fileUrl) {
+      if (selectedFile && !(currentContent as { fileUrl?: string }).fileUrl) {
         setIsUploading(true);
         setUploadProgress("Uploading file...");
 
@@ -360,12 +355,7 @@ export default function ContentEditor() {
           // Update content with Cloudinary response
           const updatedContent = {
             ...currentContent,
-            fileUrl: response.data.url,
-            fileName: response.data.fileName,
-            fileSize: response.data.fileSize,
-            fileType: response.data.fileType,
-            publicId: response.data.publicId,
-            resourceType: response.data.resourceType
+            ...response.data
           };
 
           setContent(updatedContent);
@@ -400,8 +390,8 @@ export default function ContentEditor() {
       };
 
       // For media and assignment content, ensure URL is included
-      if (['video', 'audio', 'document', 'assignment'].includes(contentType) && currentContent.fileUrl) {
-        saveData.url = currentContent.fileUrl;
+      if (['video', 'audio', 'document', 'assignment'].includes(contentType) && (currentContent as { fileUrl?: string }).fileUrl) {
+        saveData.url = (currentContent as { fileUrl?: string }).fileUrl!;
       }
 
 
@@ -411,7 +401,7 @@ export default function ContentEditor() {
         lessonId,
         data: {
           title: lessonTitle,
-          type: (contentType as 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment') || 'text',
+          type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
           data: saveData
         },
       }).unwrap();
@@ -490,14 +480,14 @@ export default function ContentEditor() {
         {contentType === 'text' && (
           <TextContentEditor
             content={content}
-            onChange={setContent}
+            onChange={(newContent) => setContent(newContent as LessonContent)}
           />
         )}
 
         {(contentType === 'blocks' || contentType === 'block') && (
           <BlocksContentEditor
             content={content}
-            onChange={setContent}
+            onChange={(newContent) => setContent(newContent as LessonContent)}
             selectedFiles={selectedFiles}
             filePreviewUrls={filePreviewUrls}
             onFileSelect={handleBlockFileSelect}
@@ -509,9 +499,8 @@ export default function ContentEditor() {
         {contentType === 'assignment' && (
           <AssignmentContentEditor
             content={content}
-            onChange={setContent}
+            onChange={(newContent) => setContent(newContent as LessonContent)}
             selectedFile={selectedFile}
-            filePreviewUrl={filePreviewUrl}
             onFileSelect={handleFileSelect}
             onFileRemove={handleFileRemove}
             isUploading={isUploading}
@@ -521,14 +510,14 @@ export default function ContentEditor() {
         {contentType === 'quiz' && (
           <QuizContentEditor
             content={content}
-            onChange={setContent}
+            onChange={(newContent) => setContent(newContent as LessonContent)}
           />
         )}
 
         {['video', 'audio', 'document'].includes(contentType) && (
           <MediaContentEditor
             content={content}
-            onChange={setContent}
+            onChange={(newContent) => setContent(newContent as LessonContent)}
             contentType={contentType}
             selectedFile={selectedFile}
             filePreviewUrl={filePreviewUrl}

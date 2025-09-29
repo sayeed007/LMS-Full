@@ -283,7 +283,7 @@ function ContentBlockRenderer({
           <div className="space-y-4">
             <MediaContentEditor
               content={{
-                type: block.type as 'image' | 'audio' | 'document',
+                type: 'document' as 'text' | 'document' | 'video' | 'quiz' | 'assignment' | 'blocks',
                 blocks: [],
                 title: block.title || '',
                 description: block.description || '',

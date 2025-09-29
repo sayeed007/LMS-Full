@@ -142,7 +142,7 @@ export default function QuizTakingPage() {
         answers: submissionAnswers
       }).unwrap();
 
-      setQuizResults(response.data?.result);
+      setQuizResults(response.data?.result || null);
       setShowResults(true);
       setTimeLeft(null);
 
@@ -170,7 +170,7 @@ export default function QuizTakingPage() {
   const getQuestionStatus = (index: number) => {
     const question = questions[index];
     if (!question) return { hasAnswer: false, isFlagged: false, isCurrent: false };
-    const questionId = typeof question === 'string' ? question : question?._id;
+    const questionId = typeof question === 'string' ? question : (question as { _id?: string })?._id;
     const hasAnswer = questionId && answers[questionId];
     const isFlagged = flaggedQuestions.has(index);
     const isCurrent = index === currentQuestionIndex;
@@ -259,9 +259,9 @@ export default function QuizTakingPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl">
                     Question {currentQuestionIndex + 1}
-                    {typeof currentQuestion === 'object' && currentQuestion?.points && (
+                    {typeof currentQuestion === 'object' && (currentQuestion as { points?: number })?.points && (
                       <Badge variant="secondary" className="ml-2">
-                        {currentQuestion.points} pts
+                        {(currentQuestion as { points?: number }).points} pts
                       </Badge>
                     )}
                   </CardTitle>
@@ -280,16 +280,16 @@ export default function QuizTakingPage() {
                   <>
                     <div className="prose max-w-none">
                       <p className="text-lg text-gray-900">
-                        {typeof currentQuestion === 'object' ? currentQuestion.questionText || currentQuestion.text : 'Question text not available'}
+                        {typeof currentQuestion === 'object' ? (currentQuestion as { questionText?: string; text?: string }).questionText || (currentQuestion as { questionText?: string; text?: string }).text : 'Question text not available'}
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       {typeof currentQuestion === 'object' && renderQuestionInput(
                         currentQuestion,
-                        answers[currentQuestion._id],
+                        answers[(currentQuestion as { _id?: string })?._id || ''],
                         (answer) =>
-                          handleAnswerChange(currentQuestion._id, answer)
+                          handleAnswerChange((currentQuestion as { _id?: string })?._id || '', answer)
                       )}
                     </div>
                   </>
@@ -422,7 +422,7 @@ function renderQuestionInput(
   switch (question.questionType) {
     case 'multiple_choice':
       return (
-        <RadioGroup value={currentAnswer || ""} onValueChange={onChange}>
+        <RadioGroup value={typeof currentAnswer === 'string' ? currentAnswer : ""} onValueChange={onChange}>
           {question.options?.map((option: string, index: number) => (
             <div key={index} className="flex items-center space-x-2">
               <RadioGroupItem value={option} id={`option-${index}`} />
@@ -461,7 +461,7 @@ function renderQuestionInput(
 
     case 'true_false':
       return (
-        <RadioGroup value={currentAnswer || ""} onValueChange={onChange}>
+        <RadioGroup value={typeof currentAnswer === 'string' ? currentAnswer : ""} onValueChange={onChange}>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="true" id="true" />
             <Label htmlFor="true" className="cursor-pointer">True</Label>
@@ -513,7 +513,7 @@ function QuizIntroView({
     title: string;
     description?: string;
     questions?: unknown[];
-    settings?: { timeLimit?: string | number };
+    settings?: { timeLimit?: string | number; allowReview?: boolean; showScoreImmediately?: boolean; allowRetake?: boolean };
     instructions?: string;
   };
   attempts: Array<{ percentage: number; isPassed: boolean }>;
