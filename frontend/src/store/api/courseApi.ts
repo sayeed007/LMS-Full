@@ -171,8 +171,9 @@ export interface CourseListParams {
   tags?: string;
   search?: string;
   sort?: string;
-  priceMin?: number;
-  priceMax?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
 }
 
 export interface CourseStatsResponse {

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { useModalActions } from "@/lib/modal-utils";
 import { showErrorToast } from "@/lib/toast-utils";
 import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import CourseFilters from "@/components/courses/CourseFilters";
 
 // Loading skeleton component
 const CoursesSkeleton = () => (
@@ -39,6 +40,33 @@ export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState("my");
   const { openModal, closeModal } = useModalActions();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Filter state for "All Courses" tab
+  const [filters, setFilters] = useState({
+    search: searchParams.get('search') || '',
+    category: searchParams.get('category') || '',
+    level: searchParams.get('level') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    minRating: searchParams.get('minRating') || '',
+    sort: searchParams.get('sort') || 'newest',
+  });
+
+  // Build query params for API
+  const buildQueryParams = () => {
+    const params: any = { page: 1, limit: 50 };
+
+    if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.level) params.level = filters.level;
+    if (filters.minPrice) params.minPrice = parseFloat(filters.minPrice);
+    if (filters.maxPrice) params.maxPrice = parseFloat(filters.maxPrice);
+    if (filters.minRating) params.minRating = parseFloat(filters.minRating);
+    if (filters.sort) params.sort = filters.sort;
+
+    return params;
+  };
 
   // API queries based on active tab
   const {
@@ -46,7 +74,7 @@ export default function CoursesPage() {
     isLoading: isLoadingAll,
     error: allCoursesError
   } = useGetCoursesQuery(
-    { page: 1, limit: 50 },
+    buildQueryParams(),
     { skip: activeTab !== "all" }
   );
 
@@ -135,6 +163,11 @@ export default function CoursesPage() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
+
+          {/* Show filters only for "All Courses" tab */}
+          {activeTab === "all" && (
+            <CourseFilters onFiltersChange={setFilters} />
+          )}
 
           {isLoading ? (
             <CoursesSkeleton />

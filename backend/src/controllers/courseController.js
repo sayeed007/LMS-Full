@@ -7,23 +7,64 @@ const emailService = require('../services/emailService');
 const getAllCourses = catchAsync(async (req, res, next) => {
   // Build query
   const queryObj = { ...req.query };
-  const excludedFields = ['page', 'sort', 'limit', 'fields'];
+  const excludedFields = ['page', 'sort', 'limit', 'fields', 'search', 'minPrice', 'maxPrice', 'minRating'];
   excludedFields.forEach(el => delete queryObj[el]);
 
   // Advanced filtering
   let queryStr = JSON.stringify(queryObj);
   queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-  let query = Course.find(JSON.parse(queryStr));
+  const filter = JSON.parse(queryStr);
 
   // Only show published and approved courses for non-authenticated users
   if (!req.user) {
-    query = query.find({ isPublished: true, isApproved: true, isDeleted: false });
+    filter.isPublished = true;
+    filter.isApproved = true;
+    filter.isDeleted = false;
   }
 
-  // Sorting
+  // Text search
+  if (req.query.search) {
+    filter.$text = { $search: req.query.search };
+  }
+
+  // Price range filtering
+  if (req.query.minPrice || req.query.maxPrice) {
+    filter.price = {};
+    if (req.query.minPrice) filter.price.$gte = parseFloat(req.query.minPrice);
+    if (req.query.maxPrice) filter.price.$lte = parseFloat(req.query.maxPrice);
+  }
+
+  // Rating filtering
+  if (req.query.minRating) {
+    filter['rating.average'] = { $gte: parseFloat(req.query.minRating) };
+  }
+
+  let query = Course.find(filter);
+
+  // Enhanced sorting
   if (req.query.sort) {
-    const sortBy = req.query.sort.split(',').join(' ');
+    let sortBy;
+    switch (req.query.sort) {
+      case 'popular':
+        sortBy = '-stats.totalEnrollments -rating.average';
+        break;
+      case 'rating':
+        sortBy = '-rating.average -stats.totalEnrollments';
+        break;
+      case 'price-asc':
+        sortBy = 'price';
+        break;
+      case 'price-desc':
+        sortBy = '-price';
+        break;
+      case 'newest':
+        sortBy = '-createdAt';
+        break;
+      default:
+        // Allow custom sort fields (e.g., sort=title,-createdAt)
+        sortBy = req.query.sort.split(',').join(' ');
+    }
     query = query.sort(sortBy);
   } else {
     query = query.sort('-createdAt');
@@ -46,7 +87,7 @@ const getAllCourses = catchAsync(async (req, res, next) => {
 
   // Execute query
   const courses = await query.populate('instructor', 'name avatar');
-  const total = await Course.countDocuments();
+  const total = await Course.countDocuments(filter);
 
   res.status(200).json({
     status: 'success',
