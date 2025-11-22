@@ -73,8 +73,8 @@ export default function TextContentEditor({ data, onChange }: TextContentEditorP
             .replace(/^(\d+)\. (.+)$/gm, '<li>$1. $2</li>')
             .replace(/\n/g, '<br>');
 
-        // Wrap list items
-        preview = preview.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+        // Wrap list items (using [\s\S] instead of 's' flag for ES5 compatibility)
+        preview = preview.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
 
         return (
             <div

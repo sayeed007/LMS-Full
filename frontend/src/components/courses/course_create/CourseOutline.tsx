@@ -282,7 +282,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         }
 
         try {
-            if (active.type === 'chapter') {
+            if (active.data?.current?.type === 'chapter') {
                 const reorderedChapters = Array.from(chapters);
                 const [removed] = reorderedChapters.splice(sourceIndex, 1);
                 reorderedChapters.splice(targetIndex, 0, removed);
@@ -298,7 +298,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                 }).unwrap();
 
                 showSuccessToast('Chapters reordered successfully!');
-            } else if (active.type === 'lesson') {
+            } else if (active.data?.current?.type === 'lesson') {
                 // Handle lesson reordering
                 if (sourceContainer.startsWith('chapter-') && targetContainer.startsWith('chapter-')) {
                     // Moving lessons within or between chapters
@@ -482,7 +482,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                 key={chapter._id}
                                 id={chapter._id}
                                 type="chapter"
-                                data={chapter}
+                                data={chapter as unknown as Record<string, unknown>}
                                 className="mb-4"
                             >
                                 <div className="space-y-2">
@@ -553,7 +553,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                                     key={lesson._id}
                                                     id={lesson._id}
                                                     type="lesson"
-                                                    data={lesson}
+                                                    data={lesson as unknown as Record<string, unknown>}
                                                 >
                                                     <LessonItem
                                                         lesson={lesson}
@@ -592,7 +592,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                 key={lesson._id}
                                 id={lesson._id}
                                 type="lesson"
-                                data={lesson}
+                                data={lesson as unknown as Record<string, unknown>}
                                 className="mb-2"
                             >
                                 <LessonItem

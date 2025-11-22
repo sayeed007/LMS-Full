@@ -289,8 +289,8 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
                     {chapterLessons.map((lesson: CourseLesson) => {
                       const isLessonExpanded = expandedLessons.includes(lesson?._id);
                       const hasResources = lesson?.resources && lesson.resources.length > 0;
-                      const hasAssignment = lesson?.assignmentDetails || lesson?.assignment;
-                      const hasQuiz = lesson?.quiz;
+                      const hasAssignment = Boolean((lesson as { assignmentDetails?: unknown; assignment?: unknown }).assignmentDetails || (lesson as { assignmentDetails?: unknown; assignment?: unknown }).assignment);
+                      const hasQuiz = Boolean((lesson as { quiz?: unknown }).quiz);
 
                       return (
                         <div key={lesson?._id} className="bg-white border border-gray-200 rounded-lg">
@@ -301,7 +301,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
-                                {lesson?.type === 'video' ? (
+                                {(lesson as { type?: string }).type === 'video' ? (
                                   <PlayCircle className="w-4 h-4 text-green-600" />
                                 ) : (
                                   <FileText className="w-4 h-4 text-green-600" />
@@ -310,11 +310,11 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
                               <div className="flex flex-col">
                                 <span className="text-gray-900 font-medium">{lesson?.title}</span>
                                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                                  <span>{lesson?.duration || 0} min</span>
-                                  {lesson?.type && (
+                                  <span>{(lesson as { duration?: number }).duration || 0} min</span>
+                                  {(lesson as { type?: string }).type && (
                                     <>
                                       <span>•</span>
-                                      <span className="capitalize">{lesson.type}</span>
+                                      <span className="capitalize">{(lesson as { type?: string }).type}</span>
                                     </>
                                   )}
                                   {(hasResources || hasAssignment || hasQuiz) && (
@@ -392,21 +392,21 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
                                   <h4 className="text-sm font-medium text-gray-700 mb-2">Assignment</h4>
                                   <div
                                     className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-orange-50 transition-colors"
-                                    onClick={() => handleAssignmentClick(course._id || '', lesson.assignment || lesson._id)}
+                                    onClick={() => handleAssignmentClick(course._id || '', (lesson as { assignment?: string }).assignment || lesson._id)}
                                   >
                                     <FileText className="w-4 h-4 text-orange-500" />
                                     <div className="flex-1">
                                       <span className="text-sm text-gray-700 block">
-                                        {lesson.assignmentDetails?.title || 'Course Assignment'}
+                                        {(lesson as { assignmentDetails?: { title?: string } }).assignmentDetails?.title || 'Course Assignment'}
                                       </span>
-                                      {lesson.assignmentDetails?.dueDate && (
+                                      {(lesson as { assignmentDetails?: { dueDate?: string } }).assignmentDetails?.dueDate && (
                                         <span className="text-xs text-gray-500">
-                                          Due: {new Date(lesson.assignmentDetails.dueDate).toLocaleDateString()}
+                                          Due: {new Date((lesson as { assignmentDetails?: { dueDate?: string } }).assignmentDetails?.dueDate || '').toLocaleDateString()}
                                         </span>
                                       )}
                                     </div>
                                     <span className="text-xs text-orange-600">
-                                      {lesson.assignmentDetails?.maxScore || 100} pts
+                                      {(lesson as { assignmentDetails?: { maxScore?: number } }).assignmentDetails?.maxScore || 100} pts
                                     </span>
                                   </div>
                                 </div>
@@ -418,7 +418,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
                                   <h4 className="text-sm font-medium text-gray-700 mb-2">Quiz</h4>
                                   <div
                                     className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-green-50 transition-colors"
-                                    onClick={() => router.push(`/courses/${course._id}/quizzes/${lesson.quiz}`)}
+                                    onClick={() => router.push(`/courses/${course._id}/quizzes/${(lesson as { quiz?: unknown })?.quiz}`)}
                                   >
                                     <FileText className="w-4 h-4 text-green-500" />
                                     <span className="text-sm text-gray-700 flex-1">Lesson Quiz</span>

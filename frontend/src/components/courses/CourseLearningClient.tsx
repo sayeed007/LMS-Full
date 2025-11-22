@@ -3,7 +3,7 @@
 import { useGetChaptersQuery, useGetContentByLessonQuery, useGetCourseByIdQuery, useGetLessonsQuery } from "@/store/api/courseApi";
 import { ArrowLeft, BookOpen, CheckCircle, Circle, Clock, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LessonContentRenderer } from "./learning/LessonContentRenderer";
@@ -101,21 +101,21 @@ export function CourseLearningClient({
     window.history.pushState({}, '', url);
   };
 
-  const goToNextLesson = () => {
+  const goToNextLesson = useCallback(() => {
     const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
     if (currentIndex < allLessons.length - 1) {
       const nextLesson = allLessons[currentIndex + 1];
-      goToLesson(nextLesson._id, nextLesson.chapterId);
+      goToLesson(nextLesson._id, nextLesson?.chapterId);
     }
-  };
+  }, []);
 
-  const goToPreviousLesson = () => {
+  const goToPreviousLesson = useCallback(() => {
     const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
     if (currentIndex > 0) {
       const previousLesson = allLessons[currentIndex - 1];
-      goToLesson(previousLesson._id, previousLesson.chapterId);
+      goToLesson(previousLesson._id, previousLesson?.chapterId);
     }
-  };
+  }, []);
 
   // Set initial lesson if not provided
   useEffect(() => {
@@ -226,11 +226,10 @@ export function CourseLearningClient({
   return (
     <div className="min-h-screen bg-gray-50 flex relative">
       {/* Sidebar */}
-      <div className={`${
-        sidebarOpen
-          ? 'w-80 lg:w-80'
-          : 'w-0 lg:w-0'
-      } transition-all duration-300 ease-in-out bg-white border-r border-gray-200 flex-shrink-0 overflow-hidden z-50 lg:relative absolute lg:z-auto h-full`}>
+      <div className={`${sidebarOpen
+        ? 'w-80 lg:w-80'
+        : 'w-0 lg:w-0'
+        } transition-all duration-300 ease-in-out bg-white border-r border-gray-200 flex-shrink-0 overflow-hidden z-50 lg:relative absolute lg:z-auto h-full`}>
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-gray-200">
@@ -289,11 +288,10 @@ export function CourseLearningClient({
                       <button
                         key={lesson._id}
                         onClick={() => goToLesson(lesson._id, chapter._id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                          isCurrent
-                            ? 'bg-blue-50 border border-blue-200 text-blue-900 shadow-sm scale-[1.02]'
-                            : 'hover:bg-gray-50 hover:shadow-sm hover:scale-[1.01] transform'
-                        }`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${isCurrent
+                          ? 'bg-blue-50 border border-blue-200 text-blue-900 shadow-sm scale-[1.02]'
+                          : 'hover:bg-gray-50 hover:shadow-sm hover:scale-[1.01] transform'
+                          }`}
                       >
                         {isCompleted ? (
                           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -335,11 +333,10 @@ export function CourseLearningClient({
                       <button
                         key={lesson._id}
                         onClick={() => goToLesson(lesson._id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                          isCurrent
-                            ? 'bg-blue-50 border border-blue-200 text-blue-900 shadow-sm scale-[1.02]'
-                            : 'hover:bg-gray-50 hover:shadow-sm hover:scale-[1.01] transform'
-                        }`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${isCurrent
+                          ? 'bg-blue-50 border border-blue-200 text-blue-900 shadow-sm scale-[1.02]'
+                          : 'hover:bg-gray-50 hover:shadow-sm hover:scale-[1.01] transform'
+                          }`}
                       >
                         {isCompleted ? (
                           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />

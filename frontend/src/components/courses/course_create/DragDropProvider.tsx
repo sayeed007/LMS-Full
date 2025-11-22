@@ -121,7 +121,7 @@ export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropP
         {activeItem ? (
           <div className="bg-white border rounded-lg shadow-lg opacity-90 p-4">
             <span className="font-medium">
-              {activeItem.type === 'chapter' ? '📚' : '📄'} {activeItem.data.title}
+              {activeItem.type === 'chapter' ? '📚' : '📄'} {(activeItem.data as { title?: string }).title || 'Untitled'}
             </span>
           </div>
         ) : null}
