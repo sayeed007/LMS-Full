@@ -32,6 +32,7 @@ const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 // Initialize express app
 const app = express();
@@ -209,6 +210,7 @@ app.use(`/api/${apiVersion}/enrollments`, enrollmentRoutes);
 app.use(`/api/${apiVersion}/categories`, categoryRoutes);
 app.use(`/api/${apiVersion}/payments`, paymentRoutes);
 app.use(`/api/${apiVersion}/assignments`, assignmentRoutes);
+app.use(`/api/${apiVersion}/messages`, messageRoutes);
 
 // Handle undefined routes
 app.all('*', (req, res, next) => {
@@ -245,32 +247,37 @@ const connectDB = async () => {
   }
 };
 
-// Connect to database
-if (process.env.NODE_ENV !== 'test') {
-  connectDB();
-}
+// Export app and connectDB for use in server.js
+module.exports = { app, connectDB };
 
-// Start server
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
-});
+// For backward compatibility (direct execution)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log('Unhandled Rejection at:', promise, 'reason:', err);
-  server.close(() => {
+  // Connect to database
+  if (process.env.NODE_ENV !== 'test') {
+    connectDB();
+  }
+
+  // Start server
+  const server = app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.log('Unhandled Rejection at:', promise, 'reason:', err);
+    server.close(() => {
+      process.exit(1);
+    });
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (err) => {
+    console.log('Uncaught Exception thrown');
+    console.log(err);
     process.exit(1);
   });
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.log('Uncaught Exception thrown');
-  console.log(err);
-  process.exit(1);
-});
-
-module.exports = app;
+}
