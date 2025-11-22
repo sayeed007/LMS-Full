@@ -1,6 +1,7 @@
 const express = require('express');
 const courseController = require('../controllers/courseController');
 const { protect, restrictTo, optionalAuth } = require('../middleware/auth');
+const { getAssignmentsByCourse } = require('../controllers/assignmentController');
 
 const router = express.Router();
 
@@ -1764,5 +1765,8 @@ router.get('/:id/content', (req, res, next) => {
   req.params.courseId = req.params.id;
   getContentByType(req, res, next);
 });
+
+// Get assignments for a course
+router.get('/:courseId/assignments', protect, getAssignmentsByCourse);
 
 module.exports = router;

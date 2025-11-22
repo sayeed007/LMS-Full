@@ -49,7 +49,8 @@ export const baseApi = createApi({
     'Category',
     'Categories',
     'Upload',
-    'Payment'
+    'Payment',
+    'Assignment'
   ],
   endpoints: () => ({}),
 });

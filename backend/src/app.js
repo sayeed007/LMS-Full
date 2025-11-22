@@ -31,6 +31,7 @@ const questionRoutes = require('./routes/questionRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const assignmentRoutes = require('./routes/assignmentRoutes');
 
 // Initialize express app
 const app = express();
@@ -207,6 +208,7 @@ app.use(`/api/${apiVersion}/questions`, questionRoutes);
 app.use(`/api/${apiVersion}/enrollments`, enrollmentRoutes);
 app.use(`/api/${apiVersion}/categories`, categoryRoutes);
 app.use(`/api/${apiVersion}/payments`, paymentRoutes);
+app.use(`/api/${apiVersion}/assignments`, assignmentRoutes);
 
 // Handle undefined routes
 app.all('*', (req, res, next) => {

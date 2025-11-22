@@ -501,6 +501,139 @@ const sendEmailVerification = async (user, verificationToken) => {
   return await sendEmail({ to: user.email, subject, html });
 };
 
+/**
+ * Send assignment submission notification to instructor
+ *
+ * @param {Object} instructor - Instructor object
+ * @param {Object} student - Student object
+ * @param {Object} assignment - Assignment object
+ * @param {Object} course - Course object
+ * @returns {Promise<Object>}
+ */
+const sendAssignmentSubmittedEmail = async (instructor, student, assignment, course) => {
+  const assignmentUrl = `${emailConfig.frontendUrl}/instructor/courses/${course._id}/assignments/${assignment._id}`;
+  const subject = `New Assignment Submission: ${assignment.title}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .info-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📝 New Assignment Submission</h1>
+        </div>
+        <div class="content">
+          <h2>Hi ${instructor.name || 'Instructor'},</h2>
+          <p>A student has submitted an assignment in your course <strong>${course.title}</strong>.</p>
+
+          <div class="info-box">
+            <h3>${assignment.title}</h3>
+            <p><strong>Student:</strong> ${student.name || 'N/A'} (${student.email})</p>
+            <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Due Date:</strong> ${new Date(assignment.dueDate).toLocaleString()}</p>
+          </div>
+
+          <p>Please review and grade this submission when you have time.</p>
+
+          <div style="text-align: center;">
+            <a href="${assignmentUrl}" class="button">View Submission</a>
+          </div>
+
+          <p>Keep up the great teaching! 🎓</p>
+          <p>The LMS Team</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} LMS Platform. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({ to: instructor.email, subject, html });
+};
+
+/**
+ * Send grade notification to student
+ *
+ * @param {Object} student - Student object
+ * @param {Object} assignment - Assignment object
+ * @param {Object} grade - Grade object
+ * @param {Object} course - Course object
+ * @returns {Promise<Object>}
+ */
+const sendGradeNotificationEmail = async (student, assignment, grade, course) => {
+  const assignmentUrl = `${emailConfig.frontendUrl}/courses/${course._id}/assignments/${assignment._id}`;
+  const passed = grade.score >= (assignment.passingScore || assignment.maxScore * 0.7);
+  const subject = `Assignment Graded: ${assignment.title}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: ${passed ? '#4caf50' : '#ff9800'}; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .grade-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .score { font-size: 48px; font-weight: bold; color: ${passed ? '#4caf50' : '#ff9800'}; }
+        .feedback-box { background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>${passed ? '🎉 Assignment Graded!' : '📊 Assignment Graded'}</h1>
+        </div>
+        <div class="content">
+          <h2>Hi ${student.name || 'there'},</h2>
+          <p>Your assignment <strong>${assignment.title}</strong> in <strong>${course.title}</strong> has been graded.</p>
+
+          <div class="grade-box">
+            <div class="score">${grade.score} / ${grade.maxScore}</div>
+            <div style="font-size: 24px; color: #666;">${grade.percentage.toFixed(1)}%</div>
+            <div style="margin-top: 10px; font-weight: bold; color: ${passed ? '#4caf50' : '#ff9800'};">
+              ${passed ? '✅ PASSED' : '⚠️ NEEDS IMPROVEMENT'}
+            </div>
+          </div>
+
+          ${grade.feedback ? `
+          <div class="feedback-box">
+            <h3>Instructor Feedback:</h3>
+            <p>${grade.feedback}</p>
+          </div>
+          ` : ''}
+
+          <div style="text-align: center;">
+            <a href="${assignmentUrl}" class="button">View Full Details</a>
+          </div>
+
+          <p>${passed ? 'Congratulations on passing!' : 'Keep up the good work!'}</p>
+          <p>The LMS Team</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} LMS Platform. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({ to: student.email, subject, html });
+};
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
@@ -510,4 +643,6 @@ module.exports = {
   sendCourseApprovedEmail,
   sendCourseRejectedEmail,
   sendEmailVerification,
+  sendAssignmentSubmittedEmail,
+  sendGradeNotificationEmail,
 };
