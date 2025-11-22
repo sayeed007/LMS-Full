@@ -377,6 +377,25 @@ const courseSchema = new mongoose.Schema({
   },
   approvedAt: Date,
   publishedAt: Date,
+  adminNotes: [{
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    note: {
+      type: String,
+      required: true
+    },
+    action: {
+      type: String,
+      enum: ['approved', 'rejected', 'revoked', 'comment'],
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   enrollments: [enrollmentSchema],
   reviews: [reviewSchema],
   rating: {

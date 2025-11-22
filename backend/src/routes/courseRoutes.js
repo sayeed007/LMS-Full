@@ -304,6 +304,135 @@ router.use(protect);
 
 /**
  * @swagger
+ * /api/v1/courses/pending:
+ *   get:
+ *     summary: Get all pending courses (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: List of pending courses
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.get('/pending', restrictTo('org_admin', 'super_admin'), courseController.getPendingCourses);
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/approve:
+ *   patch:
+ *     summary: Approve a course (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               feedback:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Course approved successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Course not found
+ */
+router.patch('/:id/approve', restrictTo('org_admin', 'super_admin'), courseController.approveCourse);
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/reject:
+ *   patch:
+ *     summary: Reject a course (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reason
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Course rejected successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Course not found
+ */
+router.patch('/:id/reject', restrictTo('org_admin', 'super_admin'), courseController.rejectCourse);
+
+/**
+ * @swagger
+ * /api/v1/courses/{id}/revoke-approval:
+ *   patch:
+ *     summary: Revoke course approval (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reason
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Course approval revoked successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Course not found
+ */
+router.patch('/:id/revoke-approval', restrictTo('org_admin', 'super_admin'), courseController.revokeApproval);
+
+/**
+ * @swagger
  * /api/v1/courses:
  *   post:
  *     summary: Create a new course

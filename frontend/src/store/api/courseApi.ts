@@ -601,6 +601,43 @@ export const courseApi = baseApi.injectEndpoints({
       ],
     }),
   }),
+
+    // Admin approval endpoints
+    getPendingCourses: builder.query<BaseApiResponse<CoursePopulated[]>, { page?: number; limit?: number }>({
+      query: (params) => ({
+        url: '/courses/pending',
+        params,
+      }),
+      providesTags: ['Course'],
+    }),
+
+    approveCourse: builder.mutation<BaseApiResponse<CoursePopulated>, { id: string; feedback?: string }>({
+      query: ({ id, feedback }) => ({
+        url: `/courses/${id}/approve`,
+        method: 'PATCH',
+        body: feedback ? { feedback } : {},
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Course', id }, 'Course'],
+    }),
+
+    rejectCourse: builder.mutation<BaseApiResponse<{ course: CoursePopulated; rejectionReason: string }>, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({
+        url: `/courses/${id}/reject`,
+        method: 'PATCH',
+        body: { reason },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Course', id }, 'Course'],
+    }),
+
+    revokeApproval: builder.mutation<BaseApiResponse<CoursePopulated>, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({
+        url: `/courses/${id}/revoke-approval`,
+        method: 'PATCH',
+        body: { reason },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Course', id }, 'Course'],
+    }),
+  }),
 });
 
 export const {
@@ -639,4 +676,9 @@ export const {
   useMoveContentMutation,
   useGetContentByTypeQuery,
   useBulkUpdateContentMutation,
+  // Admin approval hooks
+  useGetPendingCoursesQuery,
+  useApproveCourseMutation,
+  useRejectCourseMutation,
+  useRevokeApprovalMutation,
 } = courseApi;

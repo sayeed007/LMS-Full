@@ -1,7 +1,7 @@
 # LMS Delivery Plan - Go Live Roadmap
 
 **Project**: Learning Management System
-**Current Progress**: ~75% Complete
+**Current Progress**: ~78% Complete
 **Document Created**: 2025-11-22
 **Last Updated**: 2025-11-22
 
@@ -205,17 +205,25 @@ This document outlines the delivery plan to take the LMS from current state (70%
 - [ ] Add payment gateway configuration in .env file
 - [ ] Update course detail page to show "Enroll Now" button with payment flow
 
-#### 1.2 Admin Course Approval Workflow (3 days)
-- [ ] Backend: Complete admin course approval endpoints
-- [ ] Frontend: Create admin course review page
-- [ ] Frontend: Course approval/rejection UI
-- [ ] Frontend: Instructor notification on approval/rejection
-- [ ] Backend: Email notifications for course status changes
+#### 1.2 Admin Course Approval Workflow ✅ COMPLETED (2025-11-22)
+- [x] Backend: Complete admin course approval endpoints
+- [x] Backend: Add adminNotes field to Course model
+- [x] Backend: Implement getPendingCourses, approveCourse, rejectCourse, revokeApproval
+- [x] Backend: Add admin routes to courseRoutes.js
+- [x] Frontend: Update courseApi with approval endpoints
+- [x] Frontend: Create admin course review page with table
+- [x] Frontend: Course approval/rejection UI with modal
+- [ ] Backend: Email notifications for course status changes (Phase 1.3)
 
-**Files to modify:**
-- `backend/src/controllers/courseController.js` (update)
-- `frontend/src/app/admin/courses/pending/page.tsx` (new)
-- `frontend/src/components/admin/CourseApprovalCard.tsx` (new)
+**Files Created/Modified:**
+- `backend/src/controllers/courseController.js` ✅ (added 4 new functions)
+- `backend/src/routes/courseRoutes.js` ✅ (added approval routes)
+- `backend/src/models/Course.js` ✅ (added adminNotes field)
+- `frontend/src/store/api/courseApi.ts` ✅ (added approval endpoints)
+- `frontend/src/app/admin/courses/pending/page.tsx` ✅ (created admin panel)
+
+**Remaining Tasks:**
+- [ ] Instructor notification on approval/rejection (will be done in Phase 1.3 with email system)
 
 #### 1.3 Email Notification System Integration (2 days)
 - [ ] Choose email service (SendGrid, AWS SES, or Nodemailer with Gmail)

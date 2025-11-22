@@ -426,6 +426,209 @@ const getEnrolledCourses = catchAsync(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Get all pending courses for admin review
+ * @route   GET /api/v1/courses/pending
+ * @access  Private (Admin only)
+ */
+const getPendingCourses = catchAsync(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // Find courses that are published but not yet approved
+  const query = {
+    isPublished: true,
+    isApproved: false,
+    isDeleted: false
+  };
+
+  const courses = await Course.find(query)
+    .populate('instructor', 'name email avatar')
+    .populate('createdBy', 'name email')
+    .sort('-createdAt')
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Course.countDocuments(query);
+
+  res.status(200).json({
+    status: 'success',
+    results: courses.length,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    },
+    data: courses
+  });
+});
+
+/**
+ * @desc    Approve a course
+ * @route   PATCH /api/v1/courses/:id/approve
+ * @access  Private (Admin only)
+ */
+const approveCourse = catchAsync(async (req, res, next) => {
+  const { feedback } = req.body;
+
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    return next(new AppError('No course found with that ID', 404));
+  }
+
+  if (course.isDeleted) {
+    return next(new AppError('This course has been deleted', 400));
+  }
+
+  if (course.isApproved) {
+    return next(new AppError('This course is already approved', 400));
+  }
+
+  if (!course.isPublished) {
+    return next(new AppError('Course must be published before approval', 400));
+  }
+
+  // Approve the course
+  course.isApproved = true;
+  course.approvedBy = req.user._id;
+  course.approvedAt = new Date();
+
+  if (feedback) {
+    if (!course.adminNotes) {
+      course.adminNotes = [];
+    }
+    course.adminNotes.push({
+      admin: req.user._id,
+      note: feedback,
+      action: 'approved',
+      createdAt: new Date()
+    });
+  }
+
+  await course.save();
+
+  // Populate for response
+  await course.populate('instructor', 'name email');
+  await course.populate('approvedBy', 'name email');
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Course approved successfully',
+    data: course
+  });
+
+  // TODO: Send email notification to instructor (implement in Phase 1.3)
+});
+
+/**
+ * @desc    Reject a course
+ * @route   PATCH /api/v1/courses/:id/reject
+ * @access  Private (Admin only)
+ */
+const rejectCourse = catchAsync(async (req, res, next) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return next(new AppError('Please provide a reason for rejection', 400));
+  }
+
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    return next(new AppError('No course found with that ID', 404));
+  }
+
+  if (course.isDeleted) {
+    return next(new AppError('This course has been deleted', 400));
+  }
+
+  if (course.isApproved) {
+    return next(new AppError('Cannot reject an approved course', 400));
+  }
+
+  // Mark as rejected (unpublish it)
+  course.isPublished = false;
+  course.isApproved = false;
+
+  if (!course.adminNotes) {
+    course.adminNotes = [];
+  }
+
+  course.adminNotes.push({
+    admin: req.user._id,
+    note: reason,
+    action: 'rejected',
+    createdAt: new Date()
+  });
+
+  await course.save();
+
+  // Populate for response
+  await course.populate('instructor', 'name email');
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Course rejected successfully',
+    data: {
+      course,
+      rejectionReason: reason
+    }
+  });
+
+  // TODO: Send email notification to instructor (implement in Phase 1.3)
+});
+
+/**
+ * @desc    Revoke course approval
+ * @route   PATCH /api/v1/courses/:id/revoke-approval
+ * @access  Private (Admin only)
+ */
+const revokeApproval = catchAsync(async (req, res, next) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return next(new AppError('Please provide a reason for revoking approval', 400));
+  }
+
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    return next(new AppError('No course found with that ID', 404));
+  }
+
+  if (!course.isApproved) {
+    return next(new AppError('This course is not approved', 400));
+  }
+
+  // Revoke approval
+  course.isApproved = false;
+  course.isPublished = false;
+
+  if (!course.adminNotes) {
+    course.adminNotes = [];
+  }
+
+  course.adminNotes.push({
+    admin: req.user._id,
+    note: reason,
+    action: 'revoked',
+    createdAt: new Date()
+  });
+
+  await course.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Course approval revoked successfully',
+    data: course
+  });
+
+  // TODO: Send email notification to instructor (implement in Phase 1.3)
+});
+
 module.exports = {
   getAllCourses,
   getCourse,
@@ -442,4 +645,8 @@ module.exports = {
   getCategories,
   getPopularCourses,
   getFeaturedCourses,
+  getPendingCourses,
+  approveCourse,
+  rejectCourse,
+  revokeApproval,
 };
