@@ -5,6 +5,7 @@ const User = require('../models/User');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const passport = require('passport');
+const emailService = require('../services/emailService');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -47,6 +48,11 @@ const signup = catchAsync(async (req, res, next) => {
     email,
     password,
     role: role || 'student',
+  });
+
+  // Send welcome email (async, don't wait)
+  emailService.sendWelcomeEmail(newUser).catch(err => {
+    console.error('Failed to send welcome email:', err);
   });
 
   createSendToken(newUser, 201, res);
@@ -174,19 +180,60 @@ const changePassword = catchAsync(async (req, res, next) => {
 });
 
 const forgotPassword = catchAsync(async (req, res, next) => {
-  // Implementation for forgot password would be here
-  res.status(200).json({
-    status: 'success',
-    message: 'Password reset functionality not implemented yet',
-  });
+  // Get user based on email
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new AppError('There is no user with that email address', 404));
+  }
+
+  // Generate random reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  try {
+    // Send password reset email
+    await emailService.sendPasswordResetEmail(user, resetToken);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset email sent successfully',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(
+      new AppError('There was an error sending the email. Try again later!', 500)
+    );
+  }
 });
 
 const resetPassword = catchAsync(async (req, res, next) => {
-  // Implementation for reset password would be here
-  res.status(200).json({
-    status: 'success',
-    message: 'Password reset functionality not implemented yet',
+  // Get hashed token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.body.token || req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
   });
+
+  // If token has not expired and there is a user, set the new password
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  user.password = req.body.password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  // Log the user in, send JWT
+  createSendToken(user, 200, res);
 });
 
 const verifyEmail = catchAsync(async (req, res, next) => {
@@ -234,6 +281,8 @@ const oauthLogin = catchAsync(async (req, res, next) => {
       ]
     });
 
+    let isNewUser = false;
+
     if (user) {
       // Update OAuth provider info if not already present
       if (!user.oauthProviders || !user.oauthProviders[provider]) {
@@ -246,6 +295,7 @@ const oauthLogin = catchAsync(async (req, res, next) => {
       }
     } else {
       // Create new user
+      isNewUser = true;
       user = await User.create({
         name,
         email,
@@ -260,6 +310,11 @@ const oauthLogin = catchAsync(async (req, res, next) => {
         },
         // Set a random password since this is OAuth
         password: crypto.randomBytes(32).toString('hex'),
+      });
+
+      // Send welcome email for new OAuth users (async, don't wait)
+      emailService.sendWelcomeEmail(user).catch(err => {
+        console.error('Failed to send welcome email to OAuth user:', err);
       });
     }
 

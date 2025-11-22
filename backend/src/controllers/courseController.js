@@ -2,6 +2,7 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const emailService = require('../services/emailService');
 
 const getAllCourses = catchAsync(async (req, res, next) => {
   // Build query
@@ -514,13 +515,25 @@ const approveCourse = catchAsync(async (req, res, next) => {
   await course.populate('instructor', 'name email');
   await course.populate('approvedBy', 'name email');
 
+  // Send approval email to instructor
+  if (course.instructor && course.instructor.email) {
+    try {
+      await emailService.sendCourseApprovedEmail(
+        course.instructor,
+        course,
+        feedback || ''
+      );
+    } catch (emailError) {
+      console.error('Failed to send course approval email:', emailError);
+      // Don't fail the request if email fails
+    }
+  }
+
   res.status(200).json({
     status: 'success',
     message: 'Course approved successfully',
     data: course
   });
-
-  // TODO: Send email notification to instructor (implement in Phase 1.3)
 });
 
 /**
@@ -569,6 +582,20 @@ const rejectCourse = catchAsync(async (req, res, next) => {
   // Populate for response
   await course.populate('instructor', 'name email');
 
+  // Send rejection email to instructor
+  if (course.instructor && course.instructor.email) {
+    try {
+      await emailService.sendCourseRejectedEmail(
+        course.instructor,
+        course,
+        reason
+      );
+    } catch (emailError) {
+      console.error('Failed to send course rejection email:', emailError);
+      // Don't fail the request if email fails
+    }
+  }
+
   res.status(200).json({
     status: 'success',
     message: 'Course rejected successfully',
@@ -577,8 +604,6 @@ const rejectCourse = catchAsync(async (req, res, next) => {
       rejectionReason: reason
     }
   });
-
-  // TODO: Send email notification to instructor (implement in Phase 1.3)
 });
 
 /**

@@ -2,6 +2,7 @@ const SSLCommerzPayment = require('sslcommerz-lts');
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const User = require('../models/User');
+const emailService = require('../services/emailService');
 
 // SSLCommerz configuration
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
@@ -164,6 +165,29 @@ exports.paymentSuccess = async (req, res) => {
       await Course.findByIdAndUpdate(courseId, {
         $inc: { 'statistics.totalEnrollments': 1 }
       });
+
+      // Send payment confirmation and enrollment emails
+      try {
+        const user = await User.findById(userId);
+        const course = await Course.findById(courseId).populate('instructor', 'name email');
+
+        if (user && course) {
+          // Send payment confirmation email
+          await emailService.sendPaymentConfirmation(user, {
+            _id: enrollment._id,
+            transactionId: tran_id,
+            amount: amount,
+            currency: currency,
+            createdAt: new Date(tran_date)
+          }, course);
+
+          // Send enrollment confirmation email
+          await emailService.sendEnrollmentConfirmation(user, course);
+        }
+      } catch (emailError) {
+        console.error('Failed to send payment/enrollment emails:', emailError);
+        // Don't fail the request if email fails
+      }
 
       // Redirect to success page
       res.redirect(`${process.env.FRONTEND_URL}/payment/success?enrollment=${enrollment._id}&course=${courseId}`);
