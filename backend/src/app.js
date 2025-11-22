@@ -30,6 +30,7 @@ const questionBankRoutes = require('./routes/questionBankRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // Initialize express app
 const app = express();
@@ -205,6 +206,7 @@ app.use(`/api/${apiVersion}/question-banks`, questionBankRoutes);
 app.use(`/api/${apiVersion}/questions`, questionRoutes);
 app.use(`/api/${apiVersion}/enrollments`, enrollmentRoutes);
 app.use(`/api/${apiVersion}/categories`, categoryRoutes);
+app.use(`/api/${apiVersion}/payments`, paymentRoutes);
 
 // Handle undefined routes
 app.all('*', (req, res, next) => {
