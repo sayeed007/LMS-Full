@@ -1,7 +1,7 @@
 # LMS Delivery Plan - Go Live Roadmap
 
 **Project**: Learning Management System
-**Current Progress**: ~84% Complete
+**Current Progress**: ~86% Complete
 **Document Created**: 2025-11-22
 **Last Updated**: 2025-11-22
 
@@ -333,20 +333,72 @@ This document outlines the delivery plan to take the LMS from current state (70%
 
 **Priority: HIGH - Important for user experience**
 
-#### 2.1 In-App Messaging System (4 days)
-- [ ] Backend: Messaging routes and controllers
-- [ ] Backend: WebSocket/Socket.io integration for real-time messaging
-- [ ] Frontend: Messages page
-- [ ] Frontend: Chat interface component
-- [ ] Frontend: Message notifications
-- [ ] Backend: Message persistence in database
+#### 2.1 In-App Messaging System ✅ COMPLETED (2025-11-22)
+- [x] Backend: Messaging routes and controllers
+- [x] Backend: WebSocket/Socket.io integration for real-time messaging
+- [x] Frontend: Messages page with conversation list
+- [x] Frontend: Chat interface component with real-time updates
+- [x] Frontend: Message notifications (toast + badge)
+- [x] Backend: Message persistence in MongoDB
+- [x] Frontend: Socket.io client service/hook
+- [x] Frontend: Typing indicators and online status
+- [x] Frontend: User search for starting conversations
+- [x] Frontend: Unread message tracking
 
-**Files to create:**
-- `backend/src/routes/message.routes.js` (new)
-- `backend/src/controllers/messageController.js` (new)
-- `backend/src/services/socketService.js` (new)
-- `frontend/src/app/messages/page.tsx` (new)
-- `frontend/src/components/messaging/ChatInterface.tsx` (new)
+**Backend Files Created:**
+- `backend/src/models/Message.js` ✅ (142 lines - schema with attachments, soft delete, read status)
+- `backend/src/models/Conversation.js` ✅ (176 lines - participants, unread tracking, archiving)
+- `backend/src/routes/messageRoutes.js` ✅ (284 lines - 10 REST endpoints with Swagger docs)
+- `backend/src/controllers/messageController.js` ✅ (419 lines - 10 controller functions)
+- `backend/src/services/socketService.js` ✅ (289 lines - WebSocket event handlers)
+- `backend/src/server.js` ✅ (60 lines - Socket.io server integration)
+
+**Frontend Files Created:**
+- `frontend/src/lib/socket-context.tsx` ✅ (306 lines - Socket.io provider and hook)
+- `frontend/src/store/api/messageApi.ts` ✅ (285 lines - RTK Query with 10 endpoints)
+- `frontend/src/app/messages/page.tsx` ✅ (267 lines - Messages page with conversation list)
+- `frontend/src/components/messaging/ChatInterface.tsx` ✅ (356 lines - Real-time chat interface)
+- `frontend/src/components/messaging/MessageNotificationBadge.tsx` ✅ (42 lines - Notification badge)
+
+**Files Modified:**
+- `backend/src/app.js` ✅ (added message routes, refactored for Socket.io)
+- `backend/package.json` ✅ (added socket.io, updated main entry point)
+- `frontend/src/store/api/baseApi.ts` ✅ (added Message tag)
+- `frontend/src/app/layout.tsx` ✅ (added SocketProvider)
+- `frontend/src/components/layout/header.tsx` ✅ (added Messages nav + notification badge)
+- `frontend/package.json` ✅ (added socket.io-client, date-fns)
+
+**Features Implemented:**
+1. Real-time bidirectional messaging with Socket.io WebSocket
+2. Message persistence in MongoDB with soft delete support
+3. Conversation management (create, archive, unarchive)
+4. Unread message tracking per user with Map-based storage
+5. Read receipts with timestamp
+6. Typing indicators (start/stop events)
+7. Online/offline user status tracking
+8. Message notifications (toast popups + header badge)
+9. User search for starting new conversations
+10. Infinite scroll message history
+11. REST API fallback for all operations
+12. Role-based filtering (student, instructor, admin)
+13. Attachment support (schema ready for files/images)
+14. JWT authentication for WebSocket connections
+15. Comprehensive error handling and loading states
+
+**Technical Highlights:**
+- **Hybrid Architecture**: Socket.io for real-time + REST for reliability
+- **Authentication**: JWT verified on both HTTP and WebSocket
+- **Data Model**: Conversations with 2 participants, messages with sender/receiver
+- **Indexes**: Optimized MongoDB indexes for frequent queries
+- **Real-time Events**: conversation:join, message:send, typing:start/stop, user:online/offline
+- **Cache Management**: RTK Query with proper tag invalidation
+- **UI/UX**: Responsive design, smooth scrolling, typing indicators, online status
+
+**Remaining Tasks:**
+- [ ] Add file/image upload for attachments (Cloudinary integration)
+- [ ] Add message edit functionality
+- [ ] Add emoji picker
+- [ ] Add read receipt indicators in conversation list
 
 #### 2.2 Organization Management Interface (2 days)
 - [ ] Backend: Complete organization endpoints (currently 501)

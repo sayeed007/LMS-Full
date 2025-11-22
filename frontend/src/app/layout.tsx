@@ -9,6 +9,7 @@ import { ModalProviderWithGlobal } from "@/lib/modal-utils";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import SessionProvider from "@/components/providers/SessionProvider";
 import SessionSync from "@/components/auth/SessionSync";
+import { SocketProvider } from "@/lib/socket-context";
 
 
 // Google Fonts
@@ -59,10 +60,11 @@ export default function RootLayout({
         <SessionProvider>
           <ReduxProvider>
             <SessionSync />
-            <ModalProviderWithGlobal>
-              <Header />
-              {/* <main> */}
-              {children}
+            <SocketProvider>
+              <ModalProviderWithGlobal>
+                <Header />
+                {/* <main> */}
+                {children}
 
               {/* TOAST EXAMPLE */}
               {/* <ToastExample /> */}
@@ -91,7 +93,8 @@ export default function RootLayout({
                 }}
               />
               {/* </main> */}
-            </ModalProviderWithGlobal>
+              </ModalProviderWithGlobal>
+            </SocketProvider>
           </ReduxProvider>
         </SessionProvider>
       </body>

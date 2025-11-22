@@ -8,12 +8,14 @@ import { NavigationLink, Container } from '@/components/ui';
 import UserMenu from './UserMenu';
 import LoginModal from '../auth/LoginModal';
 import { Button } from '@/components/ui/button';
+import MessageNotificationBadge from '../messaging/MessageNotificationBadge';
 
 const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Courses', href: '/courses' },
     { name: 'Question Bank', href: '/question-bank' },
     { name: 'Articles', href: '/articles' },
+    { name: 'Messages', href: '/messages' },
     { name: 'Reports', href: '/reports' },
 ];
 
@@ -74,22 +76,25 @@ const Header = () => {
 
                     {/* Right side - User info and notifications */}
                     <div className="flex items-center gap-3 sm:gap-4 lg:gap-6">
-                        {/* Show notifications only if user is logged in */}
+                        {/* Show notifications and messages only if user is logged in */}
                         {session && (
-                            <button
-                                className="relative hover:scale-110 transition-transform"
-                                aria-label="Notifications"
-                            >
-                                <NotificationPopover>
-                                    <Image
-                                        src="/icons/Bell.png"
-                                        alt="Notifications"
-                                        width={24}
-                                        height={24}
-                                        className="w-6 h-6"
-                                    />
-                                </NotificationPopover>
-                            </button>
+                            <>
+                                <MessageNotificationBadge />
+                                <button
+                                    className="relative hover:scale-110 transition-transform"
+                                    aria-label="Notifications"
+                                >
+                                    <NotificationPopover>
+                                        <Image
+                                            src="/icons/Bell.png"
+                                            alt="Notifications"
+                                            width={24}
+                                            height={24}
+                                            className="w-6 h-6"
+                                        />
+                                    </NotificationPopover>
+                                </button>
+                            </>
                         )}
 
                         {/* Authentication Section */}
