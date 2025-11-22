@@ -51,7 +51,8 @@ export const baseApi = createApi({
     'Upload',
     'Payment',
     'Assignment',
-    'Message'
+    'Message',
+    'Certificate'
   ],
   endpoints: () => ({}),
 });
