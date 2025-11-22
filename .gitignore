@@ -23,16 +23,24 @@ backend/build/
 backend/lib/
 
 # Environment Variables
+# Ignore all .env files
 .env
 .env.local
-.env.development
-.env.development.local
-.env.test
-.env.test.local
-.env.production
-.env.production.local
-frontend/.env*
-backend/.env*
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+# BUT allow .env.example and environment templates
+!.env.example
+!frontend/.env.example
+!backend/.env.example
+!backend/.env.development
+!backend/.env.staging
+!backend/.env.production
 
 # Runtime data
 pids
