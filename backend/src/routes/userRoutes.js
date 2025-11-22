@@ -1,5 +1,15 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const {
+  getAllUsers,
+  getAllInstructors,
+  getUser,
+  updateUser,
+  deleteUser,
+  activateUser,
+  deactivateUser,
+  getUserStats,
+} = require('../controllers/userController');
 
 const router = express.Router();
 
@@ -211,53 +221,24 @@ const router = express.Router();
 // Protected routes - Admin only
 router.use(protect);
 
-router.get('/', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'User management endpoints not fully implemented yet. Use /api/v1/auth/me for current user profile.'
-  });
-});
+// User statistics (must come before /:id route)
+router.get('/stats', restrictTo('org_admin', 'super_admin'), getUserStats);
 
-router.get('/instructors', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Instructor listing not implemented yet'
-  });
-});
+// Get all users with filters
+router.get('/', restrictTo('org_admin', 'super_admin'), getAllUsers);
 
+// Get all instructors
+router.get('/instructors', getAllInstructors);
+
+// User activation/deactivation (must come before /:id route)
+router.patch('/:id/activate', restrictTo('org_admin', 'super_admin'), activateUser);
+router.patch('/:id/deactivate', restrictTo('org_admin', 'super_admin'), deactivateUser);
+
+// User CRUD operations
 router
   .route('/:id')
-  .get(async (req, res) => {
-    res.status(501).json({
-      status: 'error',
-      message: 'User profile by ID not implemented yet'
-    });
-  })
-  .patch(restrictTo('org_admin', 'super_admin'), async (req, res) => {
-    res.status(501).json({
-      status: 'error',
-      message: 'User update not implemented yet'
-    });
-  })
-  .delete(restrictTo('super_admin'), async (req, res) => {
-    res.status(501).json({
-      status: 'error',
-      message: 'User deletion not implemented yet'
-    });
-  });
-
-router.patch('/:id/activate', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'User activation not implemented yet'
-  });
-});
-
-router.patch('/:id/deactivate', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'User deactivation not implemented yet'
-  });
-});
+  .get(getUser)
+  .patch(restrictTo('org_admin', 'super_admin'), updateUser)
+  .delete(restrictTo('super_admin'), deleteUser);
 
 module.exports = router;

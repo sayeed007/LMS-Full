@@ -167,6 +167,30 @@ export const userApi = baseApi.injectEndpoints({
         responseHandler: (response) => response.blob(),
       }),
     }),
+
+    // Get all instructors
+    getAllInstructors: builder.query<BaseApiResponse<UserPopulated[]>, void>({
+      query: () => '/users/instructors',
+      providesTags: ['User'],
+    }),
+
+    // Admin: Activate user
+    activateUser: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, string>({
+      query: (id) => ({
+        url: `/users/${id}/activate`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
+    }),
+
+    // Admin: Deactivate user
+    deactivateUser: builder.mutation<BaseApiResponse<{ user: UserPopulated }>, string>({
+      query: (id) => ({
+        url: `/users/${id}/deactivate`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
+    }),
   }),
 });
 
@@ -183,4 +207,7 @@ export const {
   useGetUserStatsQuery,
   useDeactivateAccountMutation,
   useLazyExportUsersQuery,
+  useGetAllInstructorsQuery,
+  useActivateUserMutation,
+  useDeactivateUserMutation,
 } = userApi;
