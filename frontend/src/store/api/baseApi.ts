@@ -52,7 +52,8 @@ export const baseApi = createApi({
     'Payment',
     'Assignment',
     'Message',
-    'Certificate'
+    'Certificate',
+    'Setting'
   ],
   endpoints: () => ({}),
 });
