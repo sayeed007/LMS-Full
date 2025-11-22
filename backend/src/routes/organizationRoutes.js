@@ -1,5 +1,16 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
+const {
+  getAllOrganizations,
+  createOrganization,
+  getOrganization,
+  updateOrganization,
+  deleteOrganization,
+  getOrganizationMembers,
+  addOrganizationMember,
+  getOrganizationCourses,
+  getOrganizationStats
+} = require('../controllers/organizationController');
 
 const router = express.Router();
 
@@ -489,67 +500,17 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
-router.get('/', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization listing not implemented yet'
-  });
-});
+router.get('/', getAllOrganizations);
+router.post('/', restrictTo('super_admin'), createOrganization);
 
-router.post('/', restrictTo('super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization creation not implemented yet'
-  });
-});
+router.get('/:id', getOrganization);
+router.patch('/:id', restrictTo('org_admin', 'super_admin'), updateOrganization);
+router.delete('/:id', restrictTo('super_admin'), deleteOrganization);
 
-router.get('/:id', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization details not implemented yet'
-  });
-});
+router.get('/:id/members', restrictTo('org_admin', 'super_admin'), getOrganizationMembers);
+router.post('/:id/members', restrictTo('org_admin', 'super_admin'), addOrganizationMember);
 
-router.patch('/:id', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization update not implemented yet'
-  });
-});
-
-router.delete('/:id', restrictTo('super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization deletion not implemented yet'
-  });
-});
-
-router.get('/:id/members', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization members listing not implemented yet'
-  });
-});
-
-router.post('/:id/members', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Add organization member not implemented yet'
-  });
-});
-
-router.get('/:id/courses', async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization courses listing not implemented yet'
-  });
-});
-
-router.get('/:id/stats', restrictTo('org_admin', 'super_admin'), async (req, res) => {
-  res.status(501).json({
-    status: 'error',
-    message: 'Organization statistics not implemented yet'
-  });
-});
+router.get('/:id/courses', getOrganizationCourses);
+router.get('/:id/stats', restrictTo('org_admin', 'super_admin'), getOrganizationStats);
 
 module.exports = router;

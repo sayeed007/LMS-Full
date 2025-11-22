@@ -10,24 +10,34 @@ export interface OrganizationPopulated extends BackendOrganization {
 
 export interface CreateOrganizationRequest {
   name: string;
-  slug?: string;
+  email: string;
+  type: 'educational_institution' | 'corporate' | 'government' | 'non_profit' | 'other';
   description?: string;
   logo?: string;
   website?: string;
-  contactEmail?: string;
-  phone?: string;
   address?: BackendOrganization['address'];
+  contactPerson?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  };
   settings?: Partial<BackendOrganization['settings']>;
 }
 
 export interface UpdateOrganizationRequest {
   name?: string;
+  email?: string;
   description?: string;
   logo?: string;
   website?: string;
-  contactEmail?: string;
-  phone?: string;
   address?: BackendOrganization['address'];
+  contactPerson?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  };
   settings?: Partial<BackendOrganization['settings']>;
   isActive?: boolean;
 }
@@ -52,6 +62,12 @@ export interface OrganizationStats {
   activeInstructors: number;
   coursesThisMonth: number;
   enrollmentsThisMonth: number;
+  membersByRole: {
+    [key: string]: number;
+  };
+  coursesByStatus: {
+    [key: string]: number;
+  };
 }
 
 export const organizationApi = baseApi.injectEndpoints({
