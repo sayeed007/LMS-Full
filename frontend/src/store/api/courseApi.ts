@@ -601,7 +601,6 @@ export const courseApi = baseApi.injectEndpoints({
         { type: 'Course', id: courseId }
       ],
     }),
-  }),
 
     // Admin approval endpoints
     getPendingCourses: builder.query<BaseApiResponse<CoursePopulated[]>, { page?: number; limit?: number }>({

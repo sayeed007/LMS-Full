@@ -15,6 +15,41 @@ import {
 import React from 'react'
 import { toast } from 'sonner'
 
+// Helper function to extract error message from RTK Query error
+export const getErrorMessage = (error: unknown, fallback: string = 'An error occurred'): string => {
+    if (!error) return fallback;
+
+    // RTK Query error structure
+    if (typeof error === 'object' && error !== null && 'data' in error) {
+        const dataError = error as { data?: { message?: string } };
+        if (dataError.data?.message) {
+            return dataError.data.message;
+        }
+    }
+
+    // Error object structure
+    if (typeof error === 'object' && error !== null && 'error' in error) {
+        const nestedError = error as { error?: { message?: string } };
+        if (nestedError.error?.message) {
+            return nestedError.error.message;
+        }
+    }
+
+    // Direct message
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+        const msgError = error as { message?: string };
+        if (typeof msgError.message === 'string') {
+            return msgError.message;
+        }
+    }
+
+    return fallback;
+}
+
 // Basic Toast Functions
 export const showSuccessToast = (title: string, description?: string, duration?: number) => {
     return toast.success(title, {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSubmitAssignmentMutation, useGetMySubmissionQuery } from '@/store/api/assignmentApi';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
 
 interface AssignmentSubmissionProps {
   assignmentId: string;
@@ -19,7 +20,7 @@ export default function AssignmentSubmission({
 }: AssignmentSubmissionProps) {
   const [content, setContent] = useState('');
   const [url, setUrl] = useState('');
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
 
   const { data: submissionData, isLoading: loadingSubmission } = useGetMySubmissionQuery(assignmentId);
   const [submitAssignment, { isLoading: submitting }] = useSubmitAssignmentMutation();
@@ -32,7 +33,7 @@ export default function AssignmentSubmission({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const submissionData: any = {};
+    const submissionData: Record<string, string | File[]> = {};
 
     if (submissionType === 'text' || submissionType === 'code') {
       if (!content.trim()) {
@@ -60,8 +61,8 @@ export default function AssignmentSubmission({
       setContent('');
       setUrl('');
       setFiles([]);
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to submit assignment');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to submit assignment'));
     }
   };
 
@@ -75,9 +76,8 @@ export default function AssignmentSubmission({
 
       {/* Submission Status */}
       {hasSubmitted && (
-        <div className={`mb-6 p-4 rounded-lg ${
-          isGraded ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'
-        }`}>
+        <div className={`mb-6 p-4 rounded-lg ${isGraded ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'
+          }`}>
           <h3 className="font-semibold mb-2">
             {isGraded ? '✅ Graded' : '📝 Submitted - Awaiting Grade'}
           </h3>

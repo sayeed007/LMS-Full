@@ -7,7 +7,14 @@ import { RootState } from '../store';
 
 // Socket event types
 export interface SocketMessage {
-  message: any;
+  message: {
+    _id: string;
+    content: string;
+    sender: string;
+    receiver: string;
+    conversationId: string;
+    createdAt: string;
+  };
   conversationId: string;
 }
 
@@ -40,7 +47,13 @@ interface SocketContextType {
     receiverId?: string;
     content: string;
     messageType?: 'text' | 'file' | 'image';
-    attachments?: any[];
+    attachments?: Array<{
+      url: string;
+      publicId?: string;
+      fileName?: string;
+      fileType?: string;
+      fileSize?: number;
+    }>;
   }) => void;
   markMessagesAsRead: (conversationId: string) => void;
 
@@ -53,12 +66,12 @@ interface SocketContextType {
 
   // Event listeners
   onNewMessage: (callback: (data: SocketMessage) => void) => () => void;
-  onMessageNotification: (callback: (data: any) => void) => () => void;
+  onMessageNotification: (callback: (data: { conversationId: string; message: string }) => void) => () => void;
   onTypingStarted: (callback: (data: TypingEvent) => void) => () => void;
   onTypingStopped: (callback: (data: TypingEvent) => void) => () => void;
   onUserOnline: (callback: (data: OnlineStatusEvent) => void) => () => void;
   onUserOffline: (callback: (data: OnlineStatusEvent) => void) => () => void;
-  onMessagesRead: (callback: (data: any) => void) => () => void;
+  onMessagesRead: (callback: (data: { conversationId: string; readBy: string }) => void) => () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -171,7 +184,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     receiverId?: string;
     content: string;
     messageType?: 'text' | 'file' | 'image';
-    attachments?: any[];
+    attachments?: Array<{
+      url: string;
+      publicId?: string;
+      fileName?: string;
+      fileType?: string;
+      fileSize?: number;
+    }>;
   }) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit('message:send', data);
@@ -217,7 +236,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => {};
   }, []);
 
-  const onMessageNotification = useCallback((callback: (data: any) => void) => {
+  const onMessageNotification = useCallback((callback: (data: { conversationId: string; message: string }) => void) => {
     if (socketRef.current) {
       socketRef.current.on('message:notification', callback);
       return () => {
@@ -267,7 +286,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => {};
   }, []);
 
-  const onMessagesRead = useCallback((callback: (data: any) => void) => {
+  const onMessagesRead = useCallback((callback: (data: { conversationId: string; readBy: string }) => void) => {
     if (socketRef.current) {
       socketRef.current.on('messages:read', callback);
       return () => {

@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { getErrorMessage } from '@/lib/toast-utils';
 import {
-  useGetUsersQuery,
   useActivateUserMutation,
   useDeactivateUserMutation,
   useDeleteUserMutation,
+  useGetUsersQuery,
   useGetUserStatsQuery,
+  type UserPopulated
 } from '@/store/api/userApi';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function AdminUsersPage() {
@@ -43,8 +45,8 @@ export default function AdminUsersPage() {
     try {
       await activateUser(id).unwrap();
       toast.success('User activated successfully');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to activate user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to activate user'));
     }
   };
 
@@ -54,8 +56,8 @@ export default function AdminUsersPage() {
     try {
       await deactivateUser(id).unwrap();
       toast.success('User deactivated successfully');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to deactivate user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to deactivate user'));
     }
   };
 
@@ -65,8 +67,8 @@ export default function AdminUsersPage() {
     try {
       await deleteUser(id).unwrap();
       toast.success('User deleted successfully');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to delete user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to delete user'));
     }
   };
 
@@ -90,7 +92,7 @@ export default function AdminUsersPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-2">Error Loading Users</h2>
           <p className="text-gray-600">
-            {(error as any)?.data?.message || 'Failed to load users'}
+            {getErrorMessage(error, 'Failed to load users')}
           </p>
         </div>
       </div>
@@ -127,7 +129,7 @@ export default function AdminUsersPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">By Role</div>
             <div className="space-y-1">
-              {stats.usersByRole.map((role: any) => (
+              {stats.usersByRole.map((role: { role: string; count: number }) => (
                 <div key={role.role} className="text-sm flex justify-between">
                   <span className="capitalize">{role.role}:</span>
                   <span className="font-semibold">{role.count}</span>
@@ -242,13 +244,13 @@ export default function AdminUsersPage() {
                   </td>
                 </tr>
               ) : (
-                users.map((user: any) => (
+                users.map((user: UserPopulated) => (
                   <tr key={user._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {user.avatar ? (
-                            <img
+                            <Image
                               className="h-10 w-10 rounded-full object-cover"
                               src={user.avatar}
                               alt={user.name}
@@ -267,26 +269,24 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.role === 'super_admin'
-                            ? 'bg-purple-100 text-purple-800'
-                            : user.role === 'org_admin'
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'super_admin'
+                          ? 'bg-purple-100 text-purple-800'
+                          : user.role === 'org_admin'
                             ? 'bg-indigo-100 text-indigo-800'
                             : user.role === 'instructor'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
                       >
                         {user.role.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}
                       >
                         {user.isActive ? 'Active' : 'Inactive'}
                       </span>
@@ -350,22 +350,20 @@ export default function AdminUsersPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className={`px-4 py-2 border rounded-lg ${
-                    pagination.hasPrevPage
-                      ? 'bg-white text-gray-700 hover:bg-gray-50'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  className={`px-4 py-2 border rounded-lg ${pagination.hasPrevPage
+                    ? 'bg-white text-gray-700 hover:bg-gray-50'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!pagination.hasNextPage}
-                  className={`px-4 py-2 border rounded-lg ${
-                    pagination.hasNextPage
-                      ? 'bg-white text-gray-700 hover:bg-gray-50'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
+                  className={`px-4 py-2 border rounded-lg ${pagination.hasNextPage
+                    ? 'bg-white text-gray-700 hover:bg-gray-50'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    }`}
                 >
                   Next
                 </button>

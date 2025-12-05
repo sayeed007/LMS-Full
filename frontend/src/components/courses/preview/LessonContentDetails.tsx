@@ -33,7 +33,7 @@ export function LessonContentDetails({ lessonId, courseId }: LessonContentDetail
       case 'assignment':
         return <Clipboard className="w-4 h-4 text-orange-500" />;
       case 'image':
-        return <Image className="w-4 h-4 text-pink-500" />;
+        return <Image className="w-4 h-4 text-pink-500" alt='' />;
       default:
         return <FileText className="w-4 h-4 text-gray-500" />;
     }

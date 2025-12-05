@@ -191,6 +191,15 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
     }),
+
+    // Search users
+    searchUsers: builder.query<BaseApiResponse<UserPopulated[]>, { q: string; role?: string; limit?: number }>({
+      query: (params) => ({
+        url: '/users/search',
+        params,
+      }),
+      providesTags: ['User'],
+    }),
   }),
 });
 
@@ -210,4 +219,6 @@ export const {
   useGetAllInstructorsQuery,
   useActivateUserMutation,
   useDeactivateUserMutation,
+  useSearchUsersQuery,
+  useLazySearchUsersQuery,
 } = userApi;

@@ -198,7 +198,7 @@ export function LoginForm() {
     try {
       const result = await login(credentials).unwrap();
       // Handle success
-    } catch (err) {
+    } catch (error) {
       // Handle error
     }
   };

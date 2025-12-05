@@ -2,6 +2,7 @@
 import React from 'react'
 import { Bell, User } from 'lucide-react'
 import { Button } from './ui/button'
+import Link from 'next/link'
 
 interface LayoutProps {
     children: React.ReactNode
@@ -23,11 +24,11 @@ export default function Layout({ children, title }: LayoutProps) {
                         </div>
 
                         < nav className="flex space-x-6" >
-                            <a href="#" className="text-gray-600 hover:text-gray-900" > Dashboard </a>
-                            <a href="#" className="text-gray-600 hover:text-gray-900" > Courses </a>
-                            <a href="#" className="text-gray-600 hover:text-gray-900" > Question Bank </a>
-                            <a href="#" className="text-gray-600 hover:text-gray-900" > Article </a>
-                            <a href="#" className="text-gray-900 font-medium" > Reports </a>
+                            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900" > Dashboard </Link>
+                            <Link href="#" className="text-gray-600 hover:text-gray-900" > Courses </Link>
+                            <Link href="#" className="text-gray-600 hover:text-gray-900" > Question Bank </Link>
+                            <Link href="#" className="text-gray-600 hover:text-gray-900" > Article </Link>
+                            <Link href="#" className="text-gray-900 font-medium" > Reports </Link>
                         </nav>
                     </div>
 

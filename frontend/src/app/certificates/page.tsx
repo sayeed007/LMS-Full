@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetMyCertificatesQuery, useDownloadCertificateMutation, downloadCertificateBlob } from '@/store/api/certificateApi';
+import { useGetMyCertificatesQuery, useDownloadCertificateMutation, downloadCertificateBlob, type Certificate } from '@/store/api/certificateApi';
 import { Award, Download, Eye, Calendar, TrendingUp, FileCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
 import { format } from 'date-fns';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function MyCertificatesPage() {
   const [page, setPage] = useState(1);
@@ -18,8 +21,8 @@ export default function MyCertificatesPage() {
       const blob = await downloadCertificate(certificateId).unwrap();
       downloadCertificateBlob(blob, `Certificate-${certificateId}.pdf`);
       toast.success('Certificate downloaded successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to download certificate');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to download certificate'));
     }
   };
 
@@ -73,12 +76,12 @@ export default function MyCertificatesPage() {
             <p className="text-gray-600 mb-6">
               Complete courses to earn certificates that showcase your achievements.
             </p>
-            <a
+            <Link
               href="/courses"
               className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
             >
               Browse Courses
-            </a>
+            </Link>
           </div>
         )}
 
@@ -86,7 +89,7 @@ export default function MyCertificatesPage() {
         {!isLoading && data?.data && data.data.length > 0 && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data.data.map((certificate: any) => (
+              {data.data.map((certificate: Certificate) => (
                 <div
                   key={certificate._id}
                   className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-gray-200"
@@ -94,7 +97,7 @@ export default function MyCertificatesPage() {
                   {/* Course Thumbnail */}
                   <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
                     {certificate.course?.thumbnail ? (
-                      <img
+                      <Image
                         src={certificate.course.thumbnail}
                         alt={certificate.courseName}
                         className="w-full h-full object-cover"
@@ -146,7 +149,7 @@ export default function MyCertificatesPage() {
                         <Download className="w-4 h-4" />
                         <span className="font-medium">Download</span>
                       </button>
-                      <a
+                      <Link
                         href={`/certificates/verify/${certificate.certificateId}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -154,7 +157,7 @@ export default function MyCertificatesPage() {
                         title="View Certificate"
                       >
                         <Eye className="w-4 h-4" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

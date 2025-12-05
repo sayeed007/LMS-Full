@@ -1,22 +1,23 @@
 'use client';
 
-import { useState } from 'react';
 import { PageLayout, TabNav } from '@/components/ui';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
 import {
   useGetSettingsQuery,
-  useUpdateGeneralSettingsMutation,
-  useUpdateEmailSettingsMutation,
-  useUpdatePaymentSettingsMutation,
-  useUpdateSystemSettingsMutation,
-  useUpdateFeatureSettingsMutation,
-  useUpdateSocialSettingsMutation,
-  useUpdateSEOSettingsMutation,
-  useTestEmailConfigurationMutation,
   useResetSettingsMutation,
+  useTestEmailConfigurationMutation,
+  useUpdateEmailSettingsMutation,
+  useUpdateFeatureSettingsMutation,
+  useUpdateGeneralSettingsMutation,
+  useUpdatePaymentSettingsMutation,
+  useUpdateSEOSettingsMutation,
+  useUpdateSocialSettingsMutation,
+  useUpdateSystemSettingsMutation,
 } from '@/store/api/settingApi';
-import { Save, Mail, DollarSign, Settings as SettingsIcon, Zap, Share2, Search, RefreshCw, Send } from 'lucide-react';
+import { RefreshCw, Save, Send } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const tabs = [
   { key: 'general', label: 'General' },
@@ -41,7 +42,15 @@ export default function SettingsPage() {
   const [testEmail, { isLoading: isTesting }] = useTestEmailConfigurationMutation();
   const [resetSettings] = useResetSettingsMutation();
 
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<Partial<{
+    general: Record<string, unknown>;
+    email: Record<string, unknown>;
+    payment: Record<string, unknown>;
+    system: Record<string, unknown>;
+    features: Record<string, unknown>;
+    social: Record<string, unknown>;
+    seo: Record<string, unknown>;
+  }>>({});
   const [testEmailAddress, setTestEmailAddress] = useState('');
 
   // Initialize form data when settings load
@@ -82,8 +91,8 @@ export default function SettingsPage() {
   const settings = data.data;
 
   // Update form field
-  const updateField = (category: string, field: string, value: any) => {
-    setFormData((prev: any) => ({
+  const updateField = (category: string, field: string, value: unknown) => {
+    setFormData((prev) => ({
       ...prev,
       [category]: {
         ...prev[category],
@@ -98,8 +107,8 @@ export default function SettingsPage() {
     try {
       await updateGeneral(formData.general || settings.general).unwrap();
       toast.success('General settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update general settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update general settings'));
     }
   };
 
@@ -108,8 +117,8 @@ export default function SettingsPage() {
     try {
       await updateEmail(formData.email || settings.email).unwrap();
       toast.success('Email settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update email settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update email settings'));
     }
   };
 
@@ -118,8 +127,8 @@ export default function SettingsPage() {
     try {
       await updatePayment(formData.payment || settings.payment).unwrap();
       toast.success('Payment settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update payment settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update payment settings'));
     }
   };
 
@@ -128,8 +137,8 @@ export default function SettingsPage() {
     try {
       await updateSystem(formData.system || settings.system).unwrap();
       toast.success('System settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update system settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update system settings'));
     }
   };
 
@@ -138,8 +147,8 @@ export default function SettingsPage() {
     try {
       await updateFeatures(formData.features || settings.features).unwrap();
       toast.success('Feature settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update feature settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update feature settings'));
     }
   };
 
@@ -148,8 +157,8 @@ export default function SettingsPage() {
     try {
       await updateSocial(formData.social || settings.social).unwrap();
       toast.success('Social media settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update social media settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update social media settings'));
     }
   };
 
@@ -158,8 +167,8 @@ export default function SettingsPage() {
     try {
       await updateSEO(formData.seo || settings.seo).unwrap();
       toast.success('SEO settings updated successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update SEO settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update SEO settings'));
     }
   };
 
@@ -172,8 +181,8 @@ export default function SettingsPage() {
       await testEmail({ recipientEmail: testEmailAddress }).unwrap();
       toast.success(`Test email sent to ${testEmailAddress}`);
       setTestEmailAddress('');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to send test email');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to send test email'));
     }
   };
 
@@ -184,8 +193,8 @@ export default function SettingsPage() {
     try {
       await resetSettings().unwrap();
       toast.success('Settings reset to default values');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to reset settings');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to reset settings'));
     }
   };
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useInitiatePaymentMutation } from '@/store/api/paymentApi';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -38,9 +39,9 @@ export default function CheckoutPage() {
         toast.error('Failed to initiate payment');
         router.push(`/courses/${courseId}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Payment initiation error:', error);
-      toast.error(error?.data?.message || 'Failed to initiate payment');
+      toast.error(getErrorMessage(error, 'Failed to initiate payment'));
       router.push(`/courses/${courseId}`);
     } finally {
       setProcessingPayment(false);

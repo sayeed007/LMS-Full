@@ -156,7 +156,7 @@ export const assignmentApi = baseApi.injectEndpoints({
     }),
 
     gradeSubmission: builder.mutation<
-      BaseApiResponse<{ submission: Submission; stats: any }>,
+      BaseApiResponse<{ submission: Submission; stats: Record<string, unknown> }>,
       { assignmentId: string; submissionId: string; data: GradeSubmissionRequest }
     >({
       query: ({ assignmentId, submissionId, data }) => ({

@@ -14,7 +14,7 @@ const passport = require('passport');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
-const globalErrorHandler = require('./middleware/errorHandler');
+const { errorHandler } = require('./middleware/errorHandler');
 const AppError = require('./utils/appError');
 
 
@@ -222,7 +222,7 @@ app.all('*', (req, res, next) => {
 });
 
 // Global error handling middleware
-app.use(globalErrorHandler);
+app.use(errorHandler);
 
 // Database connection
 const connectDB = async () => {

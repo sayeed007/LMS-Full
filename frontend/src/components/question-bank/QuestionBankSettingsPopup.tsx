@@ -7,18 +7,18 @@ import { useEffect, useRef, useState } from "react"
 import { CustomSelect } from "../ui/CustomSelect"
 import PrimaryActionButton from "../ui/PrimaryButton"
 
-interface SettingsPopupProps {
-    isOpen: boolean
-    onClose: () => void
-    onSave: (settings: SettingsData) => void
-}
-
-interface SettingsData {
+export interface SettingsData {
     passingScoreRequired: boolean
     passingScore: number
     quizAttemptTime: string
     quizTimeHours: number
     quizTimeMinutes: number
+}
+
+interface SettingsPopupProps {
+    isOpen: boolean
+    onClose: () => void
+    onSave: (settings: SettingsData) => void
 }
 
 const quizAttemptOptions = [

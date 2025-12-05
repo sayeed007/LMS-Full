@@ -211,9 +211,12 @@ export default function ChatInterface({ conversationId, userId, onConversationCr
         // Refetch messages
         refetchMessages();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to send message:', error);
-      toast.error(error?.data?.message || 'Failed to send message');
+      const errorMessage = error && typeof error === 'object' && 'data' in error
+        ? (error as { data?: { message?: string } }).data?.message || 'Failed to send message'
+        : 'Failed to send message';
+      toast.error(errorMessage);
       setMessageInput(content); // Restore message on error
     }
   };

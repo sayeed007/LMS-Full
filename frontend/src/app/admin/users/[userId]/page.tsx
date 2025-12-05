@@ -11,6 +11,8 @@ import {
   useDeleteUserMutation,
 } from '@/store/api/userApi';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
+import Image from 'next/image';
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -62,8 +64,8 @@ export default function UserDetailPage() {
 
       toast.success('User updated successfully');
       setIsEditing(false);
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to update user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update user'));
     }
   };
 
@@ -73,8 +75,8 @@ export default function UserDetailPage() {
     try {
       await activateUser(userId).unwrap();
       toast.success('User activated successfully');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to activate user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to activate user'));
     }
   };
 
@@ -84,8 +86,8 @@ export default function UserDetailPage() {
     try {
       await deactivateUser(userId).unwrap();
       toast.success('User deactivated successfully');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to deactivate user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to deactivate user'));
     }
   };
 
@@ -96,8 +98,8 @@ export default function UserDetailPage() {
       await deleteUser(userId).unwrap();
       toast.success('User deleted successfully');
       router.push('/admin/users');
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to delete user');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to delete user'));
     }
   };
 
@@ -117,7 +119,7 @@ export default function UserDetailPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-red-600 mb-2">Error Loading User</h2>
           <p className="text-gray-600">
-            {(error as any)?.data?.message || 'Failed to load user details'}
+            {getErrorMessage(error, 'Failed to load user details')}
           </p>
           <Link
             href="/admin/users"
@@ -180,7 +182,7 @@ export default function UserDetailPage() {
         <div className="px-8 pb-8">
           <div className="flex items-end -mt-16">
             {user.avatar ? (
-              <img
+              <Image
                 src={user.avatar}
                 alt={user.name}
                 className="w-32 h-32 rounded-full border-4 border-white object-cover"
@@ -330,15 +332,14 @@ export default function UserDetailPage() {
                 <dt className="text-sm font-medium text-gray-500">Role</dt>
                 <dd className="mt-1">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.role === 'super_admin'
-                        ? 'bg-purple-100 text-purple-800'
-                        : user.role === 'org_admin'
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'super_admin'
+                      ? 'bg-purple-100 text-purple-800'
+                      : user.role === 'org_admin'
                         ? 'bg-indigo-100 text-indigo-800'
                         : user.role === 'instructor'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
                   >
                     {user.role?.replace('_', ' ')}
                   </span>
@@ -348,11 +349,10 @@ export default function UserDetailPage() {
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
                 <dd className="mt-1">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
                   >
                     {user.isActive ? 'Active' : 'Inactive'}
                   </span>

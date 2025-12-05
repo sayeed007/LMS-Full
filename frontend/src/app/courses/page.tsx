@@ -6,7 +6,7 @@ import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, TabNav } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { useModalActions } from "@/lib/modal-utils";
-import { showErrorToast } from "@/lib/toast-utils";
+import { showErrorToast, getErrorMessage } from "@/lib/toast-utils";
 import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -55,7 +55,7 @@ export default function CoursesPage() {
 
   // Build query params for API
   const buildQueryParams = () => {
-    const params: any = { page: 1, limit: 50 };
+    const params: Record<string, string | number> = { page: 1, limit: 50 };
 
     if (filters.search) params.search = filters.search;
     if (filters.category) params.category = filters.category;
@@ -137,12 +137,16 @@ export default function CoursesPage() {
 
   const { courses, isLoading, error } = getCurrentData();
 
-  // Handle API errors
-  if (error) {
-    showErrorToast(
-      `Failed to load ${activeTab === "my" ? "your" : activeTab} courses`
-    );
-  }
+  // Handle API errors with useEffect to prevent duplicate toasts
+  useEffect(() => {
+    if (error) {
+      const errorMessage = getErrorMessage(error, 'Failed to load courses');
+      showErrorToast(
+        `Failed to load ${activeTab === "my" ? "your" : activeTab} courses`,
+        errorMessage
+      );
+    }
+  }, [error, activeTab]);
 
   return (
     <>

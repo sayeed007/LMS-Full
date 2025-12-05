@@ -5,6 +5,7 @@ import { useGetPaymentHistoryQuery } from '@/store/api/paymentApi';
 import Link from 'next/link';
 import { Download, Eye, Calendar, CreditCard } from 'lucide-react';
 import moment from 'moment';
+import Image from 'next/image';
 
 export default function PaymentHistoryPage() {
   const [page, setPage] = useState(1);
@@ -46,7 +47,9 @@ export default function PaymentHistoryPage() {
           <div className="bg-white shadow rounded-lg p-12 text-center">
             <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No payment history</h3>
-            <p className="text-gray-600 mb-6">You haven't made any course purchases yet</p>
+            <p className="text-gray-600 mb-6">
+              {"You haven't made any course purchases yet"}
+            </p>
             <Link
               href="/courses"
               className="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
@@ -91,7 +94,7 @@ export default function PaymentHistoryPage() {
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
                               {payment.course.thumbnail ? (
-                                <img
+                                <Image
                                   className="h-10 w-10 rounded object-cover"
                                   src={payment.course.thumbnail}
                                   alt={payment.course.title}

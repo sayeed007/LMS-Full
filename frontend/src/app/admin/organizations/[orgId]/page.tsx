@@ -1,36 +1,46 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import {
-  useGetOrganizationByIdQuery,
-  useUpdateOrganizationMutation,
-  useGetOrganizationMembersQuery,
+  type OrganizationPopulated, getErrorMessage } from '@/lib/utils';
+import {
+  type OrganizationPopulated,
+  UpdateOrganizationRequest,
   useAddOrganizationMemberMutation,
+  useGetOrganizationByIdQuery,
   useGetOrganizationCoursesQuery,
+  useGetOrganizationMembersQuery,
   useGetOrganizationStatsQuery,
-  UpdateOrganizationRequest
+  useUpdateOrganizationMutation
 } from '@/store/api/organizationApi';
-import { useLazySearchUsersQuery } from '@/store/api/userApi';
 import {
-  Building2,
+  type OrganizationPopulated, useLazySearchUsersQuery,
+  type UserPopulated } from '@/store/api/userApi';
+import {
+  type OrganizationPopulated,
+  Activity,
   ArrowLeft,
-  Save,
-  Users,
-  BookOpen,
   BarChart3,
-  Settings,
-  Mail,
+  BookOpen,
+  Building2,
   Globe,
+  Mail,
   MapPin,
-  User,
   Phone,
   Plus,
-  Trash2,
+  Save,
+  Settings,
   TrendingUp,
-  Activity
+  User,
+  Users
 } from 'lucide-react';
-import { toast } from 'sonner';
+import Image from 'next/image';
+import Link from 'next/link';
+import {
+  type OrganizationPopulated, useParams, useRouter } from 'next/navigation';
+import {
+  type OrganizationPopulated, useState } from 'react';
+import {
+  type OrganizationPopulated, toast } from 'sonner';
 
 type TabType = 'info' | 'members' | 'courses' | 'stats';
 
@@ -88,8 +98,8 @@ export default function OrganizationDetailPage() {
       await updateOrganization({ id: orgId, data: formData }).unwrap();
       toast.success('Organization updated successfully');
       setIsEditing(false);
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update organization');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to update organization'));
     }
   };
 
@@ -138,7 +148,11 @@ export default function OrganizationDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {organization.logo ? (
-                <img src={organization.logo} alt={organization.name} className="w-16 h-16 rounded-full object-cover" />
+                <Image
+                  src={organization.logo}
+                  alt={organization.name}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
                   <Building2 className="w-8 h-8 text-blue-600" />
@@ -189,11 +203,10 @@ export default function OrganizationDetailPage() {
             <nav className="flex gap-8 px-6">
               <button
                 onClick={() => setActiveTab('info')}
-                className={`py-4 border-b-2 transition ${
-                  activeTab === 'info'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
+                className={`py-4 border-b-2 transition ${activeTab === 'info'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
@@ -202,11 +215,10 @@ export default function OrganizationDetailPage() {
               </button>
               <button
                 onClick={() => setActiveTab('members')}
-                className={`py-4 border-b-2 transition ${
-                  activeTab === 'members'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
+                className={`py-4 border-b-2 transition ${activeTab === 'members'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
@@ -220,11 +232,10 @@ export default function OrganizationDetailPage() {
               </button>
               <button
                 onClick={() => setActiveTab('courses')}
-                className={`py-4 border-b-2 transition ${
-                  activeTab === 'courses'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
+                className={`py-4 border-b-2 transition ${activeTab === 'courses'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5" />
@@ -238,11 +249,10 @@ export default function OrganizationDetailPage() {
               </button>
               <button
                 onClick={() => setActiveTab('stats')}
-                className={`py-4 border-b-2 transition ${
-                  activeTab === 'stats'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
+                className={`py-4 border-b-2 transition ${activeTab === 'stats'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
@@ -279,7 +289,7 @@ function InfoTab({
   formData,
   setFormData
 }: {
-  organization: any;
+  organization: OrganizationPopulated;
   isEditing: boolean;
   formData: UpdateOrganizationRequest;
   setFormData: (data: UpdateOrganizationRequest) => void;
@@ -502,8 +512,8 @@ function MembersTab({ orgId }: { orgId: string }) {
       setShowAddModal(false);
       setUserSearch('');
       setSelectedUserId('');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to add member');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to add member'));
     }
   };
 
@@ -541,7 +551,7 @@ function MembersTab({ orgId }: { orgId: string }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {membersData.data.map((member: any) => (
+          {membersData.data.map((member: UserPopulated) => (
             <div key={member._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -580,7 +590,7 @@ function MembersTab({ orgId }: { orgId: string }) {
                 />
                 {searchResults?.data && searchResults.data.length > 0 && (
                   <div className="mt-2 border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
-                    {searchResults.data.map((user: any) => (
+                    {searchResults.data.map((user: UserPopulated) => (
                       <button
                         key={user._id}
                         onClick={() => {
@@ -601,7 +611,7 @@ function MembersTab({ orgId }: { orgId: string }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select
                   value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value as any)}
+                  onChange={(e) => setSelectedRole(e.target.value as UserPopulated['role'])}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="student">Student</option>
@@ -667,22 +677,25 @@ function CoursesTab({ orgId }: { orgId: string }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {coursesData.data.map((course: any) => (
+          {coursesData.data.map((course: import('@/store/api/courseApi').CoursePopulated) => (
             <div key={course._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
               {course.thumbnail && (
-                <img src={course.thumbnail} alt={course.title} className="w-full h-40 object-cover rounded-lg mb-3" />
+                <Image
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-40 object-cover rounded-lg mb-3"
+                />
               )}
               <h3 className="font-semibold text-gray-900 mb-2">{course.title}</h3>
               <p className="text-sm text-gray-600 mb-3 line-clamp-2">{course.description}</p>
               <div className="flex items-center justify-between">
                 <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    course.status === 'published'
-                      ? 'bg-green-100 text-green-700'
-                      : course.status === 'draft'
+                  className={`px-2 py-1 text-xs rounded-full ${course.status === 'published'
+                    ? 'bg-green-100 text-green-700'
+                    : course.status === 'draft'
                       ? 'bg-yellow-100 text-yellow-700'
                       : 'bg-gray-100 text-gray-700'
-                  }`}
+                    }`}
                 >
                   {course.status}
                 </span>
@@ -806,9 +819,13 @@ function InfoField({
         <span>{label}</span>
       </div>
       {link ? (
-        <a href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+        <Link
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline">
           {value}
-        </a>
+        </Link>
       ) : (
         <div className="text-gray-900">{value}</div>
       )}

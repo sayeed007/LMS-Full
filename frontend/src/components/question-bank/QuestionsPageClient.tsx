@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { SettingsPopup } from '@/components/question-bank/QuestionBankSettingsPopup'
+import { SettingsPopup, type SettingsData } from '@/components/question-bank/QuestionBankSettingsPopup'
 import { QuestionTypesDialog } from '@/components/question-bank/QuestionTypePopUp'
 import { GoBackRoute } from '@/components/reports/GoBackRoute'
 import PrimaryActionButton from '@/components/ui/PrimaryButton'
@@ -100,8 +100,7 @@ export function QuestionsPageClient({ courseId, sectionId }: QuestionsPageClient
         // router.push(`/question-bank/courses/${courseId}`)
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleSaveSettings = (settings: any) => {
+    const handleSaveSettings = (settings: SettingsData) => {
         console.log('Settings saved:', settings)
         // Handle the settings data here
         // You can send it to your API, update state, etc.

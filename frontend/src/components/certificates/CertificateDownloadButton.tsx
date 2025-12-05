@@ -3,6 +3,7 @@
 import { useCheckCertificateAvailabilityQuery, useGenerateCertificateMutation, downloadCertificateBlob } from '@/store/api/certificateApi';
 import { Award, Download, Lock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
 
 interface CertificateDownloadButtonProps {
   enrollmentId: string;
@@ -24,8 +25,8 @@ export default function CertificateDownloadButton({
       const filename = `Certificate-${availability?.data?.certificateId || 'Course'}.pdf`;
       downloadCertificateBlob(blob, filename);
       toast.success('Certificate downloaded successfully!');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to download certificate');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to download certificate'));
     }
   };
 
@@ -100,7 +101,7 @@ export default function CertificateDownloadButton({
               <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              Congratulations! You've earned a certificate for {courseName || 'this course'}.
+              {`Congratulations! You've earned a certificate for ${courseName || 'this course'}`}.
             </p>
             <button
               onClick={handleDownload}

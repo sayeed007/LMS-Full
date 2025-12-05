@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LessonContent } from '@/types/backend-models';
-import { Upload, ExternalLink } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ExternalLink, Upload } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface MediaContentData {
     url?: string;

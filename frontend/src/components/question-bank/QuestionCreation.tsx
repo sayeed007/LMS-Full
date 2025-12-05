@@ -7,7 +7,7 @@ import { GoBackRoute } from "../reports/GoBackRoute"
 import { Input } from "../ui/input"
 import PrimaryActionButton from "../ui/PrimaryButton"
 import PrimaryOutlineButton from "../ui/PrimaryOutlineButton"
-import { SettingsPopup } from "./QuestionBankSettingsPopup"
+import { SettingsPopup, type SettingsData } from "./QuestionBankSettingsPopup"
 
 export function QuestionCreation() {
     const router = useRouter()
@@ -38,8 +38,7 @@ export function QuestionCreation() {
 
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleSaveSettings = (settings: any) => {
+    const handleSaveSettings = (settings: SettingsData) => {
         console.log('Settings saved:', settings)
         // Handle the settings data here
         // You can send it to your API, update state, etc.

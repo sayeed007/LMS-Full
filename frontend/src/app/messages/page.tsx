@@ -7,7 +7,9 @@ import { useSocket } from '@/lib/socket-context';
 import {
   useGetConversationsQuery,
   useLazySearchUsersQuery,
-  useGetUnreadCountQuery
+  useGetUnreadCountQuery,
+  type Conversation,
+  type UserSearchResult
 } from '@/store/api/messageApi';
 import ChatInterface from '@/components/messaging/ChatInterface';
 import { Search, MessageSquare, Users, Loader2 } from 'lucide-react';
@@ -128,7 +130,7 @@ export default function MessagesPage() {
                             <Loader2 className="w-5 h-5 animate-spin mx-auto text-gray-400" />
                           </div>
                         ) : searchResults?.data && searchResults.data.length > 0 ? (
-                          searchResults.data.map((user: any) => (
+                          searchResults.data.map((user: UserSearchResult) => (
                             <button
                               key={user._id}
                               onClick={() => handleStartConversation(user._id)}
@@ -173,7 +175,7 @@ export default function MessagesPage() {
                     <p className="text-sm text-gray-400 mt-1">Start a new message to begin chatting</p>
                   </div>
                 ) : (
-                  conversations.map((conversation: any) => {
+                  conversations.map((conversation: Conversation) => {
                     const isSelected = conversation._id === selectedConversationId;
                     const lastMessage = conversation.lastMessage;
                     const unreadCount = conversation.unreadCount || 0;

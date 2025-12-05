@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetAssignmentSubmissionsQuery, useGradeSubmissionMutation } from '@/store/api/assignmentApi';
+import { useGetAssignmentSubmissionsQuery, useGradeSubmissionMutation, type Submission } from '@/store/api/assignmentApi';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface AssignmentGradingProps {
   assignmentId: string;
@@ -43,8 +46,8 @@ export default function AssignmentGrading({ assignmentId }: AssignmentGradingPro
       setGradingSubmission(null);
       setScore('');
       setFeedback('');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to grade submission');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to grade submission'));
     }
   };
 
@@ -105,12 +108,16 @@ export default function AssignmentGrading({ assignmentId }: AssignmentGradingPro
           {submissions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">No submissions yet</div>
           ) : (
-            submissions.map((submission: any) => (
+            submissions.map((submission: Submission) => (
               <div key={submission._id} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-4">
                     {submission.student.avatar ? (
-                      <img src={submission.student.avatar} alt={submission.student.name} className="w-10 h-10 rounded-full" />
+                      <Image
+                        src={submission.student.avatar}
+                        alt={submission.student.name}
+                        className="w-10 h-10 rounded-full"
+                      />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
                         {submission.student.name.charAt(0)}
@@ -151,18 +158,18 @@ export default function AssignmentGrading({ assignmentId }: AssignmentGradingPro
                   {submission.url && (
                     <div>
                       <p className="text-sm font-semibold text-gray-700 mb-2">URL:</p>
-                      <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                      <Link href={submission.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
                         {submission.url}
-                      </a>
+                      </Link>
                     </div>
                   )}
                   {submission.files && submission.files.length > 0 && (
                     <div>
                       <p className="text-sm font-semibold text-gray-700 mb-2">Files:</p>
-                      {submission.files.map((file: any, idx: number) => (
-                        <a key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className="block text-blue-600 hover:underline text-sm">
+                      {submission.files.map((file: { url: string; originalName: string }, idx: number) => (
+                        <Link key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className="block text-blue-600 hover:underline text-sm">
                           📎 {file.originalName}
-                        </a>
+                        </Link>
                       ))}
                     </div>
                   )}

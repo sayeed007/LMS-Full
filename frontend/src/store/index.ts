@@ -5,10 +5,22 @@ import storage from 'redux-persist/lib/storage';
 // API imports
 import { baseApi } from './api/baseApi';
 // Import to ensure endpoints are injected
-import './api/questionBankApi';
-import './api/questionApi';
-import './api/quizApi';
+import './api/articleApi';
+import './api/assignmentApi';
+import './api/authApi';
 import './api/categoryApi';
+import './api/certificateApi';
+import './api/courseApi';
+import './api/enrollmentApi';
+import './api/messageApi';
+import './api/organizationApi';
+import './api/paymentApi';
+import './api/questionApi';
+import './api/questionBankApi';
+import './api/quizApi';
+import './api/settingApi';
+import './api/uploadApi';
+import './api/userApi';
 
 // Slice imports
 import authReducer from './slices/authSlice';

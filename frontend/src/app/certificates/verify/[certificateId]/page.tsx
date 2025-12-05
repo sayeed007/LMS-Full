@@ -4,7 +4,9 @@ import { useParams } from 'next/navigation';
 import { useGetCertificateByIdQuery, useDownloadCertificateMutation, downloadCertificateBlob } from '@/store/api/certificateApi';
 import { Award, Download, CheckCircle, XCircle, Calendar, User, BookOpen, TrendingUp, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/toast-utils';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 export default function VerifyCertificatePage() {
   const params = useParams();
@@ -20,8 +22,8 @@ export default function VerifyCertificatePage() {
       const blob = await downloadCertificate(certificateId).unwrap();
       downloadCertificateBlob(blob, `Certificate-${certificateId}.pdf`);
       toast.success('Certificate downloaded successfully');
-    } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to download certificate');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to download certificate'));
     }
   };
 
@@ -45,12 +47,12 @@ export default function VerifyCertificatePage() {
           <p className="text-gray-600 mb-6">
             The certificate ID you provided could not be verified. Please check the ID and try again.
           </p>
-          <a
+          <Link
             href="/"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
           >
             Go to Homepage
-          </a>
+          </Link>
         </div>
       </div>
     );

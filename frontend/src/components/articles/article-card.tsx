@@ -81,10 +81,10 @@ export function ArticleCard({
     //         );
 
     //         onArticleUpdated?.();
-    //     } catch (error: any) {
+    //     } catch (error: unknown) {
     //         showErrorToast(
     //             'Failed to Update',
-    //             error?.data?.message || 'Could not update mandatory read status'
+    //             getErrorMessage(error, 'Could not update mandatory read status'
     //         );
     //     } finally {
     //         setIsLoading(null);

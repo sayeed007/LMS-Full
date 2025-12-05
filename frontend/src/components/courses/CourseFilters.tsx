@@ -52,8 +52,18 @@ const RATING_OPTIONS = [
   { value: '3', label: '3 & up' },
 ];
 
+interface CourseFiltersType {
+  search: string;
+  category: string;
+  level: string;
+  minPrice: string;
+  maxPrice: string;
+  minRating: string;
+  sort: string;
+}
+
 interface CourseFiltersProps {
-  onFiltersChange?: (filters: any) => void;
+  onFiltersChange?: (filters: CourseFiltersType) => void;
 }
 
 export default function CourseFilters({ onFiltersChange }: CourseFiltersProps) {
@@ -61,7 +71,7 @@ export default function CourseFilters({ onFiltersChange }: CourseFiltersProps) {
   const searchParams = useSearchParams();
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<CourseFiltersType>({
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
     level: searchParams.get('level') || '',
@@ -72,7 +82,7 @@ export default function CourseFilters({ onFiltersChange }: CourseFiltersProps) {
   });
 
   // Update URL params when filters change
-  const updateFilters = (newFilters: any) => {
+  const updateFilters = (newFilters: CourseFiltersType) => {
     setFilters(newFilters);
 
     const params = new URLSearchParams();

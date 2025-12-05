@@ -14,6 +14,7 @@ import {
   Trophy,
   Users
 } from "lucide-react";
+import Image from "next/image";
 import React, { useMemo, useState } from "react";
 
 type ExpireBaseType = "from_enrollment" | "from_publish" | "never";
@@ -182,7 +183,7 @@ export default function CourseSettings() {
               <div className="w-56 h-36 overflow-hidden rounded-xl border border-gray-200 bg-black/5">
                 {thumbnail ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={thumbnail}
                     alt="thumb"
                     className="w-full h-full object-cover"

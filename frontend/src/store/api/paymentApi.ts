@@ -52,7 +52,7 @@ export const paymentApi = baseApi.injectEndpoints({
     }),
 
     // Verify payment
-    verifyPayment: builder.query<BaseApiResponse<any>, string>({
+    verifyPayment: builder.query<BaseApiResponse<{ verified: boolean; payment?: PaymentDetails }>, string>({
       query: (transactionId) => `/payments/verify/${transactionId}`,
       providesTags: ['Payment'],
     }),
@@ -64,7 +64,7 @@ export const paymentApi = baseApi.injectEndpoints({
     }),
 
     // Refund payment (Admin only)
-    refundPayment: builder.mutation<BaseApiResponse<any>, { enrollmentId: string; reason: string }>({
+    refundPayment: builder.mutation<BaseApiResponse<{ message: string; refund: PaymentDetails }>, { enrollmentId: string; reason: string }>({
       query: ({ enrollmentId, reason }) => ({
         url: `/payments/refund/${enrollmentId}`,
         method: 'POST',

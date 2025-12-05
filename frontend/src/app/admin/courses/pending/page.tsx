@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { useGetPendingCoursesQuery, useApproveCourseMutation, useRejectCourseMutation } from '@/store/api/courseApi';
-import { toast } from 'sonner';
-import { Check, X, Eye, Clock } from 'lucide-react';
-import Link from 'next/link';
+import { getErrorMessage } from '@/lib/utils';
+import { useApproveCourseMutation, useGetPendingCoursesQuery, useRejectCourseMutation, type CoursePopulated } from '@/store/api/courseApi';
+import { Check, Clock, Eye, X } from 'lucide-react';
 import moment from 'moment';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function PendingCoursesPage() {
   const [page, setPage] = useState(1);
   const limit = 10;
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedCourse, setSelectedCourse] = useState<CoursePopulated | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
   const { data, isLoading, refetch } = useGetPendingCoursesQuery({ page, limit });
@@ -25,13 +27,13 @@ export default function PendingCoursesPage() {
       await approveCourse({ id: courseId }).unwrap();
       toast.success('Course approved successfully!');
       refetch();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Approval error:', error);
-      toast.error(error?.data?.message || 'Failed to approve course');
+      toast.error(getErrorMessage(error, 'Failed to approve course'));
     }
   };
 
-  const openRejectModal = (course: any) => {
+  const openRejectModal = (course: CoursePopulated) => {
     setSelectedCourse(course);
     setRejectionReason('');
     setRejectModalOpen(true);
@@ -52,9 +54,9 @@ export default function PendingCoursesPage() {
       setSelectedCourse(null);
       setRejectionReason('');
       refetch();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Rejection error:', error);
-      toast.error(error?.data?.message || 'Failed to reject course');
+      toast.error(getErrorMessage(error, 'Failed to reject course'));
     }
   };
 
@@ -108,13 +110,13 @@ export default function PendingCoursesPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {courses.map((course: any) => (
+                    {courses.map((course: CoursePopulated) => (
                       <tr key={course._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-16 w-24">
                               {course.thumbnail ? (
-                                <img
+                                <Image
                                   className="h-16 w-24 rounded object-cover"
                                   src={course.thumbnail}
                                   alt={course.title}
@@ -218,7 +220,7 @@ export default function PendingCoursesPage() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Reject Course</h2>
             <p className="text-gray-600 mb-4">
-              Please provide a reason for rejecting "{selectedCourse?.title}"
+              {'Please provide a reason for rejecting "{selectedCourse?.title}"'}
             </p>
             <textarea
               value={rejectionReason}

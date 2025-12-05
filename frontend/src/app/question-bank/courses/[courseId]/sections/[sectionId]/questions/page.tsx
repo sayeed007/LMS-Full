@@ -162,7 +162,6 @@ export default async function QuestionsPage({ params }: QuestionsPageProps) {
 //         // You would typically send this to your API
 //     };
 
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 //     const handleSaveSettings = (settings: any) => {
 //         console.log('Settings saved:', settings)
 //         // Handle the settings data here
