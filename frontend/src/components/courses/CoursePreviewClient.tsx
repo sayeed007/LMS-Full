@@ -44,6 +44,8 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
     { skip: !courseId }
   );
 
+  console.log(chaptersError, lessonsError);
+
   const course = (courseData?.data?.course || {}) as Partial<CoursePopulated>;
   const error = propError || (courseError ? 'Failed to fetch course data' : null);
 
@@ -83,11 +85,11 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
     );
   };
 
-  const handleResourceClick = (resource: CourseResource) => {
-    if (resource.url) {
-      window.open(resource.url, '_blank');
-    }
-  };
+  // const handleResourceClick = (resource: CourseResource) => {
+  //   if (resource.url) {
+  //     window.open(resource.url, '_blank');
+  //   }
+  // };
 
   if (isLoading) {
     return (
@@ -129,8 +131,8 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
   // Calculate course stats from chapters and lessons
   const totalLessons = chapters.reduce((acc, chapter) => acc + (chapter.lessons?.length || 0), 0) +
     lessons.filter(lesson => !lesson.chapter).length;
-  const completedLessons = 0; // Preview mode - no progress
-  const progressPercentage = 0; // Preview mode - no progress
+  // const completedLessons = 0; // Preview mode - no progress
+  // const progressPercentage = 0; // Preview mode - no progress
 
   return (
     <Container size="xl" padding="sm" className="bg-white">
@@ -323,7 +325,7 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
                     {chapterLessons.map((lesson) => (
                       <LessonItemRenderer
                         key={lesson._id}
-                        lesson={{...lesson, chapterId: chapter._id}}
+                        lesson={{ ...lesson, chapterId: chapter._id }}
                         courseId={courseId || ""}
                         isInChapter={true}
                         expandedLessons={expandedLessons}

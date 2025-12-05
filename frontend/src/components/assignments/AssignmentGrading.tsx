@@ -238,8 +238,8 @@ export default function AssignmentGrading({ assignmentId }: AssignmentGradingPro
                         <button
                           onClick={() => {
                             setGradingSubmission(submission._id);
-                            setScore(submission.grade.score.toString());
-                            setFeedback(submission.grade.feedback || '');
+                            setScore(submission.grade?.score.toString() || '');
+                            setFeedback(submission.grade?.feedback || '');
                           }}
                           className="mt-2 text-sm text-blue-600 hover:underline"
                         >

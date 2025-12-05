@@ -1,14 +1,14 @@
 "use client";
 
-import { useGetChaptersQuery, useGetContentByLessonQuery, useGetCourseByIdQuery, useGetLessonsQuery } from "@/store/api/courseApi";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useGetChaptersQuery, useGetCourseByIdQuery, useGetLessonsQuery } from "@/store/api/courseApi";
+import { CourseLesson } from "@/types/backend-models";
 import { ArrowLeft, BookOpen, CheckCircle, Circle, Clock, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { LessonContentRenderer } from "./learning/LessonContentRenderer";
 import { CourseProgress } from "./learning/CourseProgress";
-import { CourseLesson, CourseChapter } from "@/types/backend-models";
+import { LessonContentRenderer } from "./learning/LessonContentRenderer";
 
 interface CourseLearningClientProps {
   courseId: string | null;
@@ -28,6 +28,9 @@ export function CourseLearningClient({
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(initialLessonId || null);
   const [currentChapterId, setCurrentChapterId] = useState<string | null>(initialChapterId || null);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+
+
+  console.log(currentChapterId);
 
   // Fetch course data
   const {
@@ -105,17 +108,23 @@ export function CourseLearningClient({
     const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
     if (currentIndex < allLessons.length - 1) {
       const nextLesson = allLessons[currentIndex + 1];
-      goToLesson(nextLesson._id, nextLesson?.chapterId);
+      setCurrentLessonId(nextLesson._id);
+      setCurrentChapterId(nextLesson?.chapterId || null);
+      const url = `/courses/${courseId}/learn?lesson=${nextLesson._id}${nextLesson?.chapterId ? `&chapter=${nextLesson.chapterId}` : ''}`;
+      window.history.pushState({}, '', url);
     }
-  }, []);
+  }, [allLessons, currentLessonId, courseId]);
 
   const goToPreviousLesson = useCallback(() => {
     const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
     if (currentIndex > 0) {
       const previousLesson = allLessons[currentIndex - 1];
-      goToLesson(previousLesson._id, previousLesson?.chapterId);
+      setCurrentLessonId(previousLesson._id);
+      setCurrentChapterId(previousLesson?.chapterId || null);
+      const url = `/courses/${courseId}/learn?lesson=${previousLesson._id}${previousLesson?.chapterId ? `&chapter=${previousLesson.chapterId}` : ''}`;
+      window.history.pushState({}, '', url);
     }
-  }, []);
+  }, [allLessons, currentLessonId, courseId]);
 
   // Set initial lesson if not provided
   useEffect(() => {

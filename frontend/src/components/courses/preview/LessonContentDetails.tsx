@@ -33,7 +33,8 @@ export function LessonContentDetails({ lessonId, courseId }: LessonContentDetail
       case 'assignment':
         return <Clipboard className="w-4 h-4 text-orange-500" />;
       case 'image':
-        return <Image className="w-4 h-4 text-pink-500" alt='' />;
+        // eslint-disable-next-line jsx-a11y/alt-text
+        return <Image className="w-4 h-4 text-pink-500" />;
       default:
         return <FileText className="w-4 h-4 text-gray-500" />;
     }

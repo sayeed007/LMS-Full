@@ -20,10 +20,16 @@ export default function UserDetailPage() {
   const userId = params.userId as string;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    role: 'student' | 'instructor' | 'org_admin' | 'super_admin';
+    bio: string;
+    isActive: boolean;
+  }>({
     name: '',
     email: '',
-    role: '',
+    role: 'student',
     bio: '',
     isActive: true,
   });
@@ -45,7 +51,7 @@ export default function UserDetailPage() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        role: user.role || '',
+        role: user.role || 'student',
         bio: user.bio || '',
         isActive: user.isActive ?? true,
       });
@@ -244,7 +250,7 @@ export default function UserDetailPage() {
             <select
               id="role"
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'student' | 'instructor' | 'org_admin' | 'super_admin' })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
@@ -301,7 +307,7 @@ export default function UserDetailPage() {
                   setFormData({
                     name: user.name || '',
                     email: user.email || '',
-                    role: user.role || '',
+                    role: user.role || 'student',
                     bio: user.bio || '',
                     isActive: user.isActive ?? true,
                   });

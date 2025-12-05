@@ -62,12 +62,12 @@ export default function BlockContentEditor({ data, onChange }: BlockContentEdito
         updateItems(newItems);
     };
 
-    const moveItem = (fromIndex: number, toIndex: number) => {
-        const newItems = [...items];
-        const [movedItem] = newItems.splice(fromIndex, 1);
-        newItems.splice(toIndex, 0, movedItem);
-        updateItems(newItems);
-    };
+    // const moveItem = (fromIndex: number, toIndex: number) => {
+    //     const newItems = [...items];
+    //     const [movedItem] = newItems.splice(fromIndex, 1);
+    //     newItems.splice(toIndex, 0, movedItem);
+    //     updateItems(newItems);
+    // };
 
     const getDefaultItemData = (type: ContentBlockItem['type']) => {
         switch (type) {

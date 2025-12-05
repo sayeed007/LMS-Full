@@ -13,6 +13,8 @@ export default function ChapterList({
   onDeleteChapter,
   onShowPopup,
 }: ChapterListProps) {
+
+  console.log(onDeleteChapter);
   return (
     <>
       {chapters.map((chapter, index) => (

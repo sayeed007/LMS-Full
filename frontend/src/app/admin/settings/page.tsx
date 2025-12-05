@@ -91,11 +91,15 @@ export default function SettingsPage() {
   const settings = data.data;
 
   // Update form field
-  const updateField = (category: string, field: string, value: unknown) => {
+  const updateField = (
+    category: keyof typeof formData,
+    field: string,
+    value: unknown
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [category]: {
-        ...prev[category],
+        ...(prev[category] as Record<string, unknown>),
         [field]: value,
       },
     }));
@@ -198,7 +202,11 @@ export default function SettingsPage() {
     }
   };
 
-  const currentData = formData[activeTab] || settings[activeTab] || {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentData: any =
+    formData[activeTab as keyof typeof formData] ||
+    settings[activeTab as keyof typeof settings] ||
+    {};
 
   return (
     <PageLayout

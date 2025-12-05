@@ -13,10 +13,7 @@ interface QuizContentEditorProps {
   onChange: (content: LessonContent) => void;
 }
 
-export default function QuizContentEditor({
-  content: _content,
-  onChange: _onChange
-}: QuizContentEditorProps) {
+export default function QuizContentEditor({}: QuizContentEditorProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">

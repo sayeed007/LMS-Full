@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { BookOpen, ChevronDown, ChevronUp, DollarSign, SlidersHorizontal, Star, TrendingUp, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { X, SlidersHorizontal, Star, DollarSign, BookOpen, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 import SearchSuggestions from './SearchSuggestions';
 
 const CATEGORIES = [
@@ -256,11 +256,10 @@ export default function CourseFilters({ onFiltersChange }: CourseFiltersProps) {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.floor(parseFloat(option.value))
+                      className={`w-4 h-4 ${i < Math.floor(parseFloat(option.value))
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
-                      }`}
+                        }`}
                     />
                   ))}
                   <span className="text-sm text-gray-600 ml-1">{option.label}</span>

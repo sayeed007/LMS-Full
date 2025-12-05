@@ -14,7 +14,7 @@ import {
     showSuccessToast,
     showValidationErrorToast
 } from "@/lib/toast-utils"
-import { useCreateArticleMutation, useGetArticleCategoriesQuery, useUpdateArticleMutation, type CreateArticleRequest } from "@/store/api/articleApi"
+import { useCreateArticleMutation, useUpdateArticleMutation, type CreateArticleRequest } from "@/store/api/articleApi"
 import { useUploadImageMutation } from "@/store/api/uploadApi"
 import { useSession } from "next-auth/react"
 import Image from "next/image"
@@ -41,7 +41,7 @@ export function ArticleCreationOptions() {
     const [articleCategory, setArticleCategory] = useState('General');
     const [articleTags, setArticleTags] = useState<string[]>([]);
     const [articleThumbnail, setArticleThumbnail] = useState<string>('');
-    const [, ] = useState<'draft' | 'published'>('draft');
+    const [,] = useState<'draft' | 'published'>('draft');
     const [articleVisibility, setArticleVisibility] = useState<'public' | 'private' | 'organization'>('public');
 
     // UI state
@@ -55,7 +55,7 @@ export function ArticleCreationOptions() {
     const [createArticle] = useCreateArticleMutation();
     const [updateArticle] = useUpdateArticleMutation();
     const [uploadImage] = useUploadImageMutation();
-    const { data: categoriesData } = useGetArticleCategoriesQuery();
+    // const { data: categoriesData } = useGetArticleCategoriesQuery();
 
 
     // Create or update article
@@ -232,6 +232,7 @@ export function ArticleCreationOptions() {
 
             return () => clearTimeout(autoSaveTimer);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [articleContent, articleName, session, currentArticleWritingMethod]);
 
     return (

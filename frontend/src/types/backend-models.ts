@@ -511,19 +511,29 @@ export interface Question extends BaseDocument {
 
 export interface Organization extends BaseDocument {
   name: string;
-  slug: string;
+  email: string;
+  type: 'educational_institution' | 'corporate' | 'government' | 'non_profit' | 'other';
   description?: string;
   logo?: string;
   website?: string;
-  contactEmail?: string;
-  phone?: string;
-  address?: UserAddress;
-  settings: {
-    allowUserRegistration: boolean;
-    requireEmailVerification: boolean;
-    enableSSO: boolean;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
   };
-  subscription?: UserSubscription;
+  contactPerson?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  };
+  settings: {
+    allowPublicCourses: boolean;
+    requireApproval: boolean;
+    customBranding: boolean;
+  };
   isActive: boolean;
 }
 

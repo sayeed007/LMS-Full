@@ -96,7 +96,7 @@ export default function MyCertificatesPage() {
                 >
                   {/* Course Thumbnail */}
                   <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
-                    {certificate.course?.thumbnail ? (
+                    {typeof certificate.course === 'object' && certificate.course?.thumbnail ? (
                       <Image
                         src={certificate.course.thumbnail}
                         alt={certificate.courseName}

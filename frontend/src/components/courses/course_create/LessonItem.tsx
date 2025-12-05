@@ -60,6 +60,7 @@ export const LessonItem = ({
     );
 
     const content = contentData?.data?.content || [];
+    console.log(isInChapter, showContentPopup, onAddContent);
 
     return (
         <div

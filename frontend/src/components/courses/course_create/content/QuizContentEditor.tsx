@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ContentQuizQuestion } from '@/types/backend-models';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface QuizData {
     instructions?: string;

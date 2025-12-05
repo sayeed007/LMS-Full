@@ -68,6 +68,7 @@ export default function QuizTakingPage() {
 
       return () => clearInterval(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, attemptId, showResults]);
 
   // Start quiz attempt
@@ -192,7 +193,9 @@ export default function QuizTakingPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
-          <p className="text-gray-600 mb-4">The quiz you&apos;re looking for doesn&apos;t exist or you don&apos;t have access.</p>
+          <p className="text-gray-600 mb-4">
+            {"The quiz you're looking for doesn't exist or you don&apos;t have access."}
+          </p>
           <Button onClick={() => router.back()}>
             Go Back
           </Button>
@@ -342,12 +345,12 @@ export default function QuizTakingPage() {
                         key={index}
                         onClick={() => goToQuestion(index)}
                         className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${status === 'current'
-                            ? 'bg-blue-600 text-white'
-                            : status === 'answered'
-                              ? 'bg-green-100 text-green-800 border border-green-300'
-                              : status === 'flagged'
-                                ? 'bg-orange-100 text-orange-800 border border-orange-300'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? 'bg-blue-600 text-white'
+                          : status === 'answered'
+                            ? 'bg-green-100 text-green-800 border border-green-300'
+                            : status === 'flagged'
+                              ? 'bg-orange-100 text-orange-800 border border-orange-300'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                       >
                         {index + 1}

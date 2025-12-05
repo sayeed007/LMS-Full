@@ -23,6 +23,7 @@ export default function CheckoutPage() {
 
     // Auto-initiate payment on page load
     handleInitiatePayment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   const handleInitiatePayment = async () => {

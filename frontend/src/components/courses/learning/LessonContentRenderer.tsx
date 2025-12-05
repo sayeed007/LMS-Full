@@ -271,12 +271,12 @@ export function LessonContentRenderer({
                   <Badge variant="secondary" className="text-xs">
                     {item.type}
                   </Badge>
-                  {item?.estimatedDuration && (
+                  {item.data?.duration && (
                     <>
                       <span className="text-gray-300">•</span>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />
-                        {item.data.duration ? Math.ceil(item.data.duration / 60) : 0} min
+                        {Math.ceil(item.data.duration / 60)} min
                       </div>
                     </>
                   )}

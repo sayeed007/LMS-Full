@@ -182,7 +182,6 @@ export default function CourseSettings() {
             <div className="flex items-start gap-6">
               <div className="w-56 h-36 overflow-hidden rounded-xl border border-gray-200 bg-black/5">
                 {thumbnail ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <Image
                     src={thumbnail}
                     alt="thumb"

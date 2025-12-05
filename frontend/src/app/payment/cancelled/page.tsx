@@ -1,8 +1,8 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { Ban } from 'lucide-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function PaymentCancelledPage() {
   const searchParams = useSearchParams();
@@ -33,7 +33,7 @@ export default function PaymentCancelledPage() {
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
             <p className="text-yellow-900">
-              No charges have been made to your account. You can try again when you're ready.
+              {"No charges have been made to your account. You can try again when you're ready."}
             </p>
           </div>
 

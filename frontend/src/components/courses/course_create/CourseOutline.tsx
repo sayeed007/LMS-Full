@@ -72,6 +72,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
     const { setShowHeaderActions } = useContext(CourseHeaderContext);
     const router = useRouter();
+    console.log(editingLesson);
 
     // API hooks
     const {
@@ -99,6 +100,8 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     const [deleteContent, { isLoading: isDeletingContent }] = useDeleteContentMutation();
     const [reorderLessons, { isLoading: isReorderingLessons }] = useReorderLessonsMutation();
     const [reorderChapters, { isLoading: isReorderingChapters }] = useReorderChaptersMutation();
+
+    console.log(isReorderingLessons, isReorderingChapters);
 
     const lessons = useMemo(() => {
         const lessonList = lessonsData?.data?.lessons || [];

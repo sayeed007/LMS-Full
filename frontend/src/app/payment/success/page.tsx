@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const enrollmentId = searchParams.get('enrollment');
+  // const enrollmentId = searchParams.get('enrollment');
   const courseId = searchParams.get('course');
 
   const [countdown, setCountdown] = useState(10);

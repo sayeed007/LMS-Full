@@ -124,17 +124,23 @@ export default function AdminUsersPage() {
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Inactive Users</div>
-            <div className="text-3xl font-bold text-red-600">{stats.inactiveUsers}</div>
+            <div className="text-3xl font-bold text-red-600">{stats.totalUsers - stats.activeUsers}</div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">By Role</div>
             <div className="space-y-1">
-              {stats.usersByRole.map((role: { role: string; count: number }) => (
-                <div key={role.role} className="text-sm flex justify-between">
-                  <span className="capitalize">{role.role}:</span>
-                  <span className="font-semibold">{role.count}</span>
-                </div>
-              ))}
+              <div className="text-sm flex justify-between">
+                <span className="capitalize">Students:</span>
+                <span className="font-semibold">{stats.usersByRole.students}</span>
+              </div>
+              <div className="text-sm flex justify-between">
+                <span className="capitalize">Instructors:</span>
+                <span className="font-semibold">{stats.usersByRole.instructors}</span>
+              </div>
+              <div className="text-sm flex justify-between">
+                <span className="capitalize">Admins:</span>
+                <span className="font-semibold">{stats.usersByRole.admins}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -334,23 +340,23 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
+        {pagination && pagination.pages > 1 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div className="flex-1 flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-700">
                   Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
                   <span className="font-medium">
-                    {Math.min(page * limit, pagination.totalResults)}
+                    {Math.min(page * limit, pagination.total)}
                   </span>{' '}
-                  of <span className="font-medium">{pagination.totalResults}</span> results
+                  of <span className="font-medium">{pagination.total}</span> results
                 </p>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setPage(page - 1)}
-                  disabled={!pagination.hasPrevPage}
-                  className={`px-4 py-2 border rounded-lg ${pagination.hasPrevPage
+                  disabled={page <= 1}
+                  className={`px-4 py-2 border rounded-lg ${page > 1
                     ? 'bg-white text-gray-700 hover:bg-gray-50'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
@@ -359,8 +365,8 @@ export default function AdminUsersPage() {
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
-                  disabled={!pagination.hasNextPage}
-                  className={`px-4 py-2 border rounded-lg ${pagination.hasNextPage
+                  disabled={page >= pagination.pages}
+                  className={`px-4 py-2 border rounded-lg ${page < pagination.pages
                     ? 'bg-white text-gray-700 hover:bg-gray-50'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}

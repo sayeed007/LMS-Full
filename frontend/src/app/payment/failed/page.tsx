@@ -1,11 +1,10 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { RefreshCw, XCircle } from 'lucide-react';
 import Link from 'next/link';
-import { XCircle, RefreshCw } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 export default function PaymentFailedPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = searchParams.get('course');
   const transactionId = searchParams.get('transaction');
@@ -72,7 +71,7 @@ export default function PaymentFailedPage() {
             {courseId && (
               <Link
                 href={`/payment/checkout?courseId=${courseId}`}
-                className="block w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
               >
                 <RefreshCw className="w-5 h-5" />
                 Try Again

@@ -46,11 +46,11 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
     }
   };
 
-  const handleChapterClick = (chapterId: string) => {
-    if (course?._id) {
-      router.push(`/courses/${course._id}/chapters/${chapterId}`);
-    }
-  };
+  // const handleChapterClick = (chapterId: string) => {
+  //   if (course?._id) {
+  //     router.push(`/courses/${course._id}/chapters/${chapterId}`);
+  //   }
+  // };
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters(prev =>
@@ -121,8 +121,8 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
 
   // Calculate course stats
   const totalLessons = course.chapters?.reduce((acc: number, chapter: CourseChapter) => acc + (chapter.lessons?.length || 0), 0) || 0;
-  const completedLessons = 0; // TODO: Calculate from enrollment data
-  const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  // const completedLessons = 0; // TODO: Calculate from enrollment data
+  // const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
 
   console.log(course);

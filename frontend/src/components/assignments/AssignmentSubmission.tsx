@@ -20,7 +20,13 @@ export default function AssignmentSubmission({
 }: AssignmentSubmissionProps) {
   const [content, setContent] = useState('');
   const [url, setUrl] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<Array<{
+    filename: string;
+    originalName: string;
+    url: string;
+    size: number;
+    mimeType: string;
+  }>>([]);
 
   const { data: submissionData, isLoading: loadingSubmission } = useGetMySubmissionQuery(assignmentId);
   const [submitAssignment, { isLoading: submitting }] = useSubmitAssignmentMutation();
@@ -33,7 +39,13 @@ export default function AssignmentSubmission({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const submissionData: Record<string, string | File[]> = {};
+    const submissionData: Record<string, string | Array<{
+      filename: string;
+      originalName: string;
+      url: string;
+      size: number;
+      mimeType: string;
+    }>> = {};
 
     if (submissionType === 'text' || submissionType === 'code') {
       if (!content.trim()) {

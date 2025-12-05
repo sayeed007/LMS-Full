@@ -39,6 +39,8 @@ export default function SearchSuggestions({
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  console.log(onCategorySelect);
+
   // Load recent searches from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('recentSearches');

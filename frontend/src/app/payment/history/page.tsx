@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { useGetPaymentHistoryQuery } from '@/store/api/paymentApi';
-import Link from 'next/link';
-import { Download, Eye, Calendar, CreditCard } from 'lucide-react';
+import { Calendar, CreditCard, Eye } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function PaymentHistoryPage() {
   const [page, setPage] = useState(1);
