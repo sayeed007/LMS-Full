@@ -5,15 +5,20 @@ import { useRouter } from "next/navigation";
 
 
 
-export function CourseCard({ course }: { course: CoursePopulated }) {
+export function CourseCard({ course, isOwner = false }: { course: CoursePopulated; isOwner?: boolean }) {
   const router = useRouter();
 
   const onClick = () => {
     try {
-      router.push(`/courses/${course._id}`);
+      // If user owns the course, navigate to edit page, otherwise to view page
+      if (isOwner) {
+        router.push(`/courses/create/${course._id}`);
+      } else {
+        router.push(`/courses/${course._id}`);
+      }
     } catch (error) {
       console.error(error);
-      showErrorToast('Navigation Error', 'Failed to navigate to edit page');
+      showErrorToast('Navigation Error', 'Failed to navigate to page');
     }
   };
 

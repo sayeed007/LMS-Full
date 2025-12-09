@@ -21,6 +21,7 @@ export interface DragItem {
 
 interface DragDropProviderProps {
   children: ReactNode;
+  disabled?: boolean;
   onDragStart?: (item: DragItem) => void;
   onDragEnd: (event: {
     active: DragItem;
@@ -32,7 +33,7 @@ interface DragDropProviderProps {
   }) => void;
 }
 
-export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropProviderProps) {
+export function DragDropProvider({ children, disabled = false, onDragStart, onDragEnd }: DragDropProviderProps) {
   const [activeItem, setActiveItem] = useState<DragItem | null>(null);
   const [activeContainer, setActiveContainer] = useState<string>('');
 
@@ -45,6 +46,11 @@ export function DragDropProvider({ children, onDragStart, onDragEnd }: DragDropP
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    // Prevent drag if disabled
+    if (disabled) {
+      return;
+    }
+
     const { active } = event;
     const activeData = active.data.current as DragItem;
     setActiveItem(activeData);

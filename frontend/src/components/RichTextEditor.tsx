@@ -1,7 +1,7 @@
 // components/RichTextEditor.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import ReactQuill to avoid SSR issues
@@ -37,6 +37,11 @@ export default function RichTextEditor({
     placeholder = 'Start typing...'
 }: RichTextEditorProps) {
     const [content, setContent] = useState(value);
+
+    // Update internal state when value prop changes (e.g., when editing existing content)
+    useEffect(() => {
+        setContent(value);
+    }, [value]);
 
     const handleChange = (value: string) => {
         setContent(value);

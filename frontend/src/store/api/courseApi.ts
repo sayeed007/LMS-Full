@@ -293,6 +293,8 @@ export const courseApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { courseId }) => [
         { type: 'Lesson', id: courseId },
         'Lesson',
+        { type: 'Chapter', id: courseId },
+        'Chapter',
         { type: 'Course', id: courseId }
       ],
     }),
@@ -306,7 +308,9 @@ export const courseApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { courseId, lessonId }) => [
         { type: 'Lesson', id: lessonId },
         { type: 'Lesson', id: courseId },
-        'Lesson'
+        'Lesson',
+        { type: 'Chapter', id: courseId },
+        'Chapter'
       ],
     }),
 
@@ -319,6 +323,8 @@ export const courseApi = baseApi.injectEndpoints({
         { type: 'Lesson', id: lessonId },
         { type: 'Lesson', id: courseId },
         'Lesson',
+        { type: 'Chapter', id: courseId },
+        'Chapter',
         { type: 'Course', id: courseId }
       ],
     }),

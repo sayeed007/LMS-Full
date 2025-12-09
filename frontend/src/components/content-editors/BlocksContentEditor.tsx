@@ -2,9 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { File, FileText, Video, X, GripVertical } from "lucide-react";
+import { X, GripVertical } from "lucide-react";
 import { useState } from "react";
 import BlockTextEditor from "./BlockTextEditor";
+import { BlockTypeSelector } from "./BlockTypeSelector";
 import MediaContentEditor from "./MediaContentEditor";
 import VideoContentEditor from "./VideoContentEditor";
 
@@ -130,41 +131,12 @@ export default function BlocksContentEditor({
         </Button>
 
         {/* Block Type Selector */}
-        {showBlockTypeSelector && (
-          <div className="absolute right-4 top-4 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10 min-w-[200px]">
-            <div className="space-y-1">
-              {[
-                { type: 'text', label: 'Text', icon: FileText },
-                { type: 'image', label: 'Image', icon: '🖼️' },
-                { type: 'video', label: 'Video', icon: Video },
-                { type: 'audio', label: 'Audio', icon: '🎵' },
-                { type: 'document', label: 'Document', icon: File },
-              ].map((blockType) => (
-                <button
-                  key={blockType.type}
-                  onClick={() => addContentBlock(blockType.type as ContentBlock['type'])}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 rounded-md transition-colors"
-                >
-                  {typeof blockType.icon === 'string' ? (
-                    <span>{blockType.icon}</span>
-                  ) : (
-                    <blockType.icon className="w-4 h-4 text-blue-600" />
-                  )}
-                  <span className="text-sm">{blockType.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Click outside to close selector */}
-      {showBlockTypeSelector && (
-        <div
-          className="fixed inset-0 z-5"
-          onClick={() => setShowBlockTypeSelector(false)}
+        <BlockTypeSelector
+          isOpen={showBlockTypeSelector}
+          onSelect={addContentBlock}
+          onClose={() => setShowBlockTypeSelector(false)}
         />
-      )}
+      </div>
     </div>
   );
 }

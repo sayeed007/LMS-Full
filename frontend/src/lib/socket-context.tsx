@@ -9,11 +9,36 @@ import { RootState } from '../store';
 export interface SocketMessage {
   message: {
     _id: string;
+    conversation: string;
+    sender: {
+      _id: string;
+      name: string;
+      email: string;
+      avatar?: string;
+    };
+    receiver: {
+      _id: string;
+      name: string;
+      email: string;
+      avatar?: string;
+    };
     content: string;
-    sender: string;
-    receiver: string;
-    conversationId: string;
+    messageType: 'text' | 'file' | 'image' | 'system';
+    attachments?: Array<{
+      url: string;
+      publicId?: string;
+      fileName?: string;
+      fileType?: string;
+      fileSize?: number;
+    }>;
+    isRead: boolean;
+    readAt?: string;
+    isEdited: boolean;
+    editedAt?: string;
+    isDeleted: boolean;
+    deletedAt?: string;
     createdAt: string;
+    updatedAt: string;
   };
   conversationId: string;
 }
@@ -66,7 +91,18 @@ interface SocketContextType {
 
   // Event listeners
   onNewMessage: (callback: (data: SocketMessage) => void) => () => void;
-  onMessageNotification: (callback: (data: { conversationId: string; message: string }) => void) => () => void;
+  onMessageNotification: (callback: (data: {
+    conversationId: string;
+    message: {
+      content: string;
+      sender?: {
+        _id: string;
+        name: string;
+        email: string;
+        avatar?: string;
+      };
+    };
+  }) => void) => () => void;
   onTypingStarted: (callback: (data: TypingEvent) => void) => () => void;
   onTypingStopped: (callback: (data: TypingEvent) => void) => () => void;
   onUserOnline: (callback: (data: OnlineStatusEvent) => void) => () => void;
@@ -236,7 +272,18 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => {};
   }, []);
 
-  const onMessageNotification = useCallback((callback: (data: { conversationId: string; message: string }) => void) => {
+  const onMessageNotification = useCallback((callback: (data: {
+    conversationId: string;
+    message: {
+      content: string;
+      sender?: {
+        _id: string;
+        name: string;
+        email: string;
+        avatar?: string;
+      };
+    };
+  }) => void) => {
     if (socketRef.current) {
       socketRef.current.on('message:notification', callback);
       return () => {

@@ -90,7 +90,6 @@ const Header = () => {
                                             alt="Notifications"
                                             width={24}
                                             height={24}
-                                            className="w-6 h-6"
                                         />
                                     </NotificationPopover>
                                 </button>

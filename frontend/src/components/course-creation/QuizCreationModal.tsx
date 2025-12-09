@@ -276,7 +276,7 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteQuestion(question._id)}
+                      onClick={() => handleDeleteQuestion(question._id || question.id || '')}
                       className="text-red-600 hover:text-red-700"
                     >
                       <X className="w-4 h-4" />
@@ -285,7 +285,7 @@ export function QuizCreationModal({ isOpen, onClose, onSave, initialData }: Quiz
                   <QuestionEditor
                     question={question}
                     onUpdate={handleUpdateQuestion}
-                    onDelete={() => handleDeleteQuestion(question._id)}
+                    onDelete={() => handleDeleteQuestion(question._id || question.id || '')}
                   />
                 </div>
               ))}

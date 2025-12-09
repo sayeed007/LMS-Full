@@ -22,12 +22,12 @@ export default function MessageNotificationBadge() {
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-primary-700 font-semibold">
-              {data.sender?.name?.charAt(0).toUpperCase() || '?'}
+              {data.message.sender?.name?.charAt(0).toUpperCase() || '?'}
             </span>
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{data.sender?.name || 'Someone'}</p>
-            <p className="text-sm text-gray-600">{data.message?.content || 'Sent you a message'}</p>
+            <p className="font-semibold text-gray-900">{data.message.sender?.name || 'Someone'}</p>
+            <p className="text-sm text-gray-600">{data.message.content || 'Sent you a message'}</p>
           </div>
         </div>,
         {

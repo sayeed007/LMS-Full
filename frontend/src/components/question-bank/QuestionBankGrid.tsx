@@ -134,17 +134,14 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                                     id: questionBank._id,
                                     title: questionBank.name,
                                     description: questionBank.description || '',
-                                    courseTitle: questionBank.course.title,
-                                    questionsCount: questionBank.totalQuestions,
-                                    difficulty: questionBank.averageDifficulty,
-                                    estimatedTime: questionBank.estimatedDuration,
-                                    tags: questionBank.tags,
-                                    thumbnail: questionBank.thumbnail,
-                                    color: questionBank.color,
-                                    status: questionBank.status,
-                                    createdBy: questionBank.createdBy.name,
-                                    createdAt: questionBank.createdAt,
-                                    isMyCourse: true // This should be determined based on current user
+                                    sections: [],
+                                    isPublished: questionBank.isActive,
+                                    isMyCourse: true, // This should be determined based on current user
+                                    author: {
+                                        name: questionBank.createdBy.name,
+                                        avatar: questionBank.createdBy.avatar,
+                                        initials: questionBank.createdBy.name.split(' ').map(n => n[0]).join('')
+                                    }
                                 }}
                                 onClick={() => {
                                     router.push(`/question-bank/courses/${questionBank._id}/preview`)

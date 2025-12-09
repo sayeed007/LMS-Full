@@ -81,7 +81,7 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
                     {/* Question Input */}
                     <div className='flex-1'>
                         <div className="text-sm font-medium text-gray-600 mb-2">
-                            Question {question.id.split('-')[1]}
+                            Question {question.id?.split('-')[1] || question._id?.split('-')[1] || ''}
 
                             <span className="ml-2 px-2 py-1 text-xs bg-gray-100 rounded-full">
                                 {question.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -90,7 +90,7 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
 
                         <div className="relative flex items-center gap-2">
                             <Input
-                                id={`question-${question.id}`}
+                                id={`question-${question.id || question._id}`}
                                 placeholder="Type your question here"
                                 value={localQuestion.text}
                                 onChange={(e) => updateQuestion({ text: e.target.value })}
@@ -108,11 +108,11 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
 
                         <div className="flex items-center space-x-2 mt-2">
                             <Switch
-                                id={`required-${question.id}`}
-                                checked={localQuestion.required}
+                                id={`required-${question.id || question._id}`}
+                                checked={localQuestion.required || false}
                                 onChange={(required) => updateQuestion({ required })}
                             />
-                            <Label htmlFor={`required-${question.id}`} className='text-off-white-5 font-bold'>Required</Label>
+                            <Label htmlFor={`required-${question.id || question._id}`} className='text-off-white-5 font-bold'>Required</Label>
                         </div>
                     </div>
 
@@ -138,7 +138,7 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
                     {(question.type === 'single-choice' || question.type === 'multiple-choice') && (
                         <div className="space-y-3">
                             {localQuestion.choices.map((choice, index) => (
-                                <div key={choice.id} className='flex justify-between gap-4'>
+                                <div key={choice.id || choice._id || index} className='flex justify-between gap-4'>
                                     {/* Icon */}
                                     <div className='flex items-center mt-6'>
                                         <GripVertical className="w-5 h-5 text-gray-400 cursor-move" />
@@ -153,10 +153,10 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
 
                                             <div className="relative">
                                                 <Input
-                                                    id={`choice-${choice.id}`}
+                                                    id={`choice-${choice.id || choice._id || index}`}
                                                     placeholder={`Enter choice ${index + 1}`}
                                                     value={choice.text}
-                                                    onChange={(e) => updateChoice(choice.id, { text: e.target.value })}
+                                                    onChange={(e) => updateChoice(choice.id || choice._id || '', { text: e.target.value })}
                                                     className="mt-1"
                                                 />
                                                 <Image
@@ -165,7 +165,7 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
                                                     width={16}
                                                     height={16}
                                                     className="cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4"
-                                                    onClick={() => { updateChoice(choice.id, { text: '' }) }}
+                                                    onClick={() => { updateChoice(choice.id || choice._id || '', { text: '' }) }}
                                                 />
                                             </div>
                                         </div>
@@ -181,23 +181,23 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
                                                     "cursor-pointer flex items-center space-x-2 p-3 rounded-lg h-10",
                                                     choice.isCorrect ? "bg-success-bg" : "bg-off-white-2"
                                                 )}
-                                                onClick={() => setCorrectAnswer(choice.id)}
+                                                onClick={() => setCorrectAnswer(choice.id || choice._id || '')}
                                             >
                                                 {question.type === 'single-choice' ? (
                                                     <input
-                                                        id={`correct-${question.id}-${choice.id}`}
+                                                        id={`correct-${question.id || question._id}-${choice.id || choice._id}`}
                                                         type="radio"
-                                                        name={`correct-${question.id}`}
+                                                        name={`correct-${question.id || question._id}`}
                                                         checked={choice.isCorrect}
-                                                        onChange={() => setCorrectAnswer(choice.id)}
+                                                        onChange={() => setCorrectAnswer(choice.id || choice._id || '')}
                                                         className="w-4 h-4"
                                                     />
                                                 ) : (
                                                     <input
-                                                        id={`correct-${question.id}-${choice.id}`}
+                                                        id={`correct-${question.id || question._id}-${choice.id || choice._id}`}
                                                         type="checkbox"
                                                         checked={choice.isCorrect}
-                                                        onChange={() => setCorrectAnswer(choice.id)}
+                                                        onChange={() => setCorrectAnswer(choice.id || choice._id || '')}
                                                         className="w-4 h-4"
                                                     />
                                                 )}

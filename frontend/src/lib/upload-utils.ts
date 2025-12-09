@@ -78,7 +78,9 @@ export const deleteFileFromBackend = async (
 };
 
 // Helper utilities for MediaContentEditor refs
-import { MediaContentEditorRef } from '@/components/content-editors/MediaContentEditor';
+export interface MediaContentEditorRef {
+  uploadSelectedFile: () => Promise<boolean>;
+}
 
 /**
  * Helper function to handle file uploads for multiple media editors

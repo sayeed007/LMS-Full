@@ -101,9 +101,9 @@ export const uploadApi = baseApi.injectEndpoints({
     }),
 
     getFiles: builder.query<BaseApiResponse<FileMetadata[]>, FileListParams | void>({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/upload/files',
-        params,
+        params: params || {},
       }),
       providesTags: ['Upload'],
     }),

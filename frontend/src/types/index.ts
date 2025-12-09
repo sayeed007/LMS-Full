@@ -115,19 +115,35 @@ export interface Article {
 
 // Legacy question types for quiz/test UI components
 export interface LegacyQuestionChoice {
-  id: string
+  id?: string
+  _id?: string  // Support both id and _id for flexibility
   text: string
   isCorrect: boolean
 }
 
 export interface LegacyQuestion {
-  id: string
-  type: 'single-choice' | 'multiple-choice' | 'descriptive' | 'question-bank'
+  id?: string
+  _id?: string  // Support both id and _id for flexibility
+  type: 'single-choice' | 'multiple-choice' | 'descriptive' | 'question-bank' | 'true-false' | 'fill-blank'
   text: string
   choices: LegacyQuestionChoice[]
-  score: number
-  timeLimit: number
-  required: boolean
+  score?: number
+  points?: number
+  timeLimit?: number
+  required?: boolean
+  difficulty?: 'easy' | 'medium' | 'hard'
+  tags?: string[]
+  attachments?: unknown[]
+  questionBank?: string
+  course?: string
+  section?: string
+  createdBy?: string
+  isActive?: boolean
+  isPublic?: boolean
+  timesUsed?: number
+  averageScore?: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface LegacySection {
@@ -136,6 +152,11 @@ export interface LegacySection {
   description?: string
   questions: LegacyQuestion[]
 }
+
+// Aliases for backward compatibility
+export type Section = LegacySection;
+export type QuestionChoice = LegacyQuestionChoice;
+export type Question = LegacyQuestion;
 
 export interface CourseDummyData {
   id: string;

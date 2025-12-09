@@ -66,7 +66,7 @@ export interface Conversation {
   updatedAt: string;
 }
 
-export interface ConversationListResponse extends BaseApiResponse<Conversation[]> {
+export interface ConversationListResponse extends Omit<BaseApiResponse<Conversation[]>, 'pagination'> {
   results: number;
   pagination: {
     currentPage: number;
@@ -75,7 +75,7 @@ export interface ConversationListResponse extends BaseApiResponse<Conversation[]
   };
 }
 
-export interface MessagesListResponse extends BaseApiResponse<Message[]> {
+export interface MessagesListResponse extends Omit<BaseApiResponse<Message[]>, 'pagination'> {
   results: number;
   pagination: {
     currentPage: number;
@@ -127,7 +127,7 @@ export const messageApi = baseApi.injectEndpoints({
         params
       }),
       providesTags: (result) =>
-        result
+        result?.data
           ? [
               ...result.data.map(({ _id }) => ({ type: 'Message' as const, id: `conversation-${_id}` })),
               { type: 'Message', id: 'CONVERSATION_LIST' }
@@ -166,7 +166,7 @@ export const messageApi = baseApi.injectEndpoints({
         // Otherwise, append new messages
         return {
           ...newItems,
-          data: [...currentCache.data, ...newItems.data]
+          data: [...(currentCache.data || []), ...(newItems.data || [])]
         };
       },
       forceRefetch({ currentArg, previousArg }) {
@@ -185,7 +185,7 @@ export const messageApi = baseApi.injectEndpoints({
         body: data
       }),
       invalidatesTags: (result) =>
-        result
+        result?.data
           ? [
               { type: 'Message', id: 'CONVERSATION_LIST' },
               { type: 'Message', id: `messages-${result.data.conversationId}` },

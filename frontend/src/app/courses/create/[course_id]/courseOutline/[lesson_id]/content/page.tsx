@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
 import {
   useCreateContentMutation,
-  useGetLessonByIdQuery
+  useUpdateContentMutation,
+  useGetLessonByIdQuery,
+  useGetContentByIdQuery
 } from "@/store/api/courseApi";
 import { ArrowLeft, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -16,6 +18,8 @@ import { useUploadFileToCloudinaryMutation, useDeleteFileFromCloudinaryMutation 
 import BlocksContentEditor from "@/components/content-editors/BlocksContentEditor";
 import AssignmentContentEditor from "@/components/content-editors/AssignmentContentEditor";
 import QuizContentEditor from "@/components/content-editors/QuizContentEditor";
+import { UploadLoader } from "@/components/ui/UploadLoader";
+import { decodeHTMLEntities } from "@/lib/html-utils";
 
 interface ContentBlock {
   id: string;
@@ -39,14 +43,23 @@ export default function ContentEditor() {
   const lessonId = params.lesson_id as string;
 
   const [contentType, setContentType] = useState<string>('text');
+  const [contentId, setContentId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   useEffect(() => {
-    // Get content type from URL parameters
+    // Get content type and contentId from URL parameters
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const typeParam = urlParams.get('type');
+      const contentIdParam = urlParams.get('contentId');
+
       if (typeParam) {
         setContentType(typeParam);
+      }
+
+      if (contentIdParam) {
+        setContentId(contentIdParam);
+        setIsEditMode(true);
       }
     }
   }, []);
@@ -76,29 +89,68 @@ export default function ContentEditor() {
     { skip: !courseId || !lessonId }
   );
 
+  // Fetch specific content when in edit mode
+  const { data: contentData, isLoading: isLoadingContent } = useGetContentByIdQuery(
+    { courseId, lessonId, contentId: contentId! },
+    { skip: !isEditMode || !contentId || !courseId || !lessonId }
+  );
+
   const [createContent, { isLoading: isCreating }] = useCreateContentMutation();
+  const [updateContent, { isLoading: isUpdating }] = useUpdateContentMutation();
   const [uploadFileToCloudinary] = useUploadFileToCloudinaryMutation();
   const [deleteFileFromCloudinary] = useDeleteFileFromCloudinaryMutation();
 
   const lesson = lessonData?.data?.lesson;
+  const existingContent = contentData?.data?.content;
 
   useEffect(() => {
     if (lesson) {
       setLessonTitle(lesson.title);
+    }
+  }, [lesson]);
+
+  // Separate effect to load content in edit mode
+  useEffect(() => {
+    if (isEditMode && existingContent) {
       try {
-        const parsedContent = typeof lesson.content === 'string' ? JSON.parse(lesson.content || '{}') : {};
+        const parsedData = existingContent.data ? (typeof existingContent.data === 'string' ? JSON.parse(existingContent.data) : existingContent.data) : {};
+
+        // Decode HTML entities in textContent if present
+        const textContent = parsedData.textContent || parsedData.text || "";
+        const decodedTextContent = textContent ? decodeHTMLEntities(textContent) : "";
+
+        // Set the content with all fields
         setContent({
           type: (contentType as 'text' | 'document' | 'video' | 'quiz' | 'assignment' | 'blocks') || 'text',
-          blocks: parsedContent.blocks || [],
-          textContent: parsedContent.textContent || "",
-          title: parsedContent.title || "",
-          description: parsedContent.description || "",
+          blocks: parsedData.blocks || [],
+          textContent: decodedTextContent,
+          title: existingContent.title || "",
+          description: parsedData.description || "",
+          ...parsedData
         });
+
+        // For media content (video, audio, document, assignment), set file preview if URL exists
+        if (['video', 'audio', 'document', 'assignment'].includes(contentType) && parsedData.fileUrl) {
+          setFilePreviewUrl(parsedData.fileUrl);
+        }
+
+        // For blocks content, set file previews for each block that has a fileUrl
+        if ((contentType === 'blocks' || contentType === 'block') && parsedData.blocks) {
+          const blockPreviews: { [blockId: string]: string | null } = {};
+          parsedData.blocks.forEach((block: { id: string; fileUrl?: string }) => {
+            if (block.fileUrl) {
+              blockPreviews[block.id] = block.fileUrl;
+            }
+          });
+          if (Object.keys(blockPreviews).length > 0) {
+            setFilePreviewUrls(blockPreviews);
+          }
+        }
       } catch (error) {
-        console.error("Error parsing lesson content:", error);
+        console.error("Error parsing content data:", error);
       }
     }
-  }, [lesson, contentType]);
+  }, [isEditMode, existingContent, contentType]);
 
   // File handling functions - moved from MediaContentEditor
   const handleFileSelect = (file: File) => {
@@ -395,22 +447,39 @@ export default function ContentEditor() {
       }
 
 
-      // Create content using the proper RTK Query mutation
-      await createContent({
-        courseId,
-        lessonId,
-        data: {
-          title: lessonTitle,
-          type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
-          data: saveData
-        },
-      }).unwrap();
+      // Create or Update content based on mode
+      if (isEditMode && contentId) {
+        // Update existing content
+        await updateContent({
+          courseId,
+          lessonId,
+          contentId,
+          data: {
+            title: lessonTitle,
+            type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
+            data: saveData
+          },
+        }).unwrap();
+
+        showSuccessToast("Content updated successfully!");
+      } else {
+        // Create new content
+        await createContent({
+          courseId,
+          lessonId,
+          data: {
+            title: lessonTitle,
+            type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
+            data: saveData
+          },
+        }).unwrap();
+
+        showSuccessToast("Content saved successfully!");
+      }
 
       // Clear loading state
       setIsUploading(false);
       setUploadProgress("");
-
-      showSuccessToast("Content saved successfully!");
 
       // Navigate back to course outline after successful save
       router.push(`/courses/create/${courseId}`);
@@ -429,7 +498,7 @@ export default function ContentEditor() {
 
 
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && isLoadingContent)) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -460,10 +529,10 @@ export default function ContentEditor() {
           </div>
           <Button
             onClick={handleSave}
-            disabled={isCreating}
+            disabled={isCreating || isUpdating}
             className="bg-blue-600 text-white hover:bg-blue-700"
           >
-            {isCreating ? "Saving..." : "Save"}
+            {(isCreating || isUpdating) ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update" : "Save")}
           </Button>
         </div>
       </div>
@@ -540,25 +609,10 @@ export default function ContentEditor() {
       </div>
 
       {/* Full Page Upload Loader */}
-      {isUploading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Processing...
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {uploadProgress || "Please wait while we process your request"}
-            </p>
-            <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
-              <div className="bg-blue-600 h-full rounded-full animate-pulse w-full"></div>
-            </div>
-            <p className="text-sm text-gray-500 mt-3">
-              Please don&apos;t close or refresh this page
-            </p>
-          </div>
-        </div>
-      )}
+      <UploadLoader
+        isOpen={isUploading}
+        uploadProgress={uploadProgress}
+      />
     </div>
   );
 }

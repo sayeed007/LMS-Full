@@ -9,8 +9,10 @@ import { useModalActions } from "@/lib/modal-utils";
 import { showErrorToast, getErrorMessage } from "@/lib/toast-utils";
 import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import CourseFilters from "@/components/courses/CourseFilters";
+import { useState, useEffect, useMemo } from "react";
+import CourseFiltersModal, { CourseFiltersType } from "@/components/courses/CourseFiltersModal";
+import { useAppSelector } from "@/store/hooks";
+import { SlidersHorizontal } from "lucide-react";
 
 // Loading skeleton component
 const CoursesSkeleton = () => (
@@ -30,17 +32,41 @@ const CoursesSkeleton = () => (
   </div>
 );
 
-const tabs = [
-  { key: "my", label: "My Courses" },
-  { key: "enrolled", label: "Enrolled Courses" },
-  { key: "all", label: "All Courses" },
+const allTabs = [
+  { key: "my", label: "My Courses", requiresAuth: true },
+  { key: "enrolled", label: "Enrolled Courses", requiresAuth: true },
+  { key: "all", label: "All Courses", requiresAuth: false },
 ];
 
 export default function CoursesPage() {
-  const [activeTab, setActiveTab] = useState("my");
   const { openModal, closeModal } = useModalActions();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Get authentication state
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+  // Smart default tab: "all" for guests, "my" for authenticated users
+  const defaultTab = useMemo(() => {
+    return isAuthenticated ? "my" : "all";
+  }, [isAuthenticated]);
+
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Update active tab when auth state changes
+  useEffect(() => {
+    // Only auto-switch if user is on a personal tab ("my" or "enrolled") and becomes unauthenticated
+    if (!isAuthenticated && (activeTab === "my" || activeTab === "enrolled")) {
+      setActiveTab("all");
+    }
+  }, [isAuthenticated, activeTab]);
+
+  // Filter tabs based on authentication status
+  const tabs = useMemo(() => {
+    return isAuthenticated
+      ? allTabs
+      : allTabs.filter(tab => !tab.requiresAuth);
+  }, [isAuthenticated]);
 
   // Filter state for "All Courses" tab
   const [filters, setFilters] = useState({
@@ -84,7 +110,7 @@ export default function CoursesPage() {
     error: myCoursesError
   } = useGetMyCoursesQuery(
     undefined,
-    { skip: activeTab !== "my" }
+    { skip: activeTab !== "my" || !isAuthenticated } // Skip if not authenticated
   );
 
   const {
@@ -93,7 +119,7 @@ export default function CoursesPage() {
     error: enrolledCoursesError
   } = useGetEnrolledCoursesQuery(
     { page: 1, limit: 50 },
-    { skip: activeTab !== "enrolled" }
+    { skip: activeTab !== "enrolled" || !isAuthenticated } // Skip if not authenticated
   );
 
   const openCreateModal = () => {
@@ -108,6 +134,43 @@ export default function CoursesPage() {
       { size: 'md', position: 'center' }
     );
   };
+
+  const openFiltersModal = () => {
+    openModal(
+      <CourseFiltersModal
+        initialFilters={filters}
+        onApply={(newFilters: CourseFiltersType) => {
+          setFilters(newFilters);
+          // Update URL params
+          const params = new URLSearchParams();
+          Object.entries(newFilters).forEach(([key, value]) => {
+            if (value) {
+              params.set(key, value as string);
+            }
+          });
+          router.push(`?${params.toString()}`, { scroll: false });
+        }}
+        onClose={() => closeModal()}
+      />,
+      {
+        size: 'md',
+        position: 'right',
+        className: 'max-w-md'
+      }
+    );
+  };
+
+  // Count active filters (excluding sort as it's always set)
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filters.search) count++;
+    if (filters.category) count++;
+    if (filters.level) count++;
+    if (filters.minPrice) count++;
+    if (filters.maxPrice) count++;
+    if (filters.minRating) count++;
+    return count;
+  }, [filters]);
 
   // Get current data and loading state based on active tab
   const getCurrentData = () => {
@@ -137,16 +200,19 @@ export default function CoursesPage() {
 
   const { courses, isLoading, error } = getCurrentData();
 
+  // Check if showing a personal tab without authentication
+  const showAuthRequired = !isAuthenticated && (activeTab === "my" || activeTab === "enrolled");
+
   // Handle API errors with useEffect to prevent duplicate toasts
   useEffect(() => {
-    if (error) {
+    if (error && !showAuthRequired) {
       const errorMessage = getErrorMessage(error, 'Failed to load courses');
       showErrorToast(
         `Failed to load ${activeTab === "my" ? "your" : activeTab} courses`,
         errorMessage
       );
     }
-  }, [error, activeTab]);
+  }, [error, activeTab, showAuthRequired]);
 
   return (
     <>
@@ -162,37 +228,84 @@ export default function CoursesPage() {
         }
       >
         <div className="space-y-6">
-          <TabNav
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+          {/* Tab Navigation with Filter Button */}
+          <div className="flex items-center justify-between gap-4">
+            <TabNav
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
-          {/* Show filters only for "All Courses" tab */}
-          {activeTab === "all" && (
-            <CourseFilters onFiltersChange={setFilters} />
-          )}
+            {/* Filter Button - only show for "All Courses" tab */}
+            {activeTab === "all" && (
+              <Button
+                onClick={openFiltersModal}
+                variant="outline"
+                className="relative flex items-center gap-2 px-4 py-2 border-2 border-gray-300 hover:border-info hover:bg-info/5 transition-all"
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                <span className="hidden sm:inline">Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-info text-white text-xs font-semibold rounded-full h-5 w-5 flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
 
-          {isLoading ? (
+          {/* Show authentication required message for personal tabs when not logged in */}
+          {showAuthRequired ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8 max-w-md w-full text-center">
+                <div className="mb-6">
+                  <svg
+                    className="mx-auto h-16 w-16 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Authentication Required
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Please log in to {activeTab === "my" ? "view and manage your courses" : "view your enrolled courses"}.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={() => router.push('/login')}
+                    className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
+                  >
+                    Log In
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab("all")}
+                    variant="outline"
+                    className="px-6 py-2 font-medium"
+                  >
+                    Browse All Courses
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : isLoading ? (
             <CoursesSkeleton />
           ) : courses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
               {courses.map((course, index) => (
                 <CourseCard
                   key={`${course._id}-${index}`}
                   course={{ ...course }}
-                // course={{
-                //   id: course._id,
-                //   name: course.title,
-                //   category: course.category,
-                //   description: course.description,
-                //   difficulty: course.difficulty,
-                //   chapters: course.chapters?.length || 0,
-                //   lessons: course.stats?.totalLessons || 0,
-                //   quizzes: course.stats?.totalQuizzes || 0,
-                //   image: course.thumbnail || `https://picsum.photos/400/400?random=${index + 1}`,
-                //   owner: activeTab === "my" ? "me" : activeTab === "enrolled" ? "enrolled" : "all"
-                // }}
+                  isOwner={activeTab === "my"}
                 />
               ))}
             </div>

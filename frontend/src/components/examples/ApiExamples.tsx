@@ -91,7 +91,7 @@ export default function ApiExamples() {
                         {course.category}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {course.difficulty}
+                        {course.level}
                       </span>
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export default function ApiExamples() {
               <div className="space-y-3">
                 {usersData.data.map((user) => (
                   <div key={user._id} className="border rounded-lg p-4">
-                    <h4 className="font-medium text-lg">{user.firstName} {user.lastName}</h4>
+                    <h4 className="font-medium text-lg">{user.name}</h4>
                     <p className="text-gray-600 text-sm">{user.email}</p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">

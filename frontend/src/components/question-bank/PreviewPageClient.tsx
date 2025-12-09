@@ -186,8 +186,8 @@ export function PreviewPageClient({ courseId, sectionId }: PreviewPageClientProp
                                             </Badge>
                                         </div>
                                         <div className="flex space-x-4 text-sm text-gray-600 ml-14 my-2">
-                                            <span>Score {question.score}</span>
-                                            <span>Time Limit {question.timeLimit > 0 ? `${question.timeLimit}:00` : '00:01:00'}</span>
+                                            <span>Score {question.score || 0}</span>
+                                            <span>Time Limit {(question.timeLimit || 0) > 0 ? `${question.timeLimit}:00` : '00:01:00'}</span>
                                         </div>
                                     </div>
 

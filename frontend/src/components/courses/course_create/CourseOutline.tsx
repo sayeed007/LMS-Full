@@ -3,7 +3,6 @@
 import { CourseHeaderContext } from "@/app/courses/create/[course_id]/layout";
 import { Button } from "@/components/ui/button";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
-import { cn } from "@/lib/utils";
 import {
     CoursePopulated,
     CreateChapterRequest,
@@ -16,7 +15,9 @@ import {
     useGetChaptersQuery,
     useGetLessonsQuery,
     useReorderChaptersMutation,
-    useReorderLessonsMutation
+    useReorderLessonsMutation,
+    useUpdateChapterMutation,
+    useUpdateLessonMutation
 } from "@/store/api/courseApi";
 import { LessonContent } from "@/types/backend-models";
 import {
@@ -25,9 +26,9 @@ import {
     Plus,
     Trash2
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ContentPopup } from './ContentPopup';
 import { CreationForm } from './CreationForm';
 import { DragDropProvider } from './DragDropProvider';
 import { EmptyState } from './EmptyState';
@@ -46,16 +47,6 @@ export interface ContentType {
     label: string;
 }
 
-const contentTypes: ContentType[] = [
-    { id: 'text', type: 'text', icon: '/icons/TextAa.png', label: 'Text' },
-    { id: 'block', type: 'block', icon: '/icons/Blocks.png', label: 'Block' },
-    { id: 'video', type: 'video', icon: '/icons/Video.png', label: 'Video' },
-    { id: 'audio', type: 'audio', icon: '/icons/Audio.png', label: 'Audio' },
-    { id: 'document', type: 'document', icon: '/icons/Document.png', label: 'Document' },
-    { id: 'quiz', type: 'quiz', icon: '/icons/Quiz.png', label: 'Quiz' },
-    { id: 'assignment', type: 'assignment', icon: '/icons/Assignment.png', label: 'Assignment' },
-];
-
 export default function CourseOutline({ course }: CourseOutlineProps) {
 
     const [lessonName, setLessonName] = useState("");
@@ -67,12 +58,14 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     // Additional state for nested content
     const [showContentPopup, setShowContentPopup] = useState<string | null>(null);
     const [editingLesson, setEditingLesson] = useState<string | null>(null);
+    const [editingLessonName, setEditingLessonName] = useState("");
+    const [editingChapter, setEditingChapter] = useState<string | null>(null);
+    const [editingChapterName, setEditingChapterName] = useState("");
     const [expandedLessons, setExpandedLessons] = useState<Set<string>>(new Set());
     const [creatingLessonInChapter, setCreatingLessonInChapter] = useState<string | null>(null);
 
     const { setShowHeaderActions } = useContext(CourseHeaderContext);
     const router = useRouter();
-    console.log(editingLesson);
 
     // API hooks
     const {
@@ -94,14 +87,14 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     );
 
     const [createLesson, { isLoading: isCreatingLesson }] = useCreateLessonMutation();
+    const [updateLesson, { isLoading: isUpdatingLesson }] = useUpdateLessonMutation();
     const [deleteLesson, { isLoading: isDeletingLesson }] = useDeleteLessonMutation();
     const [createChapter, { isLoading: isCreatingChapter }] = useCreateChapterMutation();
+    const [updateChapter, { isLoading: isUpdatingChapter }] = useUpdateChapterMutation();
     const [deleteChapter, { isLoading: isDeletingChapter }] = useDeleteChapterMutation();
     const [deleteContent, { isLoading: isDeletingContent }] = useDeleteContentMutation();
     const [reorderLessons, { isLoading: isReorderingLessons }] = useReorderLessonsMutation();
     const [reorderChapters, { isLoading: isReorderingChapters }] = useReorderChaptersMutation();
-
-    console.log(isReorderingLessons, isReorderingChapters);
 
     const lessons = useMemo(() => {
         const lessonList = lessonsData?.data?.lessons || [];
@@ -159,6 +152,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
             setLessonName("");
             setCreateFirstLesson(false);
             setIsCreatingNewLesson(false);
+            setCreatingLessonInChapter(null);
         } catch (error) {
             console.error("Error creating lesson:", error);
             showErrorToast("Failed to create lesson");
@@ -192,6 +186,29 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         }
     }, [course?._id, chapterName, createChapter]);
 
+    const handleUpdateLesson = useCallback(async (lessonId: string) => {
+        if (!course?._id || !editingLessonName.trim()) {
+            showErrorToast("Please enter a lesson name");
+            return;
+        }
+
+        try {
+            await updateLesson({
+                courseId: course._id,
+                lessonId,
+                data: {
+                    title: editingLessonName,
+                }
+            }).unwrap();
+            showSuccessToast("Lesson updated successfully!");
+            setEditingLesson(null);
+            setEditingLessonName("");
+        } catch (error) {
+            console.error("Error updating lesson:", error);
+            showErrorToast("Failed to update lesson");
+        }
+    }, [course?._id, editingLessonName, updateLesson]);
+
     const handleDeleteLesson = async (lessonId: string) => {
         if (!course?._id) return;
 
@@ -207,6 +224,39 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         }
     };
 
+    const startEditingLesson = (lessonId: string, currentTitle: string) => {
+        setEditingLesson(lessonId);
+        setEditingLessonName(currentTitle);
+    };
+
+    const cancelEditingLesson = () => {
+        setEditingLesson(null);
+        setEditingLessonName("");
+    };
+
+    const handleUpdateChapter = useCallback(async (chapterId: string) => {
+        if (!course?._id || !editingChapterName.trim()) {
+            showErrorToast("Please enter a chapter name");
+            return;
+        }
+
+        try {
+            await updateChapter({
+                courseId: course._id,
+                chapterId,
+                data: {
+                    title: editingChapterName,
+                }
+            }).unwrap();
+            showSuccessToast("Chapter updated successfully!");
+            setEditingChapter(null);
+            setEditingChapterName("");
+        } catch (error) {
+            console.error("Error updating chapter:", error);
+            showErrorToast("Failed to update chapter");
+        }
+    }, [course?._id, editingChapterName, updateChapter]);
+
     const handleDeleteChapter = async (chapterId: string) => {
         if (!course?._id) return;
 
@@ -220,6 +270,16 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
             console.error("Error deleting chapter:", error);
             showErrorToast("Failed to delete chapter");
         }
+    };
+
+    const startEditingChapter = (chapterId: string, currentTitle: string) => {
+        setEditingChapter(chapterId);
+        setEditingChapterName(currentTitle);
+    };
+
+    const cancelEditingChapter = () => {
+        setEditingChapter(null);
+        setEditingChapterName("");
     };
 
     const handleAddContent = (lessonId: string, contentType: ContentType) => {
@@ -469,250 +529,279 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         );
     }
 
+    // Check if any reordering operation is in progress
+    const isReordering = isReorderingLessons || isReorderingChapters;
+
     // Main content with drag and drop
     return (
-        <DragDropProvider onDragEnd={onDragEnd}>
-            <div className="space-y-4">
-                {/* Chapters */}
-                {chapters.length > 0 && (
-                    <SortableContainer
-                        id="chapters"
-                        items={chapters.map(ch => ch._id)}
-                        type="chapter"
-                    >
-                        {chapters.map((chapter) => (
-                            <SortableItem
-                                key={chapter._id}
-                                id={chapter._id}
-                                type="chapter"
-                                data={chapter as unknown as Record<string, unknown>}
-                                className="mb-4"
-                            >
-                                <div className="space-y-2">
-                                    {/* Chapter Header */}
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <List className="w-4 h-4 text-blue-600" />
-                                                <span className="font-semibold text-blue-800">
-                                                    {chapter.title}
-                                                </span>
-                                                <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
-                                                    Chapter {chapter.lessons?.length ? `(${chapter.lessons.length} lessons)` : ''}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setCreatingLessonInChapter(chapter._id)}
-                                                    className="text-blue-600 border-blue-300 hover:bg-blue-100"
-                                                >
-                                                    <Plus className="w-4 h-4 mr-1" />
-                                                    Add Lesson
-                                                </Button>
-                                                <Button variant="ghost" size="sm">
-                                                    <Edit className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-red-600"
-                                                    onClick={() => handleDeleteChapter(chapter._id)}
-                                                    disabled={isDeletingChapter}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Add Lesson Form for this chapter */}
-                                    {creatingLessonInChapter === chapter._id && (
-                                        <div className="ml-6 mt-2">
-                                            <CreationForm
-                                                type="lesson"
-                                                value={lessonName}
-                                                onChange={setLessonName}
-                                                onSubmit={() => handleCreateLesson(chapter._id)}
-                                                onCancel={() => setCreatingLessonInChapter(null)}
-                                                isLoading={isCreatingLesson}
-                                                placeholder="Enter Lesson Name"
-                                                className="border-blue-200"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Chapter Lessons */}
-                                    {chapter.lessons && chapter.lessons.length > 0 && (
-                                        <SortableContainer
-                                            id={`chapter-${chapter._id}-lessons`}
-                                            items={chapter.lessons.map(l => l._id)}
-                                            type="lesson"
-                                            className="ml-6 space-y-2"
-                                        >
-                                            {chapter.lessons.map((lesson) => (
-                                                <SortableItem
-                                                    key={lesson._id}
-                                                    id={lesson._id}
-                                                    type="lesson"
-                                                    data={lesson as unknown as Record<string, unknown>}
-                                                >
-                                                    <LessonItem
-                                                        lesson={lesson}
-                                                        courseId={course?._id || ""}
-                                                        isInChapter={true}
-                                                        expandedLessons={expandedLessons}
-                                                        showContentPopup={showContentPopup}
-                                                        isDeletingLesson={isDeletingLesson}
-                                                        isDeletingContent={isDeletingContent}
-                                                        onToggleLessonExpansion={toggleLessonExpansion}
-                                                        onSetShowContentPopup={setShowContentPopup}
-                                                        onSetEditingLesson={setEditingLesson}
-                                                        onDeleteLesson={handleDeleteLesson}
-                                                        onAddContent={handleAddContent}
-                                                        onDeleteContent={handleDeleteContent}
-                                                    />
-                                                </SortableItem>
-                                            ))}
-                                        </SortableContainer>
-                                    )}
-                                </div>
-                            </SortableItem>
-                        ))}
-                    </SortableContainer>
-                )}
-
-                {/* Standalone Lessons */}
-                {lessons.filter(lesson => !lesson.chapter).length > 0 && (
-                    <SortableContainer
-                        id="standalone-lessons"
-                        items={lessons.filter(l => !l.chapter).map(l => l._id)}
-                        type="lesson"
-                    >
-                        {lessons.filter(lesson => !lesson.chapter).map((lesson) => (
-                            <SortableItem
-                                key={lesson._id}
-                                id={lesson._id}
-                                type="lesson"
-                                data={lesson as unknown as Record<string, unknown>}
-                                className="mb-2"
-                            >
-                                <LessonItem
-                                    lesson={lesson}
-                                    courseId={course?._id || ""}
-                                    isInChapter={false}
-                                    expandedLessons={expandedLessons}
-                                    showContentPopup={showContentPopup}
-                                    isDeletingLesson={isDeletingLesson}
-                                    isDeletingContent={isDeletingContent}
-                                    onToggleLessonExpansion={toggleLessonExpansion}
-                                    onSetShowContentPopup={setShowContentPopup}
-                                    onSetEditingLesson={setEditingLesson}
-                                    onDeleteLesson={handleDeleteLesson}
-                                    onAddContent={handleAddContent}
-                                    onDeleteContent={handleDeleteContent}
-                                />
-                            </SortableItem>
-                        ))}
-                    </SortableContainer>
-                )}
-
-                {/* Creation forms */}
-                {isCreatingNewLesson && (
-                    <CreationForm
-                        type="lesson"
-                        value={lessonName}
-                        onChange={setLessonName}
-                        onSubmit={() => handleCreateLesson()}
-                        onCancel={cancelCreation}
-                        isLoading={isCreatingLesson}
-                        placeholder="Enter Lesson Name"
-                    />
-                )}
-
-                {isCreatingNewChapter && (
-                    <CreationForm
-                        type="chapter"
-                        value={chapterName}
-                        onChange={setChapterName}
-                        onSubmit={handleCreateChapter}
-                        onCancel={cancelCreation}
-                        isLoading={isCreatingChapter}
-                        placeholder="Enter Chapter Name"
-                    />
-                )}
-
-                {/* Add buttons */}
-                {!isCreatingNewLesson && !isCreatingNewChapter && (
-                    <div className="flex gap-3">
-                        <Button
-                            variant="outline"
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={startCreatingLesson}
-                        >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Lesson
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            onClick={startCreatingChapter}
-                        >
-                            <List className="w-4 h-4 mr-2" />
-                            Add Chapter
-                        </Button>
-                    </div>
-                )}
-
-                {/* Content Popup */}
-                {showContentPopup && (
-                    <>
-                        {/* Overlay */}
-                        <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => setShowContentPopup(null)}
-                        />
-                        {/* Popup Content */}
-                        <div className="fixed inset-0 z-20 pointer-events-none">
-                            <div
-                                id={`lesson-popup-${showContentPopup}`}
-                                className="absolute bg-white border border-gray-200 rounded-lg shadow-lg p-2 min-w-[200px] pointer-events-auto"
-                                style={{
-                                    // Position will be calculated dynamically
-                                }}
-                            >
-                                <div className="space-y-1">
-                                    {contentTypes.map((contentType, index) => {
-                                        // const IconComponent = contentType.icon;
-                                        return (
-                                            <button
-                                                key={contentType.id}
-                                                onClick={() => handleAddContent(showContentPopup, contentType)}
-                                                className={cn(
-                                                    "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors mb-0",
-                                                    index !== 0 && "border-t-1 border-off-white-4"
-                                                )}
-                                            >
-                                                <Image
-                                                    width={20}
-                                                    height={20}
-                                                    src={contentType.icon}
-                                                    alt={contentType.type}
-                                                    className="w-5 h-5 text-blue-600"
-                                                />
-                                                {/* <IconComponent  /> */}
-                                                <span className="text-sm">{contentType.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+        <>
+            <DragDropProvider onDragEnd={onDragEnd} disabled={isReordering}>
+                <div className="space-y-4 relative">
+                    {/* Loading overlay during reordering */}
+                    {isReordering && (
+                        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg pointer-events-none">
+                            <div className="bg-white px-6 py-4 rounded-lg shadow-lg border border-blue-200 flex items-center gap-3 pointer-events-auto">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                <span className="text-sm font-medium text-gray-700">Reordering...</span>
                             </div>
                         </div>
-                    </>
-                )}
+                    )}
+                    {/* Chapters */}
+                    {chapters.length > 0 && (
+                        <SortableContainer
+                            id="chapters"
+                            items={chapters.map(ch => ch._id)}
+                            type="chapter"
+                        >
+                            {chapters.map((chapter) => (
+                                <SortableItem
+                                    key={chapter._id}
+                                    id={chapter._id}
+                                    type="chapter"
+                                    data={chapter as unknown as Record<string, unknown>}
+                                    className="mb-4"
+                                >
+                                    <div className="space-y-2">
+                                        {/* Chapter Header */}
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            {editingChapter === chapter._id ? (
+                                                /* Editing Mode */
+                                                <div className="flex items-center gap-2">
+                                                    <List className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                                    <input
+                                                        type="text"
+                                                        value={editingChapterName}
+                                                        onChange={(e) => setEditingChapterName(e.target.value)}
+                                                        className="flex-1 px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        placeholder="Chapter name"
+                                                        autoFocus
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                handleUpdateChapter(chapter._id);
+                                                            } else if (e.key === 'Escape') {
+                                                                cancelEditingChapter();
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleUpdateChapter(chapter._id)}
+                                                        disabled={isUpdatingChapter}
+                                                        className="bg-blue-600 text-white hover:bg-blue-700"
+                                                    >
+                                                        {isUpdatingChapter ? "Saving..." : "Save"}
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={cancelEditingChapter}
+                                                        disabled={isUpdatingChapter}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                /* Display Mode */
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <List className="w-4 h-4 text-blue-600" />
+                                                        <span className="font-semibold text-blue-800">
+                                                            {chapter.title}
+                                                        </span>
+                                                        <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
+                                                            Chapter {chapter.lessons?.length ? `(${chapter.lessons.length} lessons)` : ''}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => setCreatingLessonInChapter(chapter._id)}
+                                                            className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                                                        >
+                                                            <Plus className="w-4 h-4 mr-1" />
+                                                            Add Lesson
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => startEditingChapter(chapter._id, chapter.title)}
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-600"
+                                                            onClick={() => handleDeleteChapter(chapter._id)}
+                                                            disabled={isDeletingChapter}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
 
-            </div>
-        </DragDropProvider>
+                                        {/* Add Lesson Form for this chapter */}
+                                        {creatingLessonInChapter === chapter._id && (
+                                            <div className="ml-6 mt-2">
+                                                <CreationForm
+                                                    type="lesson"
+                                                    value={lessonName}
+                                                    onChange={setLessonName}
+                                                    onSubmit={() => handleCreateLesson(chapter._id)}
+                                                    onCancel={() => setCreatingLessonInChapter(null)}
+                                                    isLoading={isCreatingLesson}
+                                                    placeholder="Enter Lesson Name"
+                                                    className="border-blue-200"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Chapter Lessons */}
+                                        {chapter.lessons && chapter.lessons.length > 0 && (
+                                            <SortableContainer
+                                                id={`chapter-${chapter._id}-lessons`}
+                                                items={chapter.lessons.map(l => l._id)}
+                                                type="lesson"
+                                                className="ml-6 space-y-2"
+                                            >
+                                                {chapter.lessons.map((lesson) => (
+                                                    <SortableItem
+                                                        key={lesson._id}
+                                                        id={lesson._id}
+                                                        type="lesson"
+                                                        data={lesson as unknown as Record<string, unknown>}
+                                                    >
+                                                        <LessonItem
+                                                            lesson={lesson}
+                                                            courseId={course?._id || ""}
+                                                            isInChapter={true}
+                                                            expandedLessons={expandedLessons}
+                                                            showContentPopup={showContentPopup}
+                                                            editingLesson={editingLesson}
+                                                            editingLessonName={editingLessonName}
+                                                            isDeletingLesson={isDeletingLesson}
+                                                            isDeletingContent={isDeletingContent}
+                                                            isUpdatingLesson={isUpdatingLesson}
+                                                            onToggleLessonExpansion={toggleLessonExpansion}
+                                                            onSetShowContentPopup={setShowContentPopup}
+                                                            onStartEditingLesson={startEditingLesson}
+                                                            onUpdateLesson={handleUpdateLesson}
+                                                            onCancelEditingLesson={cancelEditingLesson}
+                                                            onSetEditingLessonName={setEditingLessonName}
+                                                            onDeleteLesson={handleDeleteLesson}
+                                                            onAddContent={handleAddContent}
+                                                            onDeleteContent={handleDeleteContent}
+                                                        />
+                                                    </SortableItem>
+                                                ))}
+                                            </SortableContainer>
+                                        )}
+                                    </div>
+                                </SortableItem>
+                            ))}
+                        </SortableContainer>
+                    )}
+
+                    {/* Standalone Lessons */}
+                    {lessons.filter(lesson => !lesson.chapter).length > 0 && (
+                        <SortableContainer
+                            id="standalone-lessons"
+                            items={lessons.filter(l => !l.chapter).map(l => l._id)}
+                            type="lesson"
+                        >
+                            {lessons.filter(lesson => !lesson.chapter).map((lesson) => (
+                                <SortableItem
+                                    key={lesson._id}
+                                    id={lesson._id}
+                                    type="lesson"
+                                    data={lesson as unknown as Record<string, unknown>}
+                                    className="mb-2"
+                                >
+                                    <LessonItem
+                                        lesson={lesson}
+                                        courseId={course?._id || ""}
+                                        isInChapter={false}
+                                        expandedLessons={expandedLessons}
+                                        showContentPopup={showContentPopup}
+                                        editingLesson={editingLesson}
+                                        editingLessonName={editingLessonName}
+                                        isDeletingLesson={isDeletingLesson}
+                                        isDeletingContent={isDeletingContent}
+                                        isUpdatingLesson={isUpdatingLesson}
+                                        onToggleLessonExpansion={toggleLessonExpansion}
+                                        onSetShowContentPopup={setShowContentPopup}
+                                        onStartEditingLesson={startEditingLesson}
+                                        onUpdateLesson={handleUpdateLesson}
+                                        onCancelEditingLesson={cancelEditingLesson}
+                                        onSetEditingLessonName={setEditingLessonName}
+                                        onDeleteLesson={handleDeleteLesson}
+                                        onAddContent={handleAddContent}
+                                        onDeleteContent={handleDeleteContent}
+                                    />
+                                </SortableItem>
+                            ))}
+                        </SortableContainer>
+                    )}
+
+                    {/* Creation forms */}
+                    {isCreatingNewLesson && (
+                        <CreationForm
+                            type="lesson"
+                            value={lessonName}
+                            onChange={setLessonName}
+                            onSubmit={() => handleCreateLesson()}
+                            onCancel={cancelCreation}
+                            isLoading={isCreatingLesson}
+                            placeholder="Enter Lesson Name"
+                        />
+                    )}
+
+                    {isCreatingNewChapter && (
+                        <CreationForm
+                            type="chapter"
+                            value={chapterName}
+                            onChange={setChapterName}
+                            onSubmit={handleCreateChapter}
+                            onCancel={cancelCreation}
+                            isLoading={isCreatingChapter}
+                            placeholder="Enter Chapter Name"
+                        />
+                    )}
+
+                    {/* Add buttons */}
+                    {!isCreatingNewLesson && !isCreatingNewChapter && (
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                onClick={startCreatingLesson}
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Lesson
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                onClick={startCreatingChapter}
+                            >
+                                <List className="w-4 h-4 mr-2" />
+                                Add Chapter
+                            </Button>
+                        </div>
+                    )}
+
+                </div>
+            </DragDropProvider>
+
+            {/* Content Popup - Outside DragDropProvider to avoid pointer-events issues */}
+            <ContentPopup
+                showContentPopup={showContentPopup}
+                onAddContent={handleAddContent}
+                onClose={() => setShowContentPopup(null)}
+            />
+        </>
     );
 }

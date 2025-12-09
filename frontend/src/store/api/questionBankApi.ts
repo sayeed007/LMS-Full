@@ -2,8 +2,13 @@ import { QuestionBank as BackendQuestionBank } from '../../types/backend-models'
 import { baseApi } from './baseApi';
 
 // API-specific types for populated question banks
-export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'createdBy'> {
+export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'createdBy' | 'course'> {
   sections: Section[]; // Local section interface
+  course: {
+    _id: string;
+    title: string;
+    slug?: string;
+  };
   createdBy: {
     _id: string;
     name: string;
@@ -19,6 +24,8 @@ export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'create
   lastUsed?: string;
   thumbnail?: string;
   color?: string;
+  tags?: string[];
+  status?: 'draft' | 'published' | 'archived';
 }
 
 // Keep for backward compatibility

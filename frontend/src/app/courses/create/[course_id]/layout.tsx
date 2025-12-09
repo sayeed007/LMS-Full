@@ -9,6 +9,7 @@ import Learners from "./learner/page";
 import CourseSettings from "./setting/page";
 import CourseOutline from "@/components/courses/course_create/CourseOutline";
 import SimplePageContainer from "@/components/layout/SimplePageContainer";
+import TabNav from "@/components/ui/TabNav";
 
 export const CourseHeaderContext = createContext<{
   showHeaderActions: boolean;
@@ -19,11 +20,11 @@ export const CourseHeaderContext = createContext<{
 });
 
 const tabs = [
-  { slug: "outline", label: "Course Outline" },
-  { slug: "learners", label: "Learners" },
-  { slug: "evaluation", label: "Evaluation" },
-  { slug: "leaderboard", label: "Leaderboard" },
-  { slug: "setting", label: "Setting" },
+  { key: "outline", label: "Course Outline" },
+  { key: "learners", label: "Learners" },
+  { key: "evaluation", label: "Evaluation" },
+  { key: "leaderboard", label: "Leaderboard" },
+  { key: "setting", label: "Setting" },
 ];
 
 export default function CourseLayout({ children }: { children: React.ReactNode }) {
@@ -153,20 +154,13 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-6 border-b border-gray-200 mb-4 text-sm font-medium">
-          {tabs.map((tab) => (
-            <button
-              key={tab.slug}
-              onClick={() => setActiveTab(tab.slug)}
-              className={
-                activeTab === tab.slug
-                  ? "border-b-2 border-indigo-500 pb-2 text-black font-semibold"
-                  : "text-gray-500 pb-2 hover:text-black"
-              }
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="border-b border-gray-200 mb-4">
+          <TabNav
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            variant="underline"
+          />
         </div>
 
         {renderTabContent()}

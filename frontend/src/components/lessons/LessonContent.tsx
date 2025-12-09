@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { type CourseLesson } from '@/types/backend-models';
+import { decodeHTMLEntities } from '@/lib/html-utils';
 
 interface LessonContentProps {
   lesson: CourseLesson;
@@ -16,7 +17,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
                 {lesson.content.map((contentItem, index) => (
                   <div key={contentItem._id || index}>
                     {contentItem.type === 'text' && contentItem.data?.text && (
-                      <div dangerouslySetInnerHTML={{ __html: contentItem.data.text }} />
+                      <div dangerouslySetInnerHTML={{ __html: decodeHTMLEntities(contentItem.data.text) }} />
                     )}
                     {/* Additional content type renderers can be added here */}
                   </div>

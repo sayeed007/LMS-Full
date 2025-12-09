@@ -78,7 +78,6 @@ const HeaderRefactored = () => {
                                 alt="Notifications"
                                 width={28}
                                 height={28}
-                                className="w-6 h-6 sm:w-7 sm:h-7"
                             />
                         </NotificationPopover>
                     </button>
@@ -104,30 +103,26 @@ const HeaderRefactored = () => {
                         aria-expanded={isMobileMenuOpen}
                     >
                         <span
-                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
-                                isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''
-                            }`}
+                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''
+                                }`}
                         />
                         <span
-                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
-                                isMobileMenuOpen ? 'opacity-0' : ''
-                            }`}
+                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''
+                                }`}
                         />
                         <span
-                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
-                                isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
-                            }`}
+                            className={`block w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
+                                }`}
                         />
                     </button>
                 </div>
             </div>
 
             {/* Mobile Navigation Menu - Using NavigationLink component */}
-            <div className={`lg:hidden transition-all duration-300 ease-in-out ${
-                isMobileMenuOpen
-                    ? 'max-h-96 opacity-100'
-                    : 'max-h-0 opacity-0 overflow-hidden'
-            }`}>
+            <div className={`lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
+                ? 'max-h-96 opacity-100'
+                : 'max-h-0 opacity-0 overflow-hidden'
+                }`}>
                 <nav className="px-4 pb-4 space-y-2 bg-white/10 backdrop-blur-sm">
                     {navItems.map((item) => (
                         <NavigationLink

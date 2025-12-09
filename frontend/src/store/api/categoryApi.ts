@@ -65,15 +65,15 @@ export const categoryApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all categories
     getCategories: builder.query<CategoryResponse, CategoryQueryParams | void>({
-      query: (params = {}) => {
+      query: (params) => {
         const searchParams = new URLSearchParams();
 
-        if (params.page) searchParams.append('page', params.page.toString());
-        if (params.limit) searchParams.append('limit', params.limit.toString());
-        if (params.search) searchParams.append('search', params.search);
-        if (params.isActive !== undefined) searchParams.append('isActive', params.isActive.toString());
-        if (params.includeStats) searchParams.append('includeStats', params.includeStats.toString());
-        if (params.includeSubcategories) searchParams.append('includeSubcategories', params.includeSubcategories.toString());
+        if (params?.page) searchParams.append('page', params.page.toString());
+        if (params?.limit) searchParams.append('limit', params.limit.toString());
+        if (params?.search) searchParams.append('search', params.search);
+        if (params?.isActive !== undefined) searchParams.append('isActive', params.isActive.toString());
+        if (params?.includeStats) searchParams.append('includeStats', params.includeStats.toString());
+        if (params?.includeSubcategories) searchParams.append('includeSubcategories', params.includeSubcategories.toString());
 
         return {
           url: `categories?${searchParams.toString()}`,

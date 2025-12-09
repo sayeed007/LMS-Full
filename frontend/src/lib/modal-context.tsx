@@ -214,10 +214,32 @@ const ModalWrapper: FC<ModalWrapperProps> = ({ modal, zIndex, onClose }) => {
             case 'center': return 'flex items-center justify-center'
             case 'top': return 'flex items-start justify-center pt-8'
             case 'bottom': return 'flex items-end justify-center pb-8'
-            case 'left': return 'flex items-center justify-start pl-8'
-            case 'right': return 'flex items-center justify-end pr-8'
+            case 'left': return 'flex items-center justify-start'
+            case 'right': return 'flex items-center justify-end'
             default: return 'flex items-center justify-center'
         }
+    }
+
+    // Get animation classes based on position
+    const getAnimationClasses = (position: ModalPosition): string => {
+        switch (position) {
+            case 'right': return 'animate-slide-in-right'
+            case 'left': return 'animate-slide-in-left'
+            case 'top': return 'animate-slide-in-top'
+            case 'bottom': return 'animate-slide-in-bottom'
+            default: return 'animate-fade-scale-in'
+        }
+    }
+
+    // Get height/width constraints for side panels
+    const getSidePanelClasses = (position: ModalPosition): string => {
+        if (position === 'left' || position === 'right') {
+            return 'h-full max-h-full rounded-none'
+        }
+        if (position === 'top' || position === 'bottom') {
+            return 'w-full rounded-none'
+        }
+        return ''
     }
 
     const handleBackdropClick = (e: React.MouseEvent) => {
@@ -264,6 +286,8 @@ const ModalWrapper: FC<ModalWrapperProps> = ({ modal, zIndex, onClose }) => {
                 className={`relative h-fit bg-white rounded-lg shadow-xl transform transition-all duration-300 ease-out
                             ${getSizeClasses(safeOptions.size)}
                             ${safeOptions.size === 'full' ? 'rounded-none' : ''}
+                            ${getSidePanelClasses(safeOptions.position)}
+                            ${getAnimationClasses(safeOptions.position)}
                             ${safeOptions.className || ''}
                             `}
                 onClick={(e) => e.stopPropagation()}

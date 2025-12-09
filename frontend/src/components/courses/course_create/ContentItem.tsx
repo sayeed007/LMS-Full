@@ -56,7 +56,7 @@ export const ContentItem = ({ content, lessonId, courseId, isDeletingContent, on
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.push(`/courses/create/${courseId}/courseOutline/${lessonId}/content/${content._id}/edit`)}
+                        onClick={() => router.push(`/courses/create/${courseId}/courseOutline/${lessonId}/content?type=${content.type}&contentId=${content._id}`)}
                         className="text-gray-600 hover:text-blue-600 p-1 h-auto"
                     >
                         <Edit className="w-3 h-3" />
