@@ -12,7 +12,7 @@ import VideoContentEditor from "./VideoContentEditor";
 interface ContentBlock {
   id: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
-  content: string | { url?: string; text?: string; [key: string]: unknown };
+  content: string | { url?: string; text?: string;[key: string]: unknown };
   order: number;
   title?: string;
   description?: string;
@@ -89,6 +89,8 @@ export default function BlocksContentEditor({
       onChange({ ...content, blocks: newBlocks });
     }
   };
+
+  console.log("content.blocks:", content.blocks);
 
   return (
     <div className="space-y-6">

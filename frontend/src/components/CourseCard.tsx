@@ -29,13 +29,13 @@ export function CourseCard({ course, isOwner = false }: { course: CoursePopulate
     >
       <div className="relative aspect-video overflow-hidden rounded-t-xl">
         <Image
-          src={course.thumbnail || '/default-course-thumbnail.jpg'}
+          src={course.thumbnail || '/Thumbnail.png'}
           alt={course.title}
           className="object-cover"
           fill
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = '/default-course-thumbnail.jpg';
+            target.src = '/Thumbnail.png';
           }}
         />
       </div>

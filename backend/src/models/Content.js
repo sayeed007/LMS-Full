@@ -193,6 +193,10 @@ const contentSchema = new mongoose.Schema({
     duration: Number, // for audio/video
 
     // For block content - array of block items
+    blocks: [blockItemSchema],
+
+    // DEPRECATED: Backward compatibility - will be removed in future version
+    // Old field name, use 'blocks' instead
     items: [blockItemSchema],
 
     // For quiz content
@@ -283,7 +287,16 @@ const contentSchema = new mongoose.Schema({
   tags: [String]
 }, {
   timestamps: true,
-  toJSON: { virtuals: true },
+  toJSON: {
+    virtuals: true,
+    transform: function(doc, ret) {
+      // Backward compatibility: If 'items' exists but 'blocks' doesn't, copy items to blocks
+      if (ret.data && ret.data.items && !ret.data.blocks) {
+        ret.data.blocks = ret.data.items;
+      }
+      return ret;
+    }
+  },
   toObject: { virtuals: true }
 });
 
@@ -331,8 +344,8 @@ contentSchema.pre('save', function (next) {
   this.lastModified = new Date();
 
   // Update nested timestamps based on content type
-  if (this.type === 'block' && this.data.items) {
-    this.data.items.forEach(item => {
+  if (this.type === 'block' && this.data.blocks) {
+    this.data.blocks.forEach(item => {
       item.updatedAt = new Date();
     });
   }

@@ -180,8 +180,18 @@ const createContent = catchAsync(async (req, res, next) => {
 
     case 'blocks':
     case 'block':
-      if (!req.body.data || !req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
-        return next(new AppError('Blocks array is required for blocks/block type', 400));
+      // Handle backward compatibility: migrate 'items' to 'blocks' if needed
+      if (req.body.data) {
+        // If items exists but blocks doesn't, migrate items to blocks
+        if (req.body.data.items && !req.body.data.blocks) {
+          req.body.data.blocks = req.body.data.items;
+        }
+        // Ensure blocks array exists
+        if (!req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
+          req.body.data.blocks = [];
+        }
+      } else {
+        req.body.data = { blocks: [] };
       }
       break;
 
@@ -245,6 +255,18 @@ const updateContent = catchAsync(async (req, res, next) => {
     const course = await Course.findById(courseId);
     if (course.instructor.toString() !== req.user.id) {
       return next(new AppError('You can only update content for your own courses', 403));
+    }
+  }
+
+  // Handle backward compatibility and ensure blocks array exists for block content type
+  if ((content.type === 'block' || content.type === 'blocks') && req.body.data) {
+    // Migrate 'items' to 'blocks' if needed
+    if (req.body.data.items && !req.body.data.blocks) {
+      req.body.data.blocks = req.body.data.items;
+    }
+    // Ensure blocks array exists
+    if (!req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
+      req.body.data.blocks = [];
     }
   }
 

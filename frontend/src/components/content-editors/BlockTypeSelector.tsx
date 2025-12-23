@@ -1,11 +1,11 @@
 "use client";
 
-import { File, FileText, Video } from "lucide-react";
+import Image from "next/image";
 
 interface BlockType {
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
   label: string;
-  icon: typeof FileText | string;
+  icon: string;
 }
 
 interface BlockTypeSelectorProps {
@@ -15,11 +15,11 @@ interface BlockTypeSelectorProps {
 }
 
 const blockTypes: BlockType[] = [
-  { type: 'text', label: 'Text', icon: FileText },
-  { type: 'image', label: 'Image', icon: '🖼️' },
-  { type: 'video', label: 'Video', icon: Video },
-  { type: 'audio', label: 'Audio', icon: '🎵' },
-  { type: 'document', label: 'Document', icon: File },
+  { type: 'text', label: 'Text', icon: '/icons/TextAa.png' },
+  { type: 'image', label: 'Image', icon: '/icons/Image.png' },
+  { type: 'video', label: 'Video', icon: '/icons/Video.png' },
+  { type: 'audio', label: 'Audio', icon: '/icons/Audio.png' },
+  { type: 'document', label: 'Document', icon: '/icons/Document.png' },
 ];
 
 export function BlockTypeSelector({
@@ -44,15 +44,16 @@ export function BlockTypeSelector({
             <button
               key={blockType.type}
               onClick={() => onSelect(blockType.type)}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors mb-0 ${
-                index !== 0 ? 'border-t border-gray-100' : ''
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors mb-0 ${index !== 0 ? 'border-t border-gray-100' : ''
+                }`}
             >
-              {typeof blockType.icon === 'string' ? (
-                <span className="text-lg">{blockType.icon}</span>
-              ) : (
-                <blockType.icon className="w-5 h-5 text-blue-600" />
-              )}
+              <Image
+                width={20}
+                height={20}
+                src={blockType.icon}
+                alt={blockType.type}
+                className="w-5 h-5 text-blue-600"
+              />
               <span className="text-sm">{blockType.label}</span>
             </button>
           ))}

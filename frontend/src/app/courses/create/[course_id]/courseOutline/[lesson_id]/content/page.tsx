@@ -24,7 +24,7 @@ import { decodeHTMLEntities } from "@/lib/html-utils";
 interface ContentBlock {
   id: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
-  content: string | { url?: string; text?: string; [key: string]: unknown };
+  content: string | { url?: string; text?: string;[key: string]: unknown };
   order: number;
 }
 
@@ -113,21 +113,35 @@ export default function ContentEditor() {
   useEffect(() => {
     if (isEditMode && existingContent) {
       try {
+        console.log('🔍 Raw existingContent:', JSON.stringify(existingContent, null, 2));
+        console.log('📦 existingContent.data:', existingContent.data);
+        console.log('📦 existingContent.data type:', typeof existingContent.data);
+
         const parsedData = existingContent.data ? (typeof existingContent.data === 'string' ? JSON.parse(existingContent.data) : existingContent.data) : {};
+        console.log('✅ Parsed data:', JSON.stringify(parsedData, null, 2));
 
         // Decode HTML entities in textContent if present
         const textContent = parsedData.textContent || parsedData.text || "";
         const decodedTextContent = textContent ? decodeHTMLEntities(textContent) : "";
 
+        // Get blocks array from parsed data
+        const blocks = parsedData.blocks || [];
+        console.log('🧱 Blocks array:', blocks);
+        console.log('🧱 Blocks length:', blocks.length);
+
         // Set the content with all fields
-        setContent({
+        // IMPORTANT: parsedData spread must come BEFORE blocks to avoid overwriting
+        const newContent = {
           type: (contentType as 'text' | 'document' | 'video' | 'quiz' | 'assignment' | 'blocks') || 'text',
-          blocks: parsedData.blocks || [],
           textContent: decodedTextContent,
           title: existingContent.title || "",
           description: parsedData.description || "",
-          ...parsedData
-        });
+          ...parsedData,
+          // blocks must be set AFTER parsedData spread to ensure it's not overwritten
+          blocks: blocks,
+        };
+        console.log('💾 Final content to set:', JSON.stringify(newContent, null, 2));
+        setContent(newContent);
 
         // For media content (video, audio, document, assignment), set file preview if URL exists
         if (['video', 'audio', 'document', 'assignment'].includes(contentType) && parsedData.fileUrl) {
@@ -135,9 +149,9 @@ export default function ContentEditor() {
         }
 
         // For blocks content, set file previews for each block that has a fileUrl
-        if ((contentType === 'blocks' || contentType === 'block') && parsedData.blocks) {
+        if ((contentType === 'blocks' || contentType === 'block') && blocks.length > 0) {
           const blockPreviews: { [blockId: string]: string | null } = {};
-          parsedData.blocks.forEach((block: { id: string; fileUrl?: string }) => {
+          blocks.forEach((block: { id: string; fileUrl?: string }) => {
             if (block.fileUrl) {
               blockPreviews[block.id] = block.fileUrl;
             }
@@ -238,15 +252,15 @@ export default function ContentEditor() {
       blocks: prevContent.blocks.map(block =>
         block.id === blockId
           ? {
-              ...block,
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type,
-              // Clear any existing uploaded file data
-              fileUrl: undefined,
-              publicId: undefined,
-              resourceType: undefined
-            }
+            ...block,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            // Clear any existing uploaded file data
+            fileUrl: undefined,
+            publicId: undefined,
+            resourceType: undefined
+          }
           : block
       )
     }));
@@ -294,14 +308,14 @@ export default function ContentEditor() {
       blocks: prevContent.blocks.map(block =>
         block.id === blockId
           ? {
-              ...block,
-              fileName: undefined,
-              fileSize: undefined,
-              fileType: undefined,
-              fileUrl: undefined,
-              publicId: undefined,
-              resourceType: undefined
-            }
+            ...block,
+            fileName: undefined,
+            fileSize: undefined,
+            fileType: undefined,
+            fileUrl: undefined,
+            publicId: undefined,
+            resourceType: undefined
+          }
           : block
       )
     }));
@@ -441,6 +455,19 @@ export default function ContentEditor() {
         ...currentContent
       };
 
+      console.log('💾 Saving content:', {
+        contentType,
+        currentContentBlocks: currentContent.blocks,
+        blocksLength: currentContent.blocks?.length,
+        saveData
+      });
+
+      // For blocks content, ensure blocks array is properly set
+      if ((contentType === 'blocks' || contentType === 'block') && currentContent.blocks) {
+        saveData.blocks = currentContent.blocks;
+        console.log('✅ Set saveData.blocks:', saveData.blocks);
+      }
+
       // For media and assignment content, ensure URL is included
       if (['video', 'audio', 'document', 'assignment'].includes(contentType) && (currentContent as { fileUrl?: string }).fileUrl) {
         saveData.url = (currentContent as { fileUrl?: string }).fileUrl!;
@@ -539,13 +566,6 @@ export default function ContentEditor() {
 
       {/* Content Area */}
       <div className="max-w-4xl mx-auto p-6">
-        {/* Debug info - remove this later */}
-        <div className="mb-4 p-4 bg-gray-100 rounded">
-          <p><strong>Debug Info:</strong></p>
-          <p>Content Type: {contentType}</p>
-          <p>Course ID: {courseId}</p>
-          <p>Lesson ID: {lessonId}</p>
-        </div>
         {contentType === 'text' && (
           <TextContentEditor
             content={content}

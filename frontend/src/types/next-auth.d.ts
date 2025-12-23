@@ -10,6 +10,8 @@ declare module "next-auth" {
       role: string
     }
     backendToken: string
+    refreshToken: string
+    error?: string
   }
 
   interface User {
@@ -19,6 +21,7 @@ declare module "next-auth" {
     image?: string
     role: string
     token?: string
+    refreshToken?: string
   }
 }
 
@@ -27,5 +30,8 @@ declare module "next-auth/jwt" {
     userId: string
     role: string
     backendToken: string
+    refreshToken: string
+    accessTokenExpires: number
+    error?: string
   }
 }

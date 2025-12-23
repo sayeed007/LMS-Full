@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useAppDispatch } from '@/store/hooks';
 import { setCredentials, logout } from '@/store/slices/authSlice';
 
@@ -13,6 +13,14 @@ export default function SessionSync() {
     if (status === 'loading') return;
 
     if (status === 'authenticated' && session) {
+      // Check if token refresh failed
+      if (session.error === 'RefreshAccessTokenError') {
+        // Force sign out if refresh token is invalid
+        console.error('Token refresh failed, signing out...');
+        signOut({ callbackUrl: '/auth/signin' });
+        return;
+      }
+
       // Sync NextAuth session to Redux store
       if (session.backendToken && session.user) {
         dispatch(setCredentials({
@@ -28,6 +36,7 @@ export default function SessionSync() {
             updatedAt: new Date().toISOString(),
           },
           token: session.backendToken,
+          refreshToken: session.refreshToken,
         }));
       }
     } else if (status === 'unauthenticated') {

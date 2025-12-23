@@ -29,7 +29,8 @@ export default function LoginForm() {
             createdAt: (result.data.user as { createdAt?: string }).createdAt || new Date().toISOString(),
             updatedAt: (result.data.user as { updatedAt?: string }).updatedAt || new Date().toISOString()
           },
-          token: result.data.token
+          token: result.data.token,
+          refreshToken: result.data.refreshToken
         }));
         toast.success('Login successful!');
       }

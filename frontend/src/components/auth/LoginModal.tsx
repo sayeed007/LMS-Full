@@ -30,7 +30,7 @@ export default function LoginModal({
     setIsLoading(true)
     try {
       await signIn(provider, {
-        callbackUrl: '/articles',
+        callbackUrl: '/dashboard',
         redirect: true
       })
     } catch (error) {
@@ -48,7 +48,7 @@ export default function LoginModal({
       const result = await signIn('credentials', {
         email,
         password,
-        callbackUrl: '/articles',
+        callbackUrl: '/dashboard',
         redirect: false
       })
 
@@ -56,7 +56,7 @@ export default function LoginModal({
         alert('Invalid credentials. Please try again.')
       } else {
         onClose()
-        window.location.href = '/articles'
+        window.location.href = '/dashboard'
       }
     } catch (error) {
       console.error('Credentials sign in error:', error)

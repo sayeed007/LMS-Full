@@ -27,7 +27,7 @@ const modules = {
 
 const formats = [
     'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'blockquote', 'code-block',
+    'list', 'blockquote', 'code-block',
     'link', 'image'
 ];
 

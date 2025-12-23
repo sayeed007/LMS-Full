@@ -297,31 +297,12 @@ router.post('/oauth', authController.oauthLogin);
  */
 router.get('/sso/config', authController.getSSOConfig);
 
-// Protected routes
-router.use(protect); // All routes after this middleware are protected
-
-/**
- * @swagger
- * /api/v1/auth/logout:
- *   post:
- *     summary: Logout user
- *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logout successful
- */
-router.post('/logout', authController.logout);
-
 /**
  * @swagger
  * /api/v1/auth/refresh-token:
  *   post:
  *     summary: Refresh access token
  *     tags: [Authentication]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -342,6 +323,23 @@ router.post('/logout', authController.logout);
  *               $ref: '#/components/schemas/AuthResponse'
  */
 router.post('/refresh-token', authController.refreshToken);
+
+// Protected routes
+router.use(protect); // All routes after this middleware are protected
+
+/**
+ * @swagger
+ * /api/v1/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+router.post('/logout', authController.logout);
 
 /**
  * @swagger
