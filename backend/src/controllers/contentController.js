@@ -170,12 +170,16 @@ const createContent = catchAsync(async (req, res, next) => {
     return next(new AppError('Content type is required', 400));
   }
 
-  // Type-specific validation
+  // Type-specific validation and cleanup
   switch (type) {
     case 'text':
       if (!req.body.data || !req.body.data.text) {
         return next(new AppError('Text content is required for text type', 400));
       }
+      // Clean up - only keep text field
+      req.body.data = {
+        text: req.body.data.text
+      };
       break;
 
     case 'blocks':
@@ -193,6 +197,10 @@ const createContent = catchAsync(async (req, res, next) => {
       } else {
         req.body.data = { blocks: [] };
       }
+      // Clean up - only keep blocks array
+      req.body.data = {
+        blocks: req.body.data.blocks
+      };
       break;
 
     case 'audio':
@@ -202,6 +210,17 @@ const createContent = catchAsync(async (req, res, next) => {
       if (!req.body.data || !req.body.data.url) {
         return next(new AppError('URL is required for media/assignment content', 400));
       }
+      // Clean up - only keep relevant media fields
+      req.body.data = {
+        title: req.body.data.title,
+        description: req.body.data.description,
+        url: req.body.data.url,
+        filename: req.body.data.filename,
+        size: req.body.data.size,
+        mimeType: req.body.data.mimeType,
+        duration: req.body.data.duration,
+        metadata: req.body.data.metadata
+      };
       break;
 
     case 'video':
@@ -209,12 +228,28 @@ const createContent = catchAsync(async (req, res, next) => {
       if (!req.body.data || (!req.body.data.url && !req.body.data.embedUrl)) {
         return next(new AppError('Either upload URL or embed URL is required for video content', 400));
       }
+      // Clean up - only keep relevant video fields
+      req.body.data = {
+        title: req.body.data.title,
+        description: req.body.data.description,
+        url: req.body.data.url,
+        filename: req.body.data.filename,
+        size: req.body.data.size,
+        mimeType: req.body.data.mimeType,
+        duration: req.body.data.duration,
+        embedUrl: req.body.data.embedUrl,
+        metadata: req.body.data.metadata
+      };
       break;
 
     case 'quiz':
       if (!req.body.data || !req.body.data.quiz || !req.body.data.quiz.questions) {
         return next(new AppError('Quiz questions are required for quiz type', 400));
       }
+      // Clean up - only keep quiz field
+      req.body.data = {
+        quiz: req.body.data.quiz
+      };
       break;
 
     default:
@@ -258,15 +293,70 @@ const updateContent = catchAsync(async (req, res, next) => {
     }
   }
 
-  // Handle backward compatibility and ensure blocks array exists for block content type
-  if ((content.type === 'block' || content.type === 'blocks') && req.body.data) {
-    // Migrate 'items' to 'blocks' if needed
-    if (req.body.data.items && !req.body.data.blocks) {
-      req.body.data.blocks = req.body.data.items;
-    }
-    // Ensure blocks array exists
-    if (!req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
-      req.body.data.blocks = [];
+  // Type-specific cleanup to remove unwanted fields
+  if (req.body.data) {
+    switch (content.type) {
+      case 'text':
+        // Clean up - only keep text field
+        req.body.data = {
+          text: req.body.data.text
+        };
+        break;
+
+      case 'block':
+      case 'blocks':
+        // Handle backward compatibility: migrate 'items' to 'blocks' if needed
+        if (req.body.data.items && !req.body.data.blocks) {
+          req.body.data.blocks = req.body.data.items;
+        }
+        // Ensure blocks array exists
+        if (!req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
+          req.body.data.blocks = [];
+        }
+        // Clean up - only keep blocks array
+        req.body.data = {
+          blocks: req.body.data.blocks
+        };
+        break;
+
+      case 'audio':
+      case 'image':
+      case 'document':
+      case 'assignment':
+        // Clean up - only keep relevant media fields
+        req.body.data = {
+          title: req.body.data.title,
+          description: req.body.data.description,
+          url: req.body.data.url,
+          filename: req.body.data.filename,
+          size: req.body.data.size,
+          mimeType: req.body.data.mimeType,
+          duration: req.body.data.duration,
+          metadata: req.body.data.metadata
+        };
+        break;
+
+      case 'video':
+        // Clean up - only keep relevant video fields
+        req.body.data = {
+          title: req.body.data.title,
+          description: req.body.data.description,
+          url: req.body.data.url,
+          filename: req.body.data.filename,
+          size: req.body.data.size,
+          mimeType: req.body.data.mimeType,
+          duration: req.body.data.duration,
+          embedUrl: req.body.data.embedUrl,
+          metadata: req.body.data.metadata
+        };
+        break;
+
+      case 'quiz':
+        // Clean up - only keep quiz field
+        req.body.data = {
+          quiz: req.body.data.quiz
+        };
+        break;
     }
   }
 
@@ -332,6 +422,11 @@ const deleteContent = catchAsync(async (req, res, next) => {
 const reorderContent = catchAsync(async (req, res, next) => {
   const { courseId, lessonId } = req.params;
   const { content } = req.body;
+
+  // Validate content array
+  if (!content || !Array.isArray(content)) {
+    return next(new AppError('Content array is required', 400));
+  }
 
   // Verify lesson exists and belongs to course
   const lesson = await Lesson.findOne({

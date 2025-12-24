@@ -26,7 +26,7 @@ export function SortableContainer({
     id,
     data: {
       type,
-      accepts: ['chapter', 'lesson'],
+      accepts: ['chapter', 'lesson', 'content'],
     },
   });
 

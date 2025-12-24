@@ -30,8 +30,6 @@ export function CourseLearningClient({
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
 
 
-  console.log(currentChapterId);
-
   // Fetch course data
   const {
     data: courseData,

@@ -252,6 +252,7 @@ export interface LessonContent extends BaseDocument {
   data: {
     // For text content
     text?: string;
+    title?: string;
     // For media content (audio, video, document)
     url?: string;
     filename?: string;

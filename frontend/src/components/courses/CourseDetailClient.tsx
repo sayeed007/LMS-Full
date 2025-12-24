@@ -124,9 +124,6 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
   // const completedLessons = 0; // TODO: Calculate from enrollment data
   // const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-
-  console.log(course);
-
   return (
     // <div className="bg-white min-h-screen">
     <Container size="xl" padding="sm" className="bg-white">

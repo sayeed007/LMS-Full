@@ -36,6 +36,59 @@ interface LessonContent {
   description?: string;
 }
 
+// Transform backend block format to frontend format
+const transformBlockFromBackend = (backendBlock: any): ContentBlock => {
+  // Get the text content and decode HTML entities if present
+  const rawTextContent = backendBlock.data?.text || backendBlock.textContent || '';
+  const decodedTextContent = rawTextContent ? decodeHTMLEntities(rawTextContent) : '';
+
+  // Extract metadata (publicId and resourceType) from nested data.metadata
+  const publicId = backendBlock.data?.metadata?.publicId || backendBlock.publicId;
+  const resourceType = backendBlock.data?.metadata?.resourceType || backendBlock.resourceType;
+
+  const transformed = {
+    id: backendBlock._id || backendBlock.id || `block-${Date.now()}`,
+    type: backendBlock.type,
+    content: backendBlock.data || backendBlock.content || {},
+    order: backendBlock.order,
+    title: backendBlock.data?.title || backendBlock.title || '',
+    description: backendBlock.data?.description || backendBlock.description || '',
+    textContent: decodedTextContent,
+    fileUrl: backendBlock.data?.url || backendBlock.fileUrl,
+    fileName: backendBlock.data?.filename || backendBlock.fileName,
+    fileSize: backendBlock.data?.size || backendBlock.fileSize,
+    fileType: backendBlock.data?.mimeType || backendBlock.fileType,
+    publicId: publicId,
+    resourceType: resourceType,
+    embedUrl: backendBlock.data?.embedUrl || backendBlock.embedUrl,
+    videoType: backendBlock.videoType,
+  } as ContentBlock;
+
+  return transformed;
+};
+
+// Transform frontend block format to backend format
+const transformBlockToBackend = (frontendBlock: any): any => {
+  return {
+    type: frontendBlock.type,
+    order: frontendBlock.order,
+    data: {
+      text: frontendBlock.textContent || '',
+      title: frontendBlock.title || '',
+      description: frontendBlock.description || '',
+      url: frontendBlock.fileUrl,
+      filename: frontendBlock.fileName,
+      size: frontendBlock.fileSize,
+      mimeType: frontendBlock.fileType,
+      embedUrl: frontendBlock.embedUrl,
+      metadata: {
+        publicId: frontendBlock.publicId,
+        resourceType: frontendBlock.resourceType,
+      }
+    }
+  };
+};
+
 export default function ContentEditor() {
   const params = useParams();
   const router = useRouter();
@@ -113,49 +166,77 @@ export default function ContentEditor() {
   useEffect(() => {
     if (isEditMode && existingContent) {
       try {
-        console.log('🔍 Raw existingContent:', JSON.stringify(existingContent, null, 2));
-        console.log('📦 existingContent.data:', existingContent.data);
-        console.log('📦 existingContent.data type:', typeof existingContent.data);
-
         const parsedData = existingContent.data ? (typeof existingContent.data === 'string' ? JSON.parse(existingContent.data) : existingContent.data) : {};
-        console.log('✅ Parsed data:', JSON.stringify(parsedData, null, 2));
 
         // Decode HTML entities in textContent if present
         const textContent = parsedData.textContent || parsedData.text || "";
         const decodedTextContent = textContent ? decodeHTMLEntities(textContent) : "";
 
-        // Get blocks array from parsed data
-        const blocks = parsedData.blocks || [];
-        console.log('🧱 Blocks array:', blocks);
-        console.log('🧱 Blocks length:', blocks.length);
+        // Get blocks array from parsed data and transform them
+        const backendBlocks = parsedData.blocks || [];
+        const blocks = backendBlocks.map(transformBlockFromBackend);
 
-        // Set the content with all fields
-        // IMPORTANT: parsedData spread must come BEFORE blocks to avoid overwriting
-        const newContent = {
-          type: (contentType as 'text' | 'document' | 'video' | 'quiz' | 'assignment' | 'blocks') || 'text',
-          textContent: decodedTextContent,
-          title: existingContent.title || "",
-          description: parsedData.description || "",
-          ...parsedData,
-          // blocks must be set AFTER parsedData spread to ensure it's not overwritten
-          blocks: blocks,
-        };
-        console.log('💾 Final content to set:', JSON.stringify(newContent, null, 2));
+        // For single-type media content, map backend fields to frontend fields
+        const fileUrl = parsedData.url || parsedData.fileUrl;
+        const fileName = parsedData.filename || parsedData.fileName;
+        const fileSize = parsedData.size || parsedData.fileSize;
+        const fileType = parsedData.mimeType || parsedData.fileType;
+        const publicId = parsedData.metadata?.publicId || parsedData.publicId;
+        const resourceType = parsedData.metadata?.resourceType || parsedData.resourceType;
+
+        // Set the content with ONLY the fields needed for the content type
+        let newContent: LessonContent;
+
+        if (contentType === 'blocks' || contentType === 'block') {
+          // For blocks content
+          newContent = {
+            type: 'blocks',
+            textContent: decodedTextContent,
+            title: "",
+            description: "",
+            blocks: blocks,
+          };
+        } else if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+          // For media content - only include relevant fields
+          newContent = {
+            type: contentType as 'video' | 'document' | 'assignment',
+            textContent: "",
+            title: parsedData.title || "",
+            description: parsedData.description || "",
+            fileUrl,
+            fileName,
+            fileSize,
+            fileType,
+            publicId,
+            resourceType,
+            blocks: [],
+          };
+        } else {
+          // For text content
+          newContent = {
+            type: 'text',
+            textContent: decodedTextContent,
+            title: "",
+            description: "",
+            blocks: [],
+          };
+        }
         setContent(newContent);
 
         // For media content (video, audio, document, assignment), set file preview if URL exists
-        if (['video', 'audio', 'document', 'assignment'].includes(contentType) && parsedData.fileUrl) {
-          setFilePreviewUrl(parsedData.fileUrl);
+        if (['video', 'audio', 'document', 'assignment'].includes(contentType) && fileUrl) {
+          setFilePreviewUrl(fileUrl);
         }
 
         // For blocks content, set file previews for each block that has a fileUrl
         if ((contentType === 'blocks' || contentType === 'block') && blocks.length > 0) {
           const blockPreviews: { [blockId: string]: string | null } = {};
-          blocks.forEach((block: { id: string; fileUrl?: string }) => {
+          blocks.forEach((block: any) => {
             if (block.fileUrl) {
               blockPreviews[block.id] = block.fileUrl;
             }
           });
+
           if (Object.keys(blockPreviews).length > 0) {
             setFilePreviewUrls(blockPreviews);
           }
@@ -357,10 +438,15 @@ export default function ContentEditor() {
           // Upload to Cloudinary via backend
           const response = await uploadFileToCloudinary(formData).unwrap();
 
-          // Update the block with Cloudinary response
+          // Update the block with Cloudinary response - map 'url' to 'fileUrl'
           updatedBlocks[i] = {
             ...block,
-            ...response.data
+            fileUrl: response.data.url,
+            fileName: response.data.fileName,
+            fileSize: response.data.fileSize,
+            fileType: response.data.fileType,
+            publicId: response.data.publicId,
+            resourceType: response.data.resourceType
           } as ContentBlock;
 
           // Clean up local file references
@@ -418,10 +504,15 @@ export default function ContentEditor() {
 
           setUploadProgress("Processing upload...");
 
-          // Update content with Cloudinary response
+          // Update content with Cloudinary response - map 'url' to 'fileUrl'
           const updatedContent = {
             ...currentContent,
-            ...response.data
+            fileUrl: response.data.url,
+            fileName: response.data.fileName,
+            fileSize: response.data.fileSize,
+            fileType: response.data.fileType,
+            publicId: response.data.publicId,
+            resourceType: response.data.resourceType
           };
 
           setContent(updatedContent);
@@ -449,30 +540,53 @@ export default function ContentEditor() {
       // Update progress for saving
       setUploadProgress("Saving content...");
 
-      // Prepare data based on content type
-      const saveData: Record<string, unknown> = {
-        text: currentContent.textContent || "",
-        ...currentContent
-      };
+      // Prepare data based on content type - only include relevant fields
+      const saveData: Record<string, unknown> = {};
 
-      console.log('💾 Saving content:', {
-        contentType,
-        currentContentBlocks: currentContent.blocks,
-        blocksLength: currentContent.blocks?.length,
-        saveData
-      });
-
-      // For blocks content, ensure blocks array is properly set
-      if ((contentType === 'blocks' || contentType === 'block') && currentContent.blocks) {
-        saveData.blocks = currentContent.blocks;
-        console.log('✅ Set saveData.blocks:', saveData.blocks);
+      // For text content
+      if (contentType === 'text') {
+        saveData.text = currentContent.textContent || "";
       }
 
-      // For media and assignment content, ensure URL is included
-      if (['video', 'audio', 'document', 'assignment'].includes(contentType) && (currentContent as { fileUrl?: string }).fileUrl) {
-        saveData.url = (currentContent as { fileUrl?: string }).fileUrl!;
+      // For blocks content, transform and set blocks array
+      if (contentType === 'blocks' || contentType === 'block') {
+        saveData.blocks = currentContent.blocks ? currentContent.blocks.map(transformBlockToBackend) : [];
       }
 
+      // For media content (video, audio, document, assignment)
+      if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+        const typedContent = currentContent as {
+          title?: string;
+          description?: string;
+          fileUrl?: string;
+          fileName?: string;
+          fileSize?: number;
+          fileType?: string;
+          publicId?: string;
+          resourceType?: string;
+        };
+
+        if (typedContent.title) saveData.title = typedContent.title;
+        if (typedContent.description) saveData.description = typedContent.description;
+        if (typedContent.fileUrl) {
+          saveData.url = typedContent.fileUrl;
+          saveData.filename = typedContent.fileName;
+          saveData.size = typedContent.fileSize;
+          saveData.mimeType = typedContent.fileType;
+          saveData.metadata = {
+            publicId: typedContent.publicId,
+            resourceType: typedContent.resourceType
+          };
+        }
+      }
+
+      // Determine the content title based on content type
+      let contentTitle = lessonTitle;
+      if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+        // For media content, use the content's own title if available
+        const typedContent = currentContent as { title?: string };
+        contentTitle = typedContent.title || lessonTitle;
+      }
 
       // Create or Update content based on mode
       if (isEditMode && contentId) {
@@ -482,7 +596,7 @@ export default function ContentEditor() {
           lessonId,
           contentId,
           data: {
-            title: lessonTitle,
+            title: contentTitle,
             type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
             data: saveData
           },
@@ -495,7 +609,7 @@ export default function ContentEditor() {
           courseId,
           lessonId,
           data: {
-            title: lessonTitle,
+            title: contentTitle,
             type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
             data: saveData
           },

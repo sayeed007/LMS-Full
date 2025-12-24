@@ -44,7 +44,7 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
     { skip: !courseId }
   );
 
-  console.log(chaptersError, lessonsError);
+  console.info(chaptersError, lessonsError);
 
   const course = (courseData?.data?.course || {}) as Partial<CoursePopulated>;
   const error = propError || (courseError ? 'Failed to fetch course data' : null);

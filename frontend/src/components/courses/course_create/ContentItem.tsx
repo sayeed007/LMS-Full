@@ -34,10 +34,9 @@ export const ContentItem = ({ content, lessonId, courseId, isDeletingContent, on
     };
 
     const { ContentIcon, ContentIconName } = getContentIcon(content.type);
-    console.log(ContentIcon, ContentIconName);
 
     return (
-        <div className="bg-gray-50 border border-gray-100 rounded-md p-3 ml-8">
+        <div className="bg-gray-50 border border-gray-100 rounded-md p-3 ml-8 my-1">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Image
@@ -47,7 +46,7 @@ export const ContentItem = ({ content, lessonId, courseId, isDeletingContent, on
                         alt={ContentIconName}
                         className="w-5 h-5 text-gray-500"
                     />
-                    <span className="text-sm font-medium">{content.title}</span>
+                    <span className="text-sm font-medium">{content.data.title || 'Text Content'}</span>
                     <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded capitalize">
                         {content.type}
                     </span>

@@ -14,7 +14,8 @@ export default function ChapterList({
   onShowPopup,
 }: ChapterListProps) {
 
-  console.log(onDeleteChapter);
+  console.info(onDeleteChapter);
+
   return (
     <>
       {chapters.map((chapter, index) => (

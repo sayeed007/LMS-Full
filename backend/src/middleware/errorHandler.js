@@ -97,6 +97,9 @@ function handleCastError(error) {
  * Handle MongoDB Duplicate Key Errors
  */
 function handleDuplicateKeyError(error) {
+  if (!error.keyValue || typeof error.keyValue !== 'object') {
+    return new ConflictError('Duplicate key error occurred');
+  }
   const field = Object.keys(error.keyValue)[0];
   const value = error.keyValue[field];
   const message = `Duplicate field value: ${field} = "${value}". Please use another value.`;

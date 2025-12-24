@@ -90,8 +90,6 @@ export default function BlocksContentEditor({
     }
   };
 
-  console.log("content.blocks:", content.blocks);
-
   return (
     <div className="space-y-6">
       <div className="text-center">

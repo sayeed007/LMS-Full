@@ -130,10 +130,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     if (!token || !user || socketRef.current) return;
 
     const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ||
-                       process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') ||
-                       'http://localhost:5000';
+      process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') ||
+      'http://localhost:5000';
 
-    console.log('Connecting to Socket.io server:', SOCKET_URL);
+    console.info('Connecting to Socket.io server:', SOCKET_URL);
 
     const newSocket = io(SOCKET_URL, {
       auth: { token },
@@ -145,12 +145,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     });
 
     newSocket.on('connect', () => {
-      console.log('Socket.io connected:', newSocket.id);
+      console.info('Socket.io connected:', newSocket.id);
       setIsConnected(true);
     });
 
     newSocket.on('disconnect', (reason) => {
-      console.log('Socket.io disconnected:', reason);
+      console.info('Socket.io disconnected:', reason);
       setIsConnected(false);
     });
 
@@ -180,7 +180,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   // Disconnect from Socket.io server
   const disconnect = useCallback(() => {
     if (socketRef.current) {
-      console.log('Disconnecting from Socket.io server');
+      console.info('Disconnecting from Socket.io server');
       socketRef.current.disconnect();
       socketRef.current = null;
       setSocket(null);
@@ -269,7 +269,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('message:new', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const onMessageNotification = useCallback((callback: (data: {
@@ -290,7 +290,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('message:notification', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const onTypingStarted = useCallback((callback: (data: TypingEvent) => void) => {
@@ -300,7 +300,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('typing:started', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const onTypingStopped = useCallback((callback: (data: TypingEvent) => void) => {
@@ -310,7 +310,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('typing:stopped', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const onUserOnline = useCallback((callback: (data: OnlineStatusEvent) => void) => {
@@ -320,7 +320,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('user:online', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const onUserOffline = useCallback((callback: (data: OnlineStatusEvent) => void) => {
@@ -330,7 +330,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('user:offline', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const onMessagesRead = useCallback((callback: (data: { conversationId: string; readBy: string }) => void) => {
@@ -340,7 +340,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         socketRef.current?.off('messages:read', callback);
       };
     }
-    return () => {};
+    return () => { };
   }, []);
 
   const value: SocketContextType = {

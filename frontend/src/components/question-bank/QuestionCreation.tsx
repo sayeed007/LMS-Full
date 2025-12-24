@@ -39,9 +39,10 @@ export function QuestionCreation() {
     };
 
     const handleSaveSettings = (settings: SettingsData) => {
-        console.log('Settings saved:', settings)
-        // Handle the settings data here
+        // TODO: Handle the settings data here
         // You can send it to your API, update state, etc.
+        console.info('Settings saved:', settings)
+
     }
 
     return (

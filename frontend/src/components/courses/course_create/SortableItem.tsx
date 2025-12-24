@@ -4,10 +4,11 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ReactNode } from 'react';
 import { GripVertical } from 'lucide-react';
+import { cli } from 'webpack';
 
 interface SortableItemProps {
   id: string;
-  type: 'chapter' | 'lesson';
+  type: 'chapter' | 'lesson' | 'content';
   data: Record<string, unknown>;
   children: ReactNode;
   className?: string;
@@ -62,3 +63,5 @@ export function SortableItem({
     </div>
   );
 }
+
+

@@ -97,12 +97,10 @@ export function ArticleCreationOptions() {
                     id: articleId,
                     data: articleData
                 }).unwrap();
-                console.log('Article updated:', result);
             } else {
                 // Create new article
                 const result = await createArticle(articleData).unwrap();
                 setArticleId(result.data?.article._id || null);
-                console.log('Article created:', result);
             }
 
             dismissToast(loadingToastId);

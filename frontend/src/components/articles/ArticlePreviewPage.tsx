@@ -41,8 +41,7 @@ const ArticlePreviewPage = ({
     const handleCommentSubmit = () => {
         if (!newComment.trim()) return;
 
-        // Here you would typically submit to your API
-        console.log('Submitting comment:', newComment);
+        // TODO:Here you would typically submit to your API
         setNewComment('');
     };
 

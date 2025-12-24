@@ -15,12 +15,12 @@ const baseQuery = fetchBaseQuery({
 
     // Don't set Content-Type for file uploads - let browser set multipart boundary
     const isFileUpload = endpoint === 'uploadFileToCloudinary' ||
-                        endpoint === 'uploadImage' ||
-                        endpoint === 'uploadDocument' ||
-                        endpoint === 'uploadVideo' ||
-                        endpoint === 'uploadAudio' ||
-                        endpoint === 'bulkUpload' ||
-                        endpoint === 'upload';
+      endpoint === 'uploadImage' ||
+      endpoint === 'uploadDocument' ||
+      endpoint === 'uploadVideo' ||
+      endpoint === 'uploadAudio' ||
+      endpoint === 'bulkUpload' ||
+      endpoint === 'upload';
 
     if (!isFileUpload) {
       headers.set('Content-Type', 'application/json');
@@ -43,12 +43,12 @@ const baseQueryWithReauth: BaseQueryFn<
   // NextAuth handles token refresh automatically, but we need to handle the case
   // where NextAuth hasn't refreshed yet or refresh failed
   if (result.error && result.error.status === 401) {
-    console.log('Received 401 error - token may be expired');
+    console.info('Received 401 error - token may be expired');
 
     // Check if this is a refresh token request itself to avoid infinite loop
     const url = typeof args === 'string' ? args : args.url;
     if (url.includes('/auth/refresh-token')) {
-      console.log('Refresh token request failed - user needs to re-authenticate');
+      console.info('Refresh token request failed - user needs to re-authenticate');
       api.dispatch(logout());
       return result;
     }
@@ -58,12 +58,12 @@ const baseQueryWithReauth: BaseQueryFn<
     const refreshToken = state.auth.refreshToken;
 
     if (!refreshToken) {
-      console.log('No refresh token available - logging out');
+      console.info('No refresh token available - logging out');
       api.dispatch(logout());
       return result;
     }
 
-    console.log('Attempting to refresh token...');
+    console.info('Attempting to refresh token...');
 
     // Try to refresh the token
     const refreshResult = await baseQuery(
@@ -97,16 +97,16 @@ const baseQueryWithReauth: BaseQueryFn<
           refreshToken: newRefreshToken,
         }));
 
-        console.log('Token refreshed successfully, retrying original request');
+        console.info('Token refreshed successfully, retrying original request');
 
         // Retry the original query with new token
         result = await baseQuery(args, api, extraOptions);
       } else {
-        console.log('Token refresh failed - invalid response format');
+        console.info('Token refresh failed - invalid response format');
         api.dispatch(logout());
       }
     } else {
-      console.log('Token refresh failed - logging out');
+      console.info('Token refresh failed - logging out');
       api.dispatch(logout());
     }
   }

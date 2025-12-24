@@ -41,6 +41,7 @@ export default function MediaContentEditor({
 }: MediaContentEditorProps) {
   const getMediaTypeLabel = () => {
     switch (contentType) {
+      case 'image': return 'Image';
       case 'video': return 'Video';
       case 'audio': return 'Audio';
       case 'document': return 'Document';
@@ -50,6 +51,7 @@ export default function MediaContentEditor({
 
   const getAcceptedFileTypes = () => {
     switch (contentType) {
+      case 'image': return 'image/*';
       case 'video': return 'video/*';
       case 'audio': return 'audio/*';
       case 'document': return '.pdf,.doc,.docx,.ppt,.pptx,.txt';
@@ -105,6 +107,7 @@ export default function MediaContentEditor({
       {!content.fileUrl && !selectedFile ? (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
           <div className="text-blue-600 mb-4 text-4xl">
+            {contentType === 'image' && '🖼️'}
             {contentType === 'video' && '🎥'}
             {contentType === 'audio' && '🎵'}
             {contentType === 'document' && '📄'}
@@ -141,6 +144,7 @@ export default function MediaContentEditor({
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="text-amber-600 text-2xl">
+                {contentType === 'image' && '🖼️'}
                 {contentType === 'video' && '🎥'}
                 {contentType === 'audio' && '🎵'}
                 {contentType === 'document' && '📄'}
@@ -165,6 +169,16 @@ export default function MediaContentEditor({
 
           {/* Local File Preview */}
           <div className="bg-white rounded-lg p-4">
+            {contentType === 'image' && filePreviewUrl && (
+              <div className="flex justify-center">
+                <img
+                  src={filePreviewUrl}
+                  alt="Image preview"
+                  className="max-w-full max-h-96 rounded object-contain"
+                />
+              </div>
+            )}
+
             {contentType === 'video' && filePreviewUrl && (
               <video
                 src={filePreviewUrl}
@@ -227,6 +241,7 @@ export default function MediaContentEditor({
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="text-blue-600 text-2xl">
+                {contentType === 'image' && '🖼️'}
                 {contentType === 'video' && '🎥'}
                 {contentType === 'audio' && '🎵'}
                 {contentType === 'document' && '📄'}
@@ -250,6 +265,16 @@ export default function MediaContentEditor({
 
           {/* File Preview */}
           <div className="bg-gray-50 rounded-lg p-4">
+            {contentType === 'image' && content.fileUrl && (
+              <div className="flex justify-center">
+                <img
+                  src={content.fileUrl}
+                  alt={content.title || 'Uploaded image'}
+                  className="max-w-full max-h-96 rounded object-contain"
+                />
+              </div>
+            )}
+
             {contentType === 'video' && (
               <video
                 src={content.fileUrl}

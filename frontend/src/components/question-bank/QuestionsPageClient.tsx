@@ -92,8 +92,7 @@ export function QuestionsPageClient({ courseId, sectionId }: QuestionsPageClient
     }
 
     const handleSave = () => {
-        // Implement save logic here
-        console.log('Saving:', { courseId, sectionId, sectionTitle, questions })
+        // TODO:Implement save logic here
         // You would typically send this to your API
 
         // Show success message or handle response
@@ -101,8 +100,8 @@ export function QuestionsPageClient({ courseId, sectionId }: QuestionsPageClient
     };
 
     const handleSaveSettings = (settings: SettingsData) => {
-        console.log('Settings saved:', settings)
-        // Handle the settings data here
+        console.info('Settings saved:', settings)
+        // TODO: Handle the settings data here
         // You can send it to your API, update state, etc.
         setShowSettingsPopup(false)
     };

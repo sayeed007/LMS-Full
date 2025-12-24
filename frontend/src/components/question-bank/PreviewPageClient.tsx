@@ -75,8 +75,7 @@ export function PreviewPageClient({ courseId, sectionId }: PreviewPageClientProp
     }
 
     const handleSaveClick = () => {
-        // Handle save logic here
-        console.log('Saving course:', courseId);
+        // TODO: Handle save logic here
     }
 
     const handleAddQuestionsClick = () => {

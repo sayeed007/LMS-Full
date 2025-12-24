@@ -186,11 +186,19 @@ const contentSchema = new mongoose.Schema({
     text: String,
 
     // For media content (audio, video, document)
+    title: String, // Title for standalone media content
+    description: String, // Description for standalone media content
     url: String,
     filename: String,
     size: Number,
     mimeType: String,
     duration: Number, // for audio/video
+
+    // For embed videos
+    embedUrl: String,
+
+    // Additional metadata
+    metadata: mongoose.Schema.Types.Mixed,
 
     // For block content - array of block items
     blocks: [blockItemSchema],
@@ -437,14 +445,33 @@ contentSchema.statics.getNextOrder = async function (lessonId) {
 };
 
 contentSchema.statics.reorderContent = async function (lessonId, contentOrders) {
-  const bulkOps = contentOrders.map(({ _id, order }) => ({
-    updateOne: {
-      filter: { _id, lesson: lessonId },
-      update: { order, lastModified: new Date() }
-    }
-  }));
+  const session = await mongoose.startSession();
 
-  return this.bulkWrite(bulkOps);
+  try {
+    await session.withTransaction(async () => {
+      // Step 1: Set all orders to temporary negative values to avoid unique constraint violations
+      const tempOps = contentOrders.map(({ _id }, index) => ({
+        updateOne: {
+          filter: { _id, lesson: lessonId },
+          update: { order: -(index + 1), lastModified: new Date() }
+        }
+      }));
+
+      await this.bulkWrite(tempOps, { session });
+
+      // Step 2: Update to final order values
+      const finalOps = contentOrders.map(({ _id, order }) => ({
+        updateOne: {
+          filter: { _id, lesson: lessonId },
+          update: { order, lastModified: new Date() }
+        }
+      }));
+
+      await this.bulkWrite(finalOps, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
 };
 
 // Move content between lessons

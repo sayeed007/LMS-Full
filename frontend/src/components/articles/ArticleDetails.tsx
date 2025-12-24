@@ -45,14 +45,13 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     const handleCommentSubmit = () => {
         if (!newComment.trim()) return;
 
+        // TODO: Implement comment submission logic
         // Here you would typically submit to your API
-        console.log('Submitting comment:', newComment);
         setNewComment('');
     };
 
     const handleExport = () => {
-        // Implement export functionality
-        console.log('Export article');
+        // TODO: Implement export functionality
     };
 
     return (

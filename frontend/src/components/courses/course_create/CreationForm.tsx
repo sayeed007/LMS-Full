@@ -25,7 +25,7 @@ export const CreationForm = ({
     placeholder,
     className = ""
 }: CreationFormProps) => {
-    console.log(`Rendering CreationForm for ${type}`);
+    console.info(`Rendering CreationForm for ${type}`);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange(e.target.value);

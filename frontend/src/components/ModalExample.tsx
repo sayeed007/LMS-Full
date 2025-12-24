@@ -84,7 +84,6 @@ const ContactFormModal = ({ onClose }: ModalProps) => {
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
         onClose();
     };
 
@@ -523,7 +522,6 @@ const SettingsModal = ({ onClose }: ModalProps) => {
                 </button>
                 <button
                     onClick={() => {
-                        console.log('Settings saved:', settings);
                         onClose();
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -630,7 +628,6 @@ const ModalExample = () => {
                             message="Are you sure you want to delete this item? This action cannot be undone."
                             variant="danger"
                             onConfirm={() => {
-                                console.log('Item deleted!');
                                 closeModal();
                             }}
                             onCancel={() => closeModal()}
@@ -649,7 +646,6 @@ const ModalExample = () => {
                             message="Do you want to save your changes before leaving?"
                             variant="success"
                             onConfirm={() => {
-                                console.log('Changes saved!');
                                 closeModal();
                             }}
                             onCancel={() => closeModal()}

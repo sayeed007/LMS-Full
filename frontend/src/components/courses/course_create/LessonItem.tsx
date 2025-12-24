@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useGetContentByLessonQuery } from "@/store/api/courseApi";
+import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
+import { useGetContentByLessonQuery, useReorderContentMutation } from "@/store/api/courseApi";
 import { LessonContent } from "@/types/backend-models";
 import {
     ChevronsDownUp,
@@ -11,7 +12,11 @@ import {
     Plus,
     Trash2
 } from "lucide-react";
+import { useCallback, useMemo } from "react";
 import { ContentItem } from "./ContentItem";
+import { DragDropProvider } from './DragDropProvider';
+import { SortableContainer } from './SortableContainer';
+import { SortableItem } from './SortableItem';
 
 interface ContentType {
     id: string;
@@ -72,7 +77,53 @@ export const LessonItem = ({
     );
 
     const content = contentData?.data?.content || [];
-    console.log(isInChapter, showContentPopup, onAddContent);
+
+    // Sort content by order
+    const sortedContent = useMemo(() => {
+        return [...content].sort((a, b) => (a.order || 0) - (b.order || 0));
+    }, [content]);
+
+    // Reorder content mutation
+    const [reorderContent, { isLoading: isReorderingContent }] = useReorderContentMutation();
+
+    // Handle content drag and drop
+    const onContentDragEnd = useCallback(async (event: {
+        active: { id: string };
+        over: { id: string } | null;
+        sourceIndex: number;
+        targetIndex: number;
+    }) => {
+        const { sourceIndex, targetIndex } = event;
+
+        if (sourceIndex === targetIndex) {
+            return;
+        }
+
+        try {
+            // Reorder the content array
+            const reorderedContent = Array.from(sortedContent);
+            const [removed] = reorderedContent.splice(sourceIndex, 1);
+            reorderedContent.splice(targetIndex, 0, removed);
+
+            // Create the reorder data with new order values
+            const reorderData = reorderedContent.map((item, index) => ({
+                _id: item._id,
+                order: index + 1
+            }));
+
+            // Call the API to reorder
+            await reorderContent({
+                courseId,
+                lessonId: lesson._id,
+                content: reorderData
+            }).unwrap();
+
+            showSuccessToast('Content reordered successfully!');
+        } catch (error) {
+            console.error('Error reordering content:', error);
+            showErrorToast('Failed to reorder content');
+        }
+    }, [sortedContent, courseId, lesson._id, reorderContent]);
 
     return (
         <div
@@ -184,18 +235,41 @@ export const LessonItem = ({
             </div>
 
             {/* Content List */}
-            {isExpanded && content.length > 0 && (
-                <div className="px-4 pb-4 space-y-2">
-                    {content.map((contentItem) => (
-                        <ContentItem
-                            key={contentItem._id}
-                            content={contentItem}
-                            lessonId={lesson._id}
-                            courseId={courseId}
-                            isDeletingContent={isDeletingContent}
-                            onDeleteContent={onDeleteContent}
-                        />
-                    ))}
+            {isExpanded && sortedContent.length > 0 && (
+                <div className="px-4 pb-4 space-y-2 relative">
+                    {/* Loading overlay during reordering */}
+                    {isReorderingContent && (
+                        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg pointer-events-none">
+                            <div className="bg-white px-4 py-2 rounded-lg shadow-lg border border-blue-200 flex items-center gap-2 pointer-events-auto">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                <span className="text-xs font-medium text-gray-700">Reordering...</span>
+                            </div>
+                        </div>
+                    )}
+                    <DragDropProvider onDragEnd={onContentDragEnd} disabled={isReorderingContent}>
+                        <SortableContainer
+                            id={`lesson-${lesson._id}-content`}
+                            items={sortedContent.map(c => c._id)}
+                            type="content"
+                        >
+                            {sortedContent.map((contentItem) => (
+                                <SortableItem
+                                    key={contentItem._id}
+                                    id={contentItem._id}
+                                    type="content"
+                                    data={contentItem as unknown as Record<string, unknown>}
+                                >
+                                    <ContentItem
+                                        content={contentItem}
+                                        lessonId={lesson._id}
+                                        courseId={courseId}
+                                        isDeletingContent={isDeletingContent}
+                                        onDeleteContent={onDeleteContent}
+                                    />
+                                </SortableItem>
+                            ))}
+                        </SortableContainer>
+                    </DragDropProvider>
                 </div>
             )}
 

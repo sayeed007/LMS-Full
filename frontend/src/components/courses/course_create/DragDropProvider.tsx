@@ -63,8 +63,8 @@ export function DragDropProvider({ children, disabled = false, onDragStart, onDr
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    // This helps track container changes during drag
-    console.log('Drag over event:', event);
+    // TODO:This helps track container changes during drag
+    console.info('Drag over event:', event);
   };
 
   const findContainerFromElement = (id: string): string => {

@@ -141,8 +141,7 @@ export default function MediaContentEditor({ type, data, onChange }: MediaConten
                             const file = e.target.files?.[0];
                             if (file) {
                                 handleFilenameChange(file.name);
-                                // In a real app, you'd upload the file and get a URL
-                                console.log('File selected:', file);
+                                // TODO: In a real app, you'd upload the file and get a URL
                             }
                         }}
                     />
