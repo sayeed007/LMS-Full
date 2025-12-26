@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Merriweather, Poppins } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/header";
+import Footer from "@/components/layout/Footer";
 import { Toaster } from '@/components/ui/sonner';
 // import ToastExample from "@/components/ToastExample";
 // import ModalExample from "@/components/ModalExample";
@@ -56,15 +57,17 @@ export default function RootLayout({
       </head>
 
 
-      <body className="min-h-screen bg-body overflow-x-clip">
+      <body className="min-h-screen bg-body overflow-x-clip flex flex-col">
         <SessionProvider>
           <ReduxProvider>
             <SessionSync />
             <SocketProvider>
               <ModalProviderWithGlobal>
                 <Header />
-                {/* <main> */}
-                {children}
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
 
               {/* TOAST EXAMPLE */}
               {/* <ToastExample /> */}
@@ -92,7 +95,6 @@ export default function RootLayout({
                   duration: 3000,
                 }}
               />
-              {/* </main> */}
               </ModalProviderWithGlobal>
             </SocketProvider>
           </ReduxProvider>

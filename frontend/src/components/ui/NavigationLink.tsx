@@ -13,15 +13,15 @@ interface NavigationLinkProps {
 
 const variantStyles = {
   header: {
-    base: 'text-gray-600 hover:text-blue-600 px-4 py-1 transition-colors whitespace-nowrap',
+    base: 'text-gray-600 hover:text-blue-600 px-3 py-1 transition-colors whitespace-nowrap',
     active: 'text-blue-600 font-bold border-b-2 border-blue-600'
   },
   mobile: {
-    base: 'block text-gray-600 hover:text-blue-600 px-4 py-3 transition-colors rounded-lg hover:bg-white/20',
+    base: 'block text-gray-600 hover:text-blue-600 px-3 py-3 transition-colors rounded-lg hover:bg-white/20',
     active: 'text-blue-600 bg-white/20'
   },
   sidebar: {
-    base: 'flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors',
+    base: 'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
     active: 'bg-blue-100 text-blue-700'
   }
 };

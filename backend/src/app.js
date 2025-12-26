@@ -35,6 +35,7 @@ const assignmentRoutes = require('./routes/assignmentRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const settingRoutes = require('./routes/settingRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Initialize express app
 const app = express();
@@ -215,6 +216,7 @@ app.use(`/api/${apiVersion}/assignments`, assignmentRoutes);
 app.use(`/api/${apiVersion}/messages`, messageRoutes);
 app.use(`/api/${apiVersion}/certificates`, certificateRoutes);
 app.use(`/api/${apiVersion}/settings`, settingRoutes);
+app.use(`/api/${apiVersion}/dashboard`, dashboardRoutes);
 
 // Handle undefined routes
 app.all('*', (req, res, next) => {

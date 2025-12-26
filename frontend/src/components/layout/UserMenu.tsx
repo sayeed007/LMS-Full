@@ -34,7 +34,7 @@ export default function UserMenu({ user }: UserMenuProps) {
 
   const handleSignOut = async () => {
     setIsOpen(false)
-    await signOut({ callbackUrl: '/articles' })
+    await signOut({ callbackUrl: '/' })
   }
 
   const handleProfileClick = () => {
