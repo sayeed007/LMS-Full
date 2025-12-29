@@ -35,8 +35,10 @@ export function ArticleCard({
     onArticleDeleted,
     onArticleUpdated
 }: ArticleCardProps) {
-    const { thumbnail, title, author, publishedAt, views, status } = article;
+    const { thumbnail, title, author, publishedAt, createdAt, views, status } = article;
     const isPublished = status === 'published';
+    // Show publishedAt for published articles, createdAt for drafts
+    const displayDate = publishedAt || createdAt;
     const { name, avatar } = author || { name: '', avatar: '' };
     const [showActionPopup, setShowActionPopup] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -167,13 +169,13 @@ export function ArticleCard({
         >
             <div className="relative aspect-video overflow-hidden rounded-t-xl">
                 <Image
-                    src={thumbnail || '/default-article-thumbnail.jpg'}
+                    src={thumbnail || '/default-article-thumbnail.png'}
                     alt={title}
                     className="object-cover"
                     fill
                     onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/default-article-thumbnail.jpg';
+                        target.src = '/default-article-thumbnail.png';
                     }}
                 />
 
@@ -255,7 +257,7 @@ export function ArticleCard({
             <div className="mt-2 flex justify-between py-2 border-t-1 border-off-white-5 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>{monthDateYearFormat(publishedAt || '')}</span>
+                    <span>{monthDateYearFormat(displayDate || '')}</span>
                 </div>
                 <div className="flex items-center gap-1">
                     <Eye className="w-4 h-4" />
