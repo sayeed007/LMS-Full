@@ -28,6 +28,9 @@ import PrimaryOutlineButton from "../ui/PrimaryOutlineButton"
 import { MoreOptionsPopup } from "./article-more-option-popup"
 import { ArticleAddThumbnailModal } from "./ArticleAddThumbnailModal"
 import { ArticleAdvancedSettingModal } from "./ArticleAdvancedSettingModal"
+import { TemplateSelector } from "./TemplateSelector"
+import { FileImporter } from "./FileImporter"
+import type { ArticleTemplate } from "@/constants/articleTemplates"
 
 export function ArticleCreationOptions() {
     const router = useRouter()
@@ -46,7 +49,7 @@ export function ArticleCreationOptions() {
 
     // UI state
     const [showMorePopup, setShowMorePopup] = useState<boolean>(false);
-    const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch'>('root')
+    const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch' | 'template' | 'import'>('root')
     const [showAddThumbnailModal, setShowAddThumbnailModal] = useState(false);
     const [showAdvanceSettingModal, setShowAdvanceSettingModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -127,11 +130,28 @@ export function ArticleCreationOptions() {
     }
 
     const handleReadyTemplate = () => {
-        router.push(`/articles/edit?name=${encodeURIComponent(articleName)}&mode=template`)
+        setCurrentArticleWritingMethod('template');
     }
 
     const handleImportFile = () => {
-        router.push(`/articles/edit?name=${encodeURIComponent(articleName)}&mode=import`)
+        setCurrentArticleWritingMethod('import');
+    }
+
+    const handleTemplateSelect = (template: ArticleTemplate) => {
+        setArticleContent(template.content);
+        setArticleCategory(template.category);
+        setCurrentArticleWritingMethod('scratch');
+        showSuccessToast('Template loaded', `${template.name} template has been loaded. You can now edit it.`);
+    }
+
+    const handleFileImport = (content: string, fileName: string) => {
+        setArticleContent(content);
+        setCurrentArticleWritingMethod('scratch');
+        showSuccessToast('File imported', `Content from ${fileName} has been imported successfully.`);
+    }
+
+    const handleCancelTemplateOrImport = () => {
+        setCurrentArticleWritingMethod('root');
     }
 
     const handlePublish = async () => {
@@ -379,35 +399,51 @@ export function ArticleCreationOptions() {
                     </div>
                 </div>
                 :
-                currentArticleWritingMethod === 'scratch' ?
-                    <div className="container mx-auto p-6">
-                        <div className="mb-4 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="text-sm text-gray-600">
-                                    Status: <span className="font-semibold">draft</span>
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    Category: <span className="font-semibold">{articleCategory}</span>
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    Visibility: <span className="font-semibold">{articleVisibility}</span>
-                                </div>
-                            </div>
-                            {isLoading && (
-                                <div className="flex items-center gap-2 text-sm text-blue-600">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                                    Saving...
-                                </div>
-                            )}
-                        </div>
-                        <RichTextEditor
-                            value={articleContent}
-                            onChange={setArticleContent}
-                            placeholder="Write something amazing..."
+                currentArticleWritingMethod === 'template' ?
+                    <div className="container mx-auto p-6 max-w-6xl">
+                        <TemplateSelector
+                            onSelectTemplate={handleTemplateSelect}
+                            onCancel={handleCancelTemplateOrImport}
                         />
                     </div>
                     :
-                    <></>
+                    currentArticleWritingMethod === 'import' ?
+                        <div className="container mx-auto p-6 max-w-4xl">
+                            <FileImporter
+                                onImportContent={handleFileImport}
+                                onCancel={handleCancelTemplateOrImport}
+                            />
+                        </div>
+                        :
+                        currentArticleWritingMethod === 'scratch' ?
+                            <div className="container mx-auto p-6">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-sm text-gray-600">
+                                            Status: <span className="font-semibold">draft</span>
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            Category: <span className="font-semibold">{articleCategory}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            Visibility: <span className="font-semibold">{articleVisibility}</span>
+                                        </div>
+                                    </div>
+                                    {isLoading && (
+                                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                                            Saving...
+                                        </div>
+                                    )}
+                                </div>
+                                <RichTextEditor
+                                    value={articleContent}
+                                    onChange={setArticleContent}
+                                    placeholder="Write something amazing..."
+                                />
+                            </div>
+                            :
+                            <></>
             }
 
 
