@@ -1,6 +1,12 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
 const articleController = require('../controllers/articleController');
+const {
+  articleCreateLimiter,
+  articleUpdateLimiter,
+  likeLimiter,
+  commentCreateLimiter
+} = require('../middleware/rateLimiter');
 
 const commentController = require('../controllers/commentController');
 const router = express.Router();
@@ -391,14 +397,14 @@ router.get('/:id/related', articleController.getRelatedArticles);
 // Apply protection to remaining routes
 router.use(protect);
 
-// Article management routes
-router.post('/', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.createArticle);
-router.patch('/:id', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.updateArticle);
+// Article management routes (with rate limiting)
+router.post('/', articleCreateLimiter, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.createArticle);
+router.patch('/:id', articleUpdateLimiter, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.updateArticle);
 router.delete('/:id', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.deleteArticle);
 
-// Article actions
-router.post('/:id/like', articleController.toggleLikeArticle);
-router.delete('/:id/like', articleController.toggleLikeArticle);
+// Article actions (with rate limiting for likes)
+router.post('/:id/like', likeLimiter, articleController.toggleLikeArticle);
+router.delete('/:id/like', likeLimiter, articleController.toggleLikeArticle);
 router.patch('/:id/publish', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
 router.patch('/:id/archive', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.archiveArticle);
 
@@ -408,11 +414,11 @@ router.get('/:articleId/comments', commentController.getArticleComments);
 router.get('/:articleId/comments/:commentId', commentController.getCommentById);
 router.get('/:articleId/comments/:commentId/replies', commentController.getCommentReplies);
 
-// Protected routes for comment actions (must be authenticated)
-router.post('/:articleId/comments', commentController.createComment);
+// Protected routes for comment actions (must be authenticated, with rate limiting)
+router.post('/:articleId/comments', commentCreateLimiter, commentController.createComment);
 router.patch('/:articleId/comments/:commentId', commentController.updateComment);
 router.delete('/:articleId/comments/:commentId', commentController.deleteComment);
-router.post('/:articleId/comments/:commentId/like', commentController.toggleLikeComment);
+router.post('/:articleId/comments/:commentId/like', likeLimiter, commentController.toggleLikeComment);
 
 
 module.exports = router;

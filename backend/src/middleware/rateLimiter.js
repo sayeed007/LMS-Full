@@ -78,6 +78,42 @@ const paymentLimiter = createRateLimiter(securityConfig.rateLimit.payment);
 const emailLimiter = createRateLimiter(securityConfig.rateLimit.email);
 
 /**
+ * Article creation rate limiter (prevent spam)
+ */
+const articleCreateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Max 10 articles per 15 minutes
+  message: 'Too many articles created from this IP, please try again after 15 minutes'
+});
+
+/**
+ * Article update rate limiter (allow frequent updates for auto-save)
+ */
+const articleUpdateLimiter = createRateLimiter({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 50, // Max 50 updates per 5 minutes
+  message: 'Too many update requests from this IP, please try again later'
+});
+
+/**
+ * Like/Unlike rate limiter (prevent abuse)
+ */
+const likeLimiter = createRateLimiter({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // Max 30 like/unlike operations per minute
+  message: 'Too many like/unlike requests from this IP, please try again later'
+});
+
+/**
+ * Comment creation rate limiter (prevent spam)
+ */
+const commentCreateLimiter = createRateLimiter({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 20, // Max 20 comments per 5 minutes
+  message: 'Too many comments from this IP, please try again after 5 minutes'
+});
+
+/**
  * Create a custom rate limiter with specific configuration
  */
 const customLimiter = (windowMs, max, message) => {
@@ -202,6 +238,10 @@ module.exports = {
   uploadLimiter,
   paymentLimiter,
   emailLimiter,
+  articleCreateLimiter,
+  articleUpdateLimiter,
+  likeLimiter,
+  commentCreateLimiter,
   customLimiter,
   ipBlocker,
   suspiciousActivityDetector,

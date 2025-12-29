@@ -1,6 +1,27 @@
 const Article = require('../models/Article');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const DOMPurify = require('isomorphic-dompurify');
+
+// Helper function to sanitize HTML content
+const sanitizeHTML = (html) => {
+  if (!html) return html;
+
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'span', 'div', 'iframe', 'video', 'audio', 'source'
+    ],
+    ALLOWED_ATTR: [
+      'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+      'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen',
+      'controls', 'autoplay', 'loop', 'muted'
+    ],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+  });
+};
 
 // Helper function for pagination
 const getPaginationData = (page, limit, totalResults) => {
@@ -90,14 +111,14 @@ exports.getAllArticles = catchAsync(async (req, res, next) => {
   // Get total count for pagination
   const totalResults = await Article.countDocuments(filters);
 
-  // Fetch articles
+  // Fetch articles (exclude full content for performance, return excerpt instead)
   const articles = await Article.find(filters)
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
     .populate('author', 'name avatar email')
     .populate('organization', 'name')
-    .select('-likedBy'); // Exclude likedBy array for performance
+    .select('-content -likedBy'); // Exclude full content and likedBy array for performance
 
   // Add text search score if searching
   if (req.query.search) {
@@ -133,13 +154,14 @@ exports.getMyArticles = catchAsync(async (req, res, next) => {
   // Get total count for pagination
   const totalResults = await Article.countDocuments(filters);
 
-  // Fetch articles
+  // Fetch articles (exclude full content for performance in list view)
   const articles = await Article.find(filters)
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
     .populate('author', 'name avatar email')
-    .populate('organization', 'name');
+    .populate('organization', 'name')
+    .select('-content -likedBy'); // Exclude content and likedBy for performance
 
   // Get pagination data
   const pagination = getPaginationData(page, limit, totalResults);
@@ -183,6 +205,11 @@ exports.getArticleById = catchAsync(async (req, res, next) => {
 
 // Create new article
 exports.createArticle = catchAsync(async (req, res, next) => {
+  // Sanitize HTML content to prevent XSS attacks
+  if (req.body.content) {
+    req.body.content = sanitizeHTML(req.body.content);
+  }
+
   // Add author and organization to the article data
   const articleData = {
     ...req.body,
@@ -215,6 +242,11 @@ exports.updateArticle = catchAsync(async (req, res, next) => {
   if (article.author.toString() !== req.user.id &&
       !['org_admin', 'super_admin'].includes(req.user.role)) {
     return next(new AppError('You do not have permission to edit this article', 403));
+  }
+
+  // Sanitize HTML content to prevent XSS attacks
+  if (req.body.content) {
+    req.body.content = sanitizeHTML(req.body.content);
   }
 
   // Update article
@@ -325,7 +357,7 @@ exports.getRelatedArticles = catchAsync(async (req, res, next) => {
 
   const limit = parseInt(req.query.limit) || 5;
 
-  // Find related articles by category and tags
+  // Find related articles by category and tags (exclude full content)
   const relatedArticles = await Article.find({
     _id: { $ne: article._id },
     status: 'published',
@@ -337,7 +369,8 @@ exports.getRelatedArticles = catchAsync(async (req, res, next) => {
   })
   .sort({ likes: -1, views: -1 })
   .limit(limit)
-  .populate('author', 'name avatar');
+  .populate('author', 'name avatar')
+  .select('-content -likedBy'); // Exclude content and likedBy for performance
 
   res.status(200).json({
     status: 'success',

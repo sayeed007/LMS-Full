@@ -186,7 +186,8 @@ articleSchema.statics.getPopular = function (limit = 10, timeframe = 'week') {
   })
     .sort({ views: -1, likes: -1 })
     .limit(limit)
-    .populate('author', 'name avatar');
+    .populate('author', 'name avatar')
+    .select('-content -likedBy'); // Exclude full content for performance
 };
 
 articleSchema.statics.getFeatured = function (limit = 5) {
@@ -196,7 +197,8 @@ articleSchema.statics.getFeatured = function (limit = 5) {
   })
     .sort({ likes: -1, views: -1, publishedAt: -1 })
     .limit(limit)
-    .populate('author', 'name avatar');
+    .populate('author', 'name avatar')
+    .select('-content -likedBy'); // Exclude full content for performance
 };
 
 articleSchema.statics.getCategories = function () {

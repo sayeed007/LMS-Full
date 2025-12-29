@@ -2,6 +2,19 @@ const Comment = require('../models/Comment');
 const Article = require('../models/Article');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const DOMPurify = require('isomorphic-dompurify');
+
+// Helper function to sanitize comment content (text only, no HTML)
+const sanitizeCommentContent = (content) => {
+  if (!content) return content;
+
+  // For comments, we want to allow only basic text formatting
+  return DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'code'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+  });
+};
 
 // Helper function for pagination
 const getPaginationData = (page, limit, totalResults) => {
@@ -127,9 +140,12 @@ exports.createComment = catchAsync(async (req, res, next) => {
     }
   }
 
+  // Sanitize content to prevent XSS attacks
+  const sanitizedContent = sanitizeCommentContent(content);
+
   // Create comment
   const comment = await Comment.create({
-    content,
+    content: sanitizedContent,
     article: articleId,
     author: req.user.id,
     parentComment: parentComment || null
@@ -164,8 +180,11 @@ exports.updateComment = catchAsync(async (req, res, next) => {
     return next(new AppError('You can only edit your own comments', 403));
   }
 
+  // Sanitize content to prevent XSS attacks
+  const sanitizedContent = sanitizeCommentContent(content);
+
   // Update comment
-  comment.content = content;
+  comment.content = sanitizedContent;
   await comment.save();
 
   // Populate author information
