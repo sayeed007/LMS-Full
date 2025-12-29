@@ -644,3 +644,4 @@ pm2 logs lms-frontend
 - Review user feedback
 
 This setup guide provides everything needed to get the LMS project running locally and deploy to production successfully. For any issues, refer to the troubleshooting section or check the individual README files in frontend/ and backend/ directories.
+

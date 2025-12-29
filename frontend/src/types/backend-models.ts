@@ -603,11 +603,15 @@ export interface Article extends BaseDocument {
   tags: string[];
   thumbnail?: string;
   author: author; // User ObjectId
-  isPublished: boolean;
+  status: 'draft' | 'published' | 'archived';
+  visibility: 'public' | 'private' | 'organization';
   publishedAt?: string;
   views: number;
   likes: number;
+  likedBy?: string[]; // User ObjectIds
   organization?: string; // Organization ObjectId
+  // Deprecated field - use status instead
+  isPublished?: boolean;
 }
 
 // =============================================================================

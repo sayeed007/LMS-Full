@@ -31,25 +31,31 @@ import { ArticleAdvancedSettingModal } from "./ArticleAdvancedSettingModal"
 import { TemplateSelector } from "./TemplateSelector"
 import { FileImporter } from "./FileImporter"
 import type { ArticleTemplate } from "@/constants/articleTemplates"
+import { Article } from "@/types/backend-models"
 
-export function ArticleCreationOptions() {
+interface ArticleCreationOptionsProps {
+    existingArticle?: Article;
+}
+
+export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptionsProps = {}) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { data: session } = useSession()
 
     // Article state
-    const [articleId, setArticleId] = useState<string | null>(null)
-    const [articleName, setArticleName] = useState<string>(searchParams.get('name') || 'Untitled Article');
-    const [articleContent, setArticleContent] = useState('');
-    const [articleCategory, setArticleCategory] = useState('General');
-    const [articleTags, setArticleTags] = useState<string[]>([]);
-    const [articleThumbnail, setArticleThumbnail] = useState<string>('');
-    const [,] = useState<'draft' | 'published'>('draft');
-    const [articleVisibility, setArticleVisibility] = useState<'public' | 'private' | 'organization'>('public');
+    const [articleId, setArticleId] = useState<string | null>(existingArticle?._id || null)
+    const [articleName, setArticleName] = useState<string>(existingArticle?.title || searchParams.get('name') || 'Untitled Article');
+    const [articleContent, setArticleContent] = useState(existingArticle?.content || '');
+    const [articleCategory, setArticleCategory] = useState(existingArticle?.category || 'General');
+    const [articleTags, setArticleTags] = useState<string[]>(existingArticle?.tags || []);
+    const [articleThumbnail, setArticleThumbnail] = useState<string>(existingArticle?.thumbnail || '');
+    const [,] = useState<'draft' | 'published'>(existingArticle?.status || 'draft');
+    const [articleVisibility, setArticleVisibility] = useState<'public' | 'private' | 'organization'>(existingArticle?.visibility || 'public');
 
     // UI state
     const [showMorePopup, setShowMorePopup] = useState<boolean>(false);
-    const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch' | 'template' | 'import'>('root')
+    // If editing existing article, go straight to editor
+    const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch' | 'template' | 'import'>(existingArticle ? 'scratch' : 'root')
     const [showAddThumbnailModal, setShowAddThumbnailModal] = useState(false);
     const [showAdvanceSettingModal, setShowAdvanceSettingModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);

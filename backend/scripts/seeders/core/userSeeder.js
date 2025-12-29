@@ -1,15 +1,15 @@
-const bcrypt = require('bcryptjs');
 const User = require('../../../src/models/User');
 
 const seedUsers = async () => {
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  // Don't hash here - let the User model's pre-save hook handle it
+  const plainPassword = 'password123';
 
   const users = [
     // Super Admin
     {
       name: 'System Administrator',
       email: 'admin@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'super_admin',
       isEmailVerified: true,
       profile: {
@@ -30,7 +30,7 @@ const seedUsers = async () => {
     {
       name: 'Organization Manager',
       email: 'org.admin@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'org_admin',
       isEmailVerified: true,
       profile: {
@@ -44,7 +44,7 @@ const seedUsers = async () => {
     {
       name: 'Dr. John Doe',
       email: 'john.doe@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'instructor',
       isEmailVerified: true,
       profile: {
@@ -66,7 +66,7 @@ const seedUsers = async () => {
     {
       name: 'Prof. Sarah Wilson',
       email: 'sarah.wilson@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'instructor',
       isEmailVerified: true,
       profile: {
@@ -86,7 +86,7 @@ const seedUsers = async () => {
     {
       name: 'Michael Chen',
       email: 'michael.chen@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'instructor',
       isEmailVerified: true,
       profile: {
@@ -102,7 +102,7 @@ const seedUsers = async () => {
     {
       name: 'Dr. Emily Rodriguez',
       email: 'emily.rodriguez@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'instructor',
       isEmailVerified: true,
       profile: {
@@ -119,7 +119,7 @@ const seedUsers = async () => {
     {
       name: 'Alice Student',
       email: 'alice.student@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -138,7 +138,7 @@ const seedUsers = async () => {
     {
       name: 'Bob Johnson',
       email: 'bob.johnson@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -152,7 +152,7 @@ const seedUsers = async () => {
     {
       name: 'Carol Williams',
       email: 'carol.williams@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -166,7 +166,7 @@ const seedUsers = async () => {
     {
       name: 'David Brown',
       email: 'david.brown@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -180,7 +180,7 @@ const seedUsers = async () => {
     {
       name: 'Emma Davis',
       email: 'emma.davis@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -194,7 +194,7 @@ const seedUsers = async () => {
     {
       name: 'Frank Miller',
       email: 'frank.miller@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -208,7 +208,7 @@ const seedUsers = async () => {
     {
       name: 'Grace Taylor',
       email: 'grace.taylor@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -222,7 +222,7 @@ const seedUsers = async () => {
     {
       name: 'Henry Wilson',
       email: 'henry.wilson@lms.com',
-      password: hashedPassword,
+      password: plainPassword,
       role: 'student',
       isEmailVerified: true,
       profile: {
@@ -234,8 +234,9 @@ const seedUsers = async () => {
     }
   ];
 
-  // Create users and return them
-  const createdUsers = await User.insertMany(users);
+  // Create users using User.create() to trigger pre-save hooks (password hashing)
+  // Note: User.create() triggers middleware, insertMany() does not
+  const createdUsers = await User.create(users);
   return createdUsers;
 };
 
