@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import '@/styles/quill-content.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, File, X, AlertCircle } from 'lucide-react';
@@ -250,10 +251,12 @@ export const FileImporter = ({ onImportContent, onCancel }: FileImporterProps) =
                             <Card>
                                 <CardContent className="p-6">
                                     <h4 className="font-semibold text-gray-900 mb-4">Content Preview</h4>
-                                    <div
-                                        className="prose prose-sm max-w-none max-h-[300px] overflow-y-auto border rounded p-4 bg-gray-50"
-                                        dangerouslySetInnerHTML={{ __html: previewContent }}
-                                    />
+                                    <div className="max-h-[400px] overflow-y-auto border rounded-lg p-6 bg-white shadow-inner">
+                                        <div
+                                            className="quill-content"
+                                            dangerouslySetInnerHTML={{ __html: previewContent }}
+                                        />
+                                    </div>
                                 </CardContent>
                             </Card>
                         </>

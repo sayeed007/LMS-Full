@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import '@/styles/quill-content.css';
 import { articleTemplates, type ArticleTemplate } from '@/constants/articleTemplates';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,12 +68,29 @@ export const TemplateSelector = ({ onSelectTemplate, onCancel }: TemplateSelecto
             </div>
 
             {selectedTemplate && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-2">
-                        {selectedTemplate.icon} {selectedTemplate.name}
-                    </h4>
-                    <p className="text-sm text-blue-800">{selectedTemplate.description}</p>
-                </div>
+                <Card className="border-blue-200 bg-blue-50">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-semibold text-blue-900 text-lg">
+                                {selectedTemplate.icon} {selectedTemplate.name}
+                            </h4>
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                {selectedTemplate.category}
+                            </Badge>
+                        </div>
+                        <p className="text-sm text-blue-800 mb-4">{selectedTemplate.description}</p>
+
+                        <div className="bg-white border border-blue-200 rounded-lg p-4">
+                            <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Template Preview</h5>
+                            <div className="max-h-[250px] overflow-y-auto">
+                                <div
+                                    className="quill-content text-sm"
+                                    dangerouslySetInnerHTML={{ __html: selectedTemplate.content }}
+                                />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             )}
 
             <div className="flex justify-end gap-3 pt-4 border-t">
