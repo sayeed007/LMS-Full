@@ -379,16 +379,17 @@ router.get('/popular', articleController.getPopularArticles);
 router.get('/search', articleController.searchArticles);
 router.get('/', articleController.getAllArticles);
 
-// Public article detail routes (must come before protected routes)
+// Protected routes - Define specific routes before generic ones
+// IMPORTANT: These must come BEFORE /:id to avoid route conflicts
+router.get('/my-articles', protect, articleController.getMyArticles);
+router.get('/stats', protect, articleController.getArticleStats);
+
+// Public article detail routes (must come after specific routes)
 router.get('/:id', articleController.getArticleById);
 router.get('/:id/related', articleController.getRelatedArticles);
 
-// Protected routes - Define specific routes before generic ones
+// Apply protection to remaining routes
 router.use(protect);
-
-// User-specific routes
-router.get('/my-articles', articleController.getMyArticles);
-router.get('/stats', articleController.getArticleStats);
 
 // Article management routes
 router.post('/', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.createArticle);
