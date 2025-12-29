@@ -289,6 +289,51 @@ exports.deleteArticle = catchAsync(async (req, res, next) => {
   });
 });
 
+// Duplicate article
+exports.duplicateArticle = catchAsync(async (req, res, next) => {
+  const originalArticle = await Article.findById(req.params.id);
+
+  if (!originalArticle) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if user is the author or has permission
+  if (originalArticle.author.toString() !== req.user.id &&
+      !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to duplicate this article', 403));
+  }
+
+  // Create duplicate with modified title and reset stats
+  const duplicateData = {
+    title: `${originalArticle.title} (Copy)`,
+    content: originalArticle.content,
+    excerpt: originalArticle.excerpt,
+    category: originalArticle.category,
+    tags: originalArticle.tags,
+    thumbnail: originalArticle.thumbnail,
+    author: req.user.id, // Set current user as author
+    status: 'draft', // Always create as draft
+    visibility: originalArticle.visibility,
+    organization: req.user.organization,
+    // Reset engagement metrics
+    views: 0,
+    likes: 0,
+    likedBy: []
+  };
+
+  const duplicatedArticle = await Article.create(duplicateData);
+
+  // Populate author information
+  await duplicatedArticle.populate('author', 'name avatar email');
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      article: duplicatedArticle
+    }
+  });
+});
+
 // Like/Unlike article
 exports.toggleLikeArticle = catchAsync(async (req, res, next) => {
   const article = await Article.findById(req.params.id);

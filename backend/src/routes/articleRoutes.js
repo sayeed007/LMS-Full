@@ -401,6 +401,7 @@ router.use(protect);
 router.post('/', articleCreateLimiter, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.createArticle);
 router.patch('/:id', articleUpdateLimiter, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.updateArticle);
 router.delete('/:id', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.deleteArticle);
+router.post('/:id/duplicate', articleCreateLimiter, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.duplicateArticle);
 
 // Article actions (with rate limiting for likes)
 router.post('/:id/like', likeLimiter, articleController.toggleLikeArticle);
