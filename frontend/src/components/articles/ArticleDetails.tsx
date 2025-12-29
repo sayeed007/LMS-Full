@@ -13,6 +13,7 @@ import { useAppSelector } from '@/store/hooks';
 import { PageLayout } from '../ui';
 import { ArticlePopulated, useLikeArticleMutation, useUnlikeArticleMutation } from '@/store/api/articleApi';
 import { showSuccessToast, showErrorToast } from '@/lib/toast-utils';
+import { useCreateCommentMutation, useGetArticleCommentsQuery } from '@/store/api/commentApi';
 import { useLoginModal } from '@/hooks/useLoginModal';
 
 

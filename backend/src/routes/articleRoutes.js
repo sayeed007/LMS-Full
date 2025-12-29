@@ -2,6 +2,7 @@ const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
 const articleController = require('../controllers/articleController');
 
+const commentController = require('../controllers/commentController');
 const router = express.Router();
 
 /**
@@ -399,5 +400,18 @@ router.post('/:id/like', articleController.toggleLikeArticle);
 router.delete('/:id/like', articleController.toggleLikeArticle);
 router.patch('/:id/publish', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
 router.patch('/:id/archive', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.archiveArticle);
+
+// Comment routes - nested under articles
+// Public routes for reading comments
+router.get('/:articleId/comments', commentController.getArticleComments);
+router.get('/:articleId/comments/:commentId', commentController.getCommentById);
+router.get('/:articleId/comments/:commentId/replies', commentController.getCommentReplies);
+
+// Protected routes for comment actions (must be authenticated)
+router.post('/:articleId/comments', commentController.createComment);
+router.patch('/:articleId/comments/:commentId', commentController.updateComment);
+router.delete('/:articleId/comments/:commentId', commentController.deleteComment);
+router.post('/:articleId/comments/:commentId/like', commentController.toggleLikeComment);
+
 
 module.exports = router;

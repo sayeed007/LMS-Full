@@ -128,6 +128,7 @@ export const baseApi = createApi({
     'Progress',
     'Organization',
     'Article',
+    'Comment',
     'Auth',
     'QuestionBank',
     'QuestionBanks',
