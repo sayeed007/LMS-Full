@@ -678,3 +678,172 @@ exports.restoreArticleVersion = catchAsync(async (req, res, next) => {
     message: `Article restored to version ${req.params.versionNumber}`
   });
 });
+
+/**
+ * Get article analytics/insights
+ * @route GET /api/v1/articles/:id/analytics
+ * @access Private (Author or Admin)
+ */
+exports.getArticleAnalytics = catchAsync(async (req, res, next) => {
+  const article = await Article.findById(req.params.id)
+    .populate('author', 'name avatar email')
+    .select('+likedBy');
+
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if user has permission to view analytics
+  if (article.author._id.toString() !== req.user.id && req.user.role !== 'super_admin') {
+    return next(new AppError('You do not have permission to view this article\'s analytics', 403));
+  }
+
+  // Get comments for this article
+  const Comment = require('../models/Comment');
+  const comments = await Comment.find({ article: article._id, deletedAt: null });
+  const totalComments = comments.length;
+  const totalReplies = comments.filter(c => c.parentComment).length;
+  const topLevelComments = comments.filter(c => !c.parentComment).length;
+
+  // Get engagement rate (likes + comments per view)
+  const engagementRate = article.views > 0
+    ? ((article.likes + totalComments) / article.views * 100).toFixed(2)
+    : 0;
+
+  // Get version history count
+  const ArticleVersion = require('../models/ArticleVersion');
+  const versionCount = await ArticleVersion.countDocuments({ article: article._id });
+
+  // Prepare analytics data
+  const analytics = {
+    views: article.views,
+    likes: article.likes,
+    likeRate: article.views > 0 ? (article.likes / article.views * 100).toFixed(2) : 0,
+    comments: {
+      total: totalComments,
+      topLevel: topLevelComments,
+      replies: totalReplies
+    },
+    engagement: {
+      rate: engagementRate,
+      totalInteractions: article.likes + totalComments
+    },
+    versions: versionCount,
+    readTime: article.readTime,
+    publishedAt: article.publishedAt,
+    lastUpdated: article.updatedAt,
+    status: article.status,
+    visibility: article.visibility,
+    category: article.category,
+    tags: article.tags
+  };
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      analytics
+    }
+  });
+});
+
+/**
+ * Bookmark/favorite an article
+ * @route POST /api/v1/articles/:id/bookmark
+ * @access Private
+ */
+exports.bookmarkArticle = catchAsync(async (req, res, next) => {
+  const User = require('../models/User');
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  const article = await Article.findById(req.params.id);
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if article is already bookmarked
+  const isBookmarked = user.bookmarkedArticles.includes(req.params.id);
+
+  if (isBookmarked) {
+    return next(new AppError('Article is already bookmarked', 400));
+  }
+
+  // Add to bookmarks
+  user.bookmarkedArticles.push(req.params.id);
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Article bookmarked successfully',
+    data: {
+      bookmarkedArticles: user.bookmarkedArticles
+    }
+  });
+});
+
+/**
+ * Remove bookmark/unfavorite an article
+ * @route DELETE /api/v1/articles/:id/bookmark
+ * @access Private
+ */
+exports.unbookmarkArticle = catchAsync(async (req, res, next) => {
+  const User = require('../models/User');
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // Check if article is bookmarked
+  const isBookmarked = user.bookmarkedArticles.includes(req.params.id);
+
+  if (!isBookmarked) {
+    return next(new AppError('Article is not bookmarked', 400));
+  }
+
+  // Remove from bookmarks
+  user.bookmarkedArticles = user.bookmarkedArticles.filter(
+    id => id.toString() !== req.params.id
+  );
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Article bookmark removed successfully',
+    data: {
+      bookmarkedArticles: user.bookmarkedArticles
+    }
+  });
+});
+
+/**
+ * Get user's bookmarked articles
+ * @route GET /api/v1/articles/bookmarks
+ * @access Private
+ */
+exports.getBookmarkedArticles = catchAsync(async (req, res, next) => {
+  const User = require('../models/User');
+  const user = await User.findById(req.user.id).populate({
+    path: 'bookmarkedArticles',
+    select: '-content -likedBy',
+    populate: {
+      path: 'author',
+      select: 'name avatar email'
+    }
+  });
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    results: user.bookmarkedArticles.length,
+    data: {
+      articles: user.bookmarkedArticles
+    }
+  });
+});

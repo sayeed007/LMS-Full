@@ -389,6 +389,7 @@ router.get('/', articleController.getAllArticles);
 // IMPORTANT: These must come BEFORE /:id to avoid route conflicts
 router.get('/my-articles', protect, articleController.getMyArticles);
 router.get('/stats', protect, articleController.getArticleStats);
+router.get('/bookmarks', protect, articleController.getBookmarkedArticles);
 
 // Public article detail routes (must come after specific routes)
 router.get('/:id', articleController.getArticleById);
@@ -398,6 +399,9 @@ router.get('/:id/related', articleController.getRelatedArticles);
 router.get('/:id/versions', protect, articleController.getArticleVersions);
 router.get('/:id/versions/:versionNumber', protect, articleController.getArticleVersion);
 router.post('/:id/versions/:versionNumber/restore', protect, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.restoreArticleVersion);
+
+// Article analytics route (protected - author or admin only)
+router.get('/:id/analytics', protect, articleController.getArticleAnalytics);
 
 // Apply protection to remaining routes
 router.use(protect);
@@ -411,6 +415,8 @@ router.post('/:id/duplicate', articleCreateLimiter, restrictTo('student', 'instr
 // Article actions (with rate limiting for likes)
 router.post('/:id/like', likeLimiter, articleController.toggleLikeArticle);
 router.delete('/:id/like', likeLimiter, articleController.toggleLikeArticle);
+router.post('/:id/bookmark', articleController.bookmarkArticle);
+router.delete('/:id/bookmark', articleController.unbookmarkArticle);
 router.patch('/:id/publish', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
 router.patch('/:id/archive', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.archiveArticle);
 

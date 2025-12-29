@@ -245,6 +245,11 @@ const userSchema = new mongoose.Schema({
       default: 'light'
     }
   },
+  // Bookmarked/favorited articles
+  bookmarkedArticles: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Article'
+  }],
   // OAuth fields
   googleId: String,
   microsoftId: String,

@@ -70,6 +70,29 @@ export interface ArticleStats {
   articlesThisMonth: number;
 }
 
+export interface ArticleAnalytics {
+  views: number;
+  likes: number;
+  likeRate: string;
+  comments: {
+    total: number;
+    topLevel: number;
+    replies: number;
+  };
+  engagement: {
+    rate: string;
+    totalInteractions: number;
+  };
+  versions: number;
+  readTime: number;
+  publishedAt: string;
+  lastUpdated: string;
+  status: string;
+  visibility: string;
+  category: string;
+  tags: string[];
+}
+
 export const articleApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getArticles: builder.query<ArticleListResponse, ArticleListParams | void>({
@@ -216,6 +239,32 @@ export const articleApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, id) => [{ type: 'Article', id }],
     }),
+
+    getArticleAnalytics: builder.query<BaseApiResponse<ArticleAnalytics>, string>({
+      query: (id) => `/articles/${id}/analytics`,
+      providesTags: (result, error, id) => [{ type: 'Article', id: `${id}-analytics` }],
+    }),
+
+    bookmarkArticle: builder.mutation<BaseApiResponse<{ bookmarkedArticles: string[] }>, string>({
+      query: (id) => ({
+        url: `/articles/${id}/bookmark`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Article'],
+    }),
+
+    unbookmarkArticle: builder.mutation<BaseApiResponse<{ bookmarkedArticles: string[] }>, string>({
+      query: (id) => ({
+        url: `/articles/${id}/bookmark`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Article'],
+    }),
+
+    getBookmarkedArticles: builder.query<BaseApiResponse<{ articles: ArticlePopulated[] }>, void>({
+      query: () => '/articles/bookmarks',
+      providesTags: ['Article'],
+    }),
   }),
 });
 
@@ -239,4 +288,8 @@ export const {
   usePublishArticleMutation,
   useArchiveArticleMutation,
   useIncrementArticleViewsMutation,
+  useGetArticleAnalyticsQuery,
+  useBookmarkArticleMutation,
+  useUnbookmarkArticleMutation,
+  useGetBookmarkedArticlesQuery,
 } = articleApi;

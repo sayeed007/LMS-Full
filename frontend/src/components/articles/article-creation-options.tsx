@@ -59,6 +59,7 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
     const [showAddThumbnailModal, setShowAddThumbnailModal] = useState(false);
     const [showAdvanceSettingModal, setShowAdvanceSettingModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     // API hooks
     const [createArticle] = useCreateArticleMutation();
@@ -111,6 +112,9 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
                 const result = await createArticle(articleData).unwrap();
                 setArticleId(result.data?.article._id || null);
             }
+
+            // Reset unsaved changes flag after successful save
+            setHasUnsavedChanges(false);
 
             dismissToast(loadingToastId);
 
@@ -245,6 +249,13 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
         router.push(url);
     };
 
+    // Track content changes to mark as unsaved
+    useEffect(() => {
+        if (currentArticleWritingMethod === 'scratch' && (articleContent || articleName !== 'Untitled Article')) {
+            setHasUnsavedChanges(true);
+        }
+    }, [articleContent, articleName, articleCategory, articleTags, articleThumbnail, articleVisibility, currentArticleWritingMethod]);
+
     // Auto-save functionality
     useEffect(() => {
         if (currentArticleWritingMethod === 'scratch' && articleContent.trim() && articleName.trim()) {
@@ -258,6 +269,19 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [articleContent, articleName, session, currentArticleWritingMethod]);
+
+    // Warn user before leaving with unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
 
     return (
         <SimplePageContainer containerSize="xl" containerPadding="none">

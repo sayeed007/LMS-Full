@@ -4,18 +4,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Download, MessageCircle, ThumbsUp, SortDesc } from 'lucide-react';
+import { Download, MessageCircle, ThumbsUp, SortDesc, Bookmark } from 'lucide-react';
 import { useState } from 'react';
 import { GoBackRoute } from '../reports/GoBackRoute';
 import PrimaryActionButton from '../ui/PrimaryButton';
 import PrimaryOutlineButton from '../ui/PrimaryOutlineButton';
 import { useAppSelector } from '@/store/hooks';
 import { PageLayout } from '../ui';
-import { ArticlePopulated, useLikeArticleMutation, useUnlikeArticleMutation } from '@/store/api/articleApi';
+import { ArticlePopulated, useLikeArticleMutation, useUnlikeArticleMutation, useBookmarkArticleMutation, useUnbookmarkArticleMutation } from '@/store/api/articleApi';
 import { showSuccessToast, showErrorToast } from '@/lib/toast-utils';
 import { useCreateCommentMutation, useGetArticleCommentsQuery } from '@/store/api/commentApi';
 import { useLoginModal } from '@/hooks/useLoginModal';
 import { CommentItem } from './CommentItem';
+import { SocialShare } from './SocialShare';
 import {
     Select,
     SelectContent,
@@ -36,6 +37,7 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     const [sortBy, setSortBy] = useState<'createdAt' | 'likes'>('createdAt');
     const [hasLiked, setHasLiked] = useState(false);
     const [localLikes, setLocalLikes] = useState(article.likes || 0);
+    const [isBookmarked, setIsBookmarked] = useState(false);
     const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
     const { openLoginModal } = useLoginModal();
 
@@ -43,6 +45,8 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     const [likeArticle, { isLoading: isLiking }] = useLikeArticleMutation();
     const [unlikeArticle, { isLoading: isUnliking }] = useUnlikeArticleMutation();
     const [createComment, { isLoading: isSubmittingComment }] = useCreateCommentMutation();
+    const [bookmarkArticle, { isLoading: isBookmarking }] = useBookmarkArticleMutation();
+    const [unbookmarkArticle, { isLoading: isUnbookmarking }] = useUnbookmarkArticleMutation();
 
     // Fetch comments for this article with sorting
     const { data: commentsData, isLoading: isLoadingComments } = useGetArticleCommentsQuery({
@@ -141,6 +145,33 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
         setNewComment('');
     };
 
+    const handleBookmark = async () => {
+        // Check authentication first
+        if (!isAuthenticated) {
+            openLoginModal("Please sign in to bookmark this article.");
+            return;
+        }
+
+        if (isBookmarking || isUnbookmarking) return;
+
+        try {
+            if (isBookmarked) {
+                // Remove bookmark
+                await unbookmarkArticle(article._id).unwrap();
+                setIsBookmarked(false);
+                showSuccessToast('Bookmark removed');
+            } else {
+                // Add bookmark
+                await bookmarkArticle(article._id).unwrap();
+                setIsBookmarked(true);
+                showSuccessToast('Article bookmarked');
+            }
+        } catch (error) {
+            showErrorToast('Failed to update bookmark', 'Please try again');
+            console.error('Error toggling bookmark:', error);
+        }
+    };
+
     const handleExport = () => {
         try {
             // Create a printable version of the article
@@ -234,13 +265,24 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                         <span className="text-sm font-medium">Back to Articles</span>
                     </div>
 
-                    <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                        onClick={handleExport}
-                    >
-                        <Download className="w-4 h-4 mr-2" />
-                        Export as PDF
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                            onClick={handleBookmark}
+                        >
+                            <Bookmark className={`w-4 h-4 mr-2 ${isBookmarked ? 'fill-blue-600' : ''}`} />
+                            {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                        </Button>
+
+                        <Button
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                            onClick={handleExport}
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Export as PDF
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Main Content Card */}
@@ -294,6 +336,11 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                                     Like ({localLikes})
                                 </PrimaryOutlineButton>
                             </div>
+                        </div>
+
+                        {/* Social Share Section */}
+                        <div className="border-t border-off-white-4 pt-8 mb-8">
+                            <SocialShare article={{ _id: article._id, title, excerpt: article.excerpt }} />
                         </div>
 
                         {/* Comments Section */}
