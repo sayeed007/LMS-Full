@@ -1,7 +1,7 @@
 "use client"
 import Image from "next/image";
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Container from "@/components/ui/Container";
 import PageHeader from "@/components/ui/PageHeader";
 import { useAppSelector } from "@/store/hooks";
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const user = useAppSelector((state) => state.auth.user);
   console.log(user)
@@ -162,10 +163,11 @@ export default function DashboardPage() {
                     {visibleCourses.map((course) => (
                       <div
                         key={course._id}
-                        className="bg-white rounded-xl shadow-sm w-68 min-w-[272px] flex-shrink-0 hover:shadow-md transition-shadow"
+                        onClick={() => router.push(`/courses/${course._id}`)}
+                        className="bg-white rounded-xl shadow-sm w-68 min-w-[272px] flex-shrink-0 hover:shadow-md transition-shadow cursor-pointer"
                       >
                         <Image
-                          src={course.thumbnail || "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=400&q=80"}
+                          src={course.thumbnail || "/default-course-thumbnail.png"}
                           alt={course.title}
                           width={1400}
                           height={128}

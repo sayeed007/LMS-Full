@@ -219,12 +219,14 @@ export default function CoursesPage() {
       <PageLayout
         title="Courses"
         headerActions={
-          <Button
-            onClick={openCreateModal}
-            className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
-          >
-            Create Now
-          </Button>
+          isAuthenticated ? (
+            <Button
+              onClick={openCreateModal}
+              className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
+            >
+              Create Now
+            </Button>
+          ) : null
         }
       >
         <div className="space-y-6">

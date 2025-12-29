@@ -1,25 +1,26 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../../../.env' });
 const mongoose = require('mongoose');
 const chalk = require('chalk');
 
 // Import models
-const User = require('../models/User');
-const Category = require('../models/Category');
-const Course = require('../models/Course');
-const Lesson = require('../models/Lesson');
-const Assignment = require('../models/Assignment');
-const { Quiz, QuizAttempt } = require('../models/Quiz');
-const Question = require('../models/Question');
-const QuestionBank = require('../models/QuestionBank');
-const Enrollment = require('../models/Enrollment');
+const User = require('../../../src/models/User');
+const Category = require('../../../src/models/Category');
+const Course = require('../../../src/models/Course');
+const Lesson = require('../../../src/models/Lesson');
+const Assignment = require('../../../src/models/Assignment');
+const { Quiz, QuizAttempt } = require('../../../src/models/Quiz');
+const Question = require('../../../src/models/Question');
+const QuestionBank = require('../../../src/models/QuestionBank');
+const Enrollment = require('../../../src/models/Enrollment');
 
 // Import seeders
 const { seedUsers } = require('./userSeeder');
 const { seedCategories } = require('./categorySeeder');
-const { seedCoursesWithLessons } = require('./improvedCourseSeeder');
-const { seedQuestionBanks, seedQuestions, seedQuizzes } = require('./quizSeeder');
-const { seedEnrollments } = require('./enrollmentSeeder');
-const { seedArticles } = require('./improvedArticleSeeder');
+const { seedCoursesWithLessons } = require('../courses/improvedCourseSeeder');
+const { seedSOLIDPrinciplesCourse } = require('../courses/solid-principles/solidPrinciplesCourseSeederComplete');
+const { seedQuestionBanks, seedQuestions, seedQuizzes } = require('../assessments/quizSeeder');
+const { seedEnrollments } = require('../students/enrollmentSeeder');
+const { seedArticles } = require('../content/improvedArticleSeeder');
 
 // Database connection with retry logic
 const connectDB = async (retries = 5) => {
@@ -97,7 +98,7 @@ const getModelByCollection = (collection) => {
     'courses': Course,
     'categories': Category,
     'users': User,
-    'articles': require('../models/Article')
+    'articles': require('../../../src/models/Article')
   };
   return modelMap[collection];
 };
@@ -133,6 +134,11 @@ const seedDatabase = async () => {
     console.log(chalk.cyan('📚 Seeding courses with embedded lessons...'));
     courses = await seedCoursesWithLessons(users);
     console.log(chalk.green(`✅ Created ${courses.length} courses with embedded lessons`));
+
+    console.log(chalk.cyan('📘 Seeding SOLID Principles course...'));
+    const solidCourse = await seedSOLIDPrinciplesCourse(users);
+    courses.push(solidCourse);
+    console.log(chalk.green(`✅ Created SOLID Principles & Design Patterns Mastery course`));
 
     // Count total lessons across all courses
     const totalLessons = courses.reduce((total, course) => {

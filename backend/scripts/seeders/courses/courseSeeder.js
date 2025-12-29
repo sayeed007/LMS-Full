@@ -1,5 +1,5 @@
-const Course = require('../models/Course');
-const Category = require('../models/Category');
+const Course = require('../../../src/models/Course');
+const Category = require('../../../src/models/Category');
 
 const seedCourses = async (users) => {
   // Find instructors

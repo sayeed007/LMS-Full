@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const User = require('../models/User');
-const Article = require('../models/Article');
+const User = require('../../../src/models/User');
+const Article = require('../../../src/models/Article');
 
 // Sample articles data
 const sampleArticles = [

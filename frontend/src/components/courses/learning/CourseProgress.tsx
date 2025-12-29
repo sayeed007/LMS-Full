@@ -15,14 +15,14 @@ export function CourseProgress({ totalLessons, completedLessons, className }: Co
     <div className={cn("space-y-3", className)}>
       {/* Progress Header */}
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-gray-700">Course Progress</span>
-        <span className="text-gray-600">
+        <span className="font-medium text-white">Course Progress</span>
+        <span className="text-white">
           {completedLessons} of {totalLessons} lessons
         </span>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+      <div className="w-full bg-white rounded-full h-2.5 overflow-hidden">
         <div
           className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progressPercentage}%` }}
@@ -30,7 +30,7 @@ export function CourseProgress({ totalLessons, completedLessons, className }: Co
       </div>
 
       {/* Progress Percentage */}
-      <div className="flex items-center justify-between text-xs text-gray-600">
+      <div className="flex items-center justify-between text-xs text-white">
         <span>{Math.round(progressPercentage)}% Complete</span>
         {progressPercentage === 100 && (
           <span className="text-green-600 font-medium flex items-center gap-1">

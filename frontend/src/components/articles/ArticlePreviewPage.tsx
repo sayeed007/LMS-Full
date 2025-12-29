@@ -112,7 +112,7 @@ const ArticlePreviewPage = ({
                                     </div>
 
                                     <div className="ml-auto text-sm text-gray-500">
-                                        {localVotes.yes} Yes | {localVotes.no} No
+                                        {localVotes?.yes} Yes | {localVotes?.no} No
                                     </div>
                                 </div>
                             </div>

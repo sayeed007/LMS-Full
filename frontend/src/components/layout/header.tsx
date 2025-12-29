@@ -1,7 +1,7 @@
 "use client"
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { NotificationPopover } from '../NotificationPopover';
 import { NavigationLink, Container } from '@/components/ui';
@@ -9,45 +9,65 @@ import UserMenu from './UserMenu';
 import LoginModal from '../auth/LoginModal';
 import { Button } from '@/components/ui/button';
 import MessageNotificationBadge from '../messaging/MessageNotificationBadge';
+import { useModal } from '@/lib/modal-context';
+import { useState } from 'react';
 
-// Public navigation items (visible to everyone)
-const publicNavItems = [
-    { name: 'Courses', href: '/courses' },
-    { name: 'Articles', href: '/articles' },
-];
-
-// Protected navigation items (visible only to authenticated users)
-const protectedNavItems = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Question Bank', href: '/question-bank' },
-    { name: 'Messages', href: '/messages' },
-    { name: 'Reports', href: '/reports' },
-];
-
-const adminNavItems = [
-    { name: 'Admin', href: '/admin/users' },
+// Navigation items in the correct order
+// Some items are public (visible to everyone), others are protected (require authentication)
+const navigationItems = [
+    { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
+    { name: 'Courses', href: '/courses', requiresAuth: false },
+    { name: 'Question Bank', href: '/question-bank', requiresAuth: true },
+    { name: 'Articles', href: '/articles', requiresAuth: false },
+    { name: 'Reports', href: '/reports', requiresAuth: true },
+    { name: 'Admin', href: '/admin/users', requiresAuth: true, adminOnly: true },
 ];
 
 const Header = () => {
     const [activeLink, setActiveLink] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [showLoginModal, setShowLoginModal] = useState(false);
 
     const { data: session, status } = useSession();
     const pathname = usePathname();
     const router = useRouter();
+    const { openModal, closeModal } = useModal();
 
     // Check if user is admin
     const isAdmin = session?.user?.role === 'org_admin' || session?.user?.role === 'super_admin';
 
+    // Open login modal
+    const handleOpenLogin = () => {
+        // Get current URL for redirect after login
+        const currentUrl = window.location.pathname + window.location.search;
+
+        openModal(
+            <LoginModal
+                isOpen={true}
+                onClose={() => closeModal()}
+                title="Sign in to continue"
+                message="Please sign in to access your account and enjoy all features."
+                callbackUrl={currentUrl}
+            />,
+            {
+                size: 'md',
+                position: 'center',
+                showCloseButton: false,
+            }
+        );
+    };
+
+    // Filter navigation items based on auth status and admin role
+    const visibleNavItems = navigationItems.filter(item => {
+        // Filter out items that require auth if user is not logged in
+        if (item.requiresAuth && !session) return false;
+        // Filter out admin-only items if user is not admin
+        if (item.adminOnly && !isAdmin) return false;
+        return true;
+    });
+
     useEffect(() => {
         const currentPath = pathname.split('/')[1] || 'dashboard';
-        const allNavItems = [
-            ...publicNavItems,
-            ...(session ? protectedNavItems : []),
-            ...(isAdmin ? adminNavItems : [])
-        ];
-        const matchingNavItem = allNavItems.find(item => item.href.split('/')[1] === currentPath);
+        const matchingNavItem = visibleNavItems.find(item => item.href.split('/')[1] === currentPath);
         if (matchingNavItem) {
             setActiveLink(matchingNavItem.name.toLowerCase());
         }
@@ -80,42 +100,23 @@ const Header = () => {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden lg:flex gap-3">
-                        {/* Public navigation - visible to everyone */}
-                        {publicNavItems.map((item) => (
+                        {visibleNavItems.map((item) => (
                             <NavigationLink
                                 key={item.name}
                                 href={item.href}
                                 isActive={activeLink === item.name.toLowerCase()}
                                 onClick={() => setActiveLink(item.name.toLowerCase())}
                             >
-                                {item.name}
-                            </NavigationLink>
-                        ))}
-                        {/* Protected navigation - only for authenticated users */}
-                        {session && protectedNavItems.map((item) => (
-                            <NavigationLink
-                                key={item.name}
-                                href={item.href}
-                                isActive={activeLink === item.name.toLowerCase()}
-                                onClick={() => setActiveLink(item.name.toLowerCase())}
-                            >
-                                {item.name}
-                            </NavigationLink>
-                        ))}
-                        {/* Admin Navigation - Only for admins */}
-                        {isAdmin && adminNavItems.map((item) => (
-                            <NavigationLink
-                                key={item.name}
-                                href={item.href}
-                                isActive={activeLink === item.name.toLowerCase()}
-                                onClick={() => setActiveLink(item.name.toLowerCase())}
-                            >
-                                <span className="flex items-center gap-1">
-                                    {item.name}
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                                    </svg>
-                                </span>
+                                {item.adminOnly ? (
+                                    <span className="flex items-center gap-1">
+                                        {item.name}
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                        </svg>
+                                    </span>
+                                ) : (
+                                    item.name
+                                )}
                             </NavigationLink>
                         ))}
                     </nav>
@@ -161,7 +162,7 @@ const Header = () => {
                             </div>
                         ) : (
                             <Button
-                                onClick={() => setShowLoginModal(true)}
+                                onClick={handleOpenLogin}
                                 variant="outline"
                                 className="hidden sm:block bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                             >
@@ -198,8 +199,7 @@ const Header = () => {
                     : 'max-h-0 opacity-0 overflow-hidden'
                     }`}>
                     <nav className="px-4 pb-4 md:px-6 lg:px-8 space-y-2 bg-white/10 backdrop-blur-sm">
-                        {/* Public navigation - visible to everyone */}
-                        {publicNavItems.map((item) => (
+                        {visibleNavItems.map((item) => (
                             <NavigationLink
                                 key={item.name}
                                 href={item.href}
@@ -210,42 +210,16 @@ const Header = () => {
                                     setIsMobileMenuOpen(false);
                                 }}
                             >
-                                {item.name}
-                            </NavigationLink>
-                        ))}
-                        {/* Protected navigation - only for authenticated users */}
-                        {session && protectedNavItems.map((item) => (
-                            <NavigationLink
-                                key={item.name}
-                                href={item.href}
-                                isActive={activeLink === item.name.toLowerCase()}
-                                variant="mobile"
-                                onClick={() => {
-                                    setActiveLink(item.name.toLowerCase());
-                                    setIsMobileMenuOpen(false);
-                                }}
-                            >
-                                {item.name}
-                            </NavigationLink>
-                        ))}
-                        {/* Admin Navigation - Only for admins */}
-                        {isAdmin && adminNavItems.map((item) => (
-                            <NavigationLink
-                                key={item.name}
-                                href={item.href}
-                                isActive={activeLink === item.name.toLowerCase()}
-                                variant="mobile"
-                                onClick={() => {
-                                    setActiveLink(item.name.toLowerCase());
-                                    setIsMobileMenuOpen(false);
-                                }}
-                            >
-                                <span className="flex items-center gap-1">
-                                    {item.name}
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                                    </svg>
-                                </span>
+                                {item.adminOnly ? (
+                                    <span className="flex items-center gap-1">
+                                        {item.name}
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                        </svg>
+                                    </span>
+                                ) : (
+                                    item.name
+                                )}
                             </NavigationLink>
                         ))}
 
@@ -266,7 +240,7 @@ const Header = () => {
                                 <div className="px-4 py-3 md:px-6 lg:px-8">
                                     <Button
                                         onClick={() => {
-                                            setShowLoginModal(true);
+                                            handleOpenLogin();
                                             setIsMobileMenuOpen(false);
                                         }}
                                         className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
@@ -280,14 +254,6 @@ const Header = () => {
                     </nav>
                 </div>
             </Container>
-
-            {/* Login Modal */}
-            <LoginModal
-                isOpen={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
-                title="Sign in to continue"
-                message="Please sign in to access your account and enjoy all features."
-            />
         </header>
     );
 };

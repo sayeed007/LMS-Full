@@ -1,4 +1,4 @@
-const Article = require('../models/Article');
+const Article = require('../../../src/models/Article');
 
 const seedArticles = async (users) => {
   // Find instructors and admin for article authorship
@@ -741,7 +741,7 @@ export default defineConfig({
   const createdArticles = await Article.insertMany(articlesWithDefaults);
 
   // Update user stats for authors
-  const User = require('../models/User');
+  const User = require('../../../src/models/User');
   for (const author of allAuthors) {
     const articleCount = createdArticles.filter(article =>
       article.author.toString() === author._id.toString()

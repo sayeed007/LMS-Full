@@ -1,0 +1,792 @@
+{
+  "chapters": [
+    {
+      "title": "Introduction to Design Patterns",
+      "description": "Understand what design patterns are, why they matter, and the cost of poor design",
+      "order": 1,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "What are Design Patterns?",
+          "description": "Learn about What are Design Patterns?",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**Design Patterns** are proven, reusable solutions to common problems in software design.\n\n- **Not** code you can copy-paste\n- **Not** specific to any programming language\n- **ARE** templates for solving recurring design problems\n- **ARE** best practices evolved from years of software development"
+        },
+        {
+          "title": "Why Do We Need Design Patterns?",
+          "description": "Learn about Why Do We Need Design Patterns?",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### 1. **Maintainability**\n- Code is read 10x more than it's written\n- Easy to understand = Easy to maintain\n- Patterns provide a common vocabulary\n\n### 2. **Scalability**\n- Systems grow over time\n- Poorly designed code becomes harder to change\n- Good patterns allow for growth without complete rewrites\n\n### 3. **Team Collaboration**\n- Common language among developers\n- \"We need a Factory here\" - everyone understands\n- Reduces onboarding time for new developers\n\n### 4. **Reduced Bugs**\n- Proven solutions = fewer edge cases\n- Better separation of concerns = easier testing\n- Less coupling = changes don't break unrelated code"
+        },
+        {
+          "title": "The Cost of Poor Design",
+          "description": "Learn about The Cost of Poor Design",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "SOLID Principles Overview",
+      "description": "Learn the five SOLID principles and their importance in software development",
+      "order": 2,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "The Cost of Poor Design",
+          "description": "Learn about The Cost of Poor Design",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": ""
+        },
+        {
+          "title": "What is SOLID?",
+          "description": "Learn about What is SOLID?",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "SOLID is an acronym for 5 fundamental principles of object-oriented design:\n\n| Letter | Principle |\n|--------|-----------|\n| **S** | **S**ingle Responsibility Principle |\n| **O** | **O**pen/Closed Principle |\n| **L** | **L**iskov Substitution Principle |\n| **I** | **I**nterface Segregation Principle |\n| **D** | **D**ependency Inversion Principle |"
+        },
+        {
+          "title": "Why SOLID Matters",
+          "description": "Learn about Why SOLID Matters",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"A class/module/function should have only ONE reason to change\""
+        }
+      ]
+    },
+    {
+      "title": "Single Responsibility Principle (SRP)",
+      "description": "Master the Single Responsibility Principle through real-world violations and solutions",
+      "order": 3,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "Why SOLID Matters",
+          "description": "Learn about Why SOLID Matters",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"A class/module/function should have only ONE reason to change\""
+        },
+        {
+          "title": "SRP: The Problem",
+          "description": "Learn about SRP: The Problem",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**One responsibility = One reason to change**\n\nWhen a component has multiple responsibilities:\n- Changes in one area can break another\n- Hard to test in isolation\n- Hard to reuse\n- Hard to understand"
+        },
+        {
+          "title": "SRP Violation #1: AdminPanel.js",
+          "description": "Learn about SRP Violation #1: AdminPanel.js",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/views/dashboard/AdminGraph/AdminPanel.js](src/views/dashboard/AdminGraph/AdminPanel.js)\n**Size:** 631 lines\n\n### Multiple Responsibilities:\n\n1. Fetching data for 8 different graph types\n2. Managing company selection state\n3. Handling date filtering logic\n4. Rendering multiple chart types\n5. Navigation/routing logic"
+        },
+        {
+          "title": "SRP Violation #1: The Code",
+          "description": "Learn about SRP Violation #1: The Code",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\nuseEffect(() => {\n    setLoading(true);\n    if (selectedCompany?.length > 0) {\n        if (moment(companyEstablishDate)?.format('YYYY') <= new Date().getFullYear()) {\n            fetchYearWiseCompany();        // Graph 1\n            fetchEmployeeTurnOver();       // Graph 2\n            fetchMaleFemale();             // Graph 3\n            fetchJobLength();              // Graph 4\n            fetchUniversityWise();         // Graph 5\n            fetchDegreeWise();             // Graph 6\n            fetchEmploymentSummary();      // Graph 7\n            fetchTotalEmployeeCount();     // Graph 8\n        }\n    }\n}, [companyId, selectedCompany]);\n```\n\n**Problem:** One component doing too many things!"
+        },
+        {
+          "title": "SRP Violation #2: AllPayRoll.js",
+          "description": "Learn about SRP Violation #2: AllPayRoll.js",
+          "type": "text",
+          "order": 4,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/tfhrm/payroll/AllPayRoll.js](src/tfhrm/payroll/AllPayRoll.js)\n**Size:** 1,405 lines (Our biggest component!)\n\n### Multiple Responsibilities:\n\n1. Payroll generation\n2. Payroll approval workflow\n3. CSV/PDF export logic\n4. Data sorting and filtering\n5. Notification handling\n6. Bulk adjustment uploads\n7. Data transformation for reports"
+        },
+        {
+          "title": "SRP Violation #2: State Explosion",
+          "description": "Learn about SRP Violation #2: State Explosion",
+          "type": "text",
+          "order": 5,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\nconst AllPayRoll = () => {\n  // 50+ state variables!\n  const [allEmployee, setAllEmployee] = useState([]);\n  const [payrollApproveModal, setPayrollApproveModal] = useState(false);\n  const [generatePayloadDateModalVisible, setGeneratePayloadDateModalVisible] = useState(false);\n  const [isLoading, setIsLoading] = useState({...});\n  const [companyOptions, setCompanyOptions] = useState(companyList);\n  const [csvData, setCsvData] = useState([]);\n  const [selectedPaySlip, setSelectedPaySlip] = useState([]);\n  const [payrollGenerateModal, setPayrollGenerateModal] = useState(false);\n  // ... 42 MORE state variables ...\n}\n```\n\n**Red Flag:** When a component has 50+ state variables, it's doing too much!"
+        },
+        {
+          "title": "SRP Violation #3: AddEmployee.js",
+          "description": "Learn about SRP Violation #3: AddEmployee.js",
+          "type": "text",
+          "order": 6,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/tfhrm/employeeInfo/employee/AddEmployee.js](src/tfhrm/employeeInfo/employee/AddEmployee.js)\n**Size:** 1,270 lines\n\n### Multiple Responsibilities:\n\n1. 6-step wizard management\n2. File uploads (multiple document types)\n3. Fetching company/department/leave policy data\n4. New employee vs. rehire logic\n5. Draft employee restoration\n6. Form validation for each step"
+        },
+        {
+          "title": "How to Fix SRP Violations",
+          "description": "Learn about How to Fix SRP Violations",
+          "type": "text",
+          "order": 7,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy: Decompose into Smaller Components\n\n**Before (AdminPanel.js):**\n```\nAdminPanel (631 lines)\n  ├─ 8 different graph data fetching\n  ├─ Company selection logic\n  ├─ Date filtering\n  ├─ Chart rendering\n  └─ Navigation\n```\n\n**After:**\n```\nAdminPanelContainer\n  ├─ useGraphData (custom hook)\n  ├─ CompanyFilter (component)\n  ├─ DateRangeFilter (component)\n  └─ GraphGrid (component)\n      ├─ EmployeeTurnoverChart\n      ├─ GenderDistributionChart\n      └─ ... (one component per graph)\n```"
+        },
+        {
+          "title": "How to Fix SRP: Practical Steps",
+          "description": "Learn about How to Fix SRP: Practical Steps",
+          "type": "video",
+          "order": 8,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### 1. Extract Custom Hooks for Data Fetching\n\n```javascript\n// Before: Everything in component\nconst AdminPanel = () => {\n  const [data, setData] = useState({});\n\n  useEffect(() => {\n    fetchYearWiseCompany();\n    fetchEmployeeTurnOver();\n    // ... 6 more\n  }, [companyId]);\n\n  return <div>...</div>;\n};\n\n// After: Separate data fetching\nconst useAdminGraphData = (companyId, dateRange) => {\n  const [data, setData] = useState({});\n  const [loading, setLoading] = useState(false);\n\n  useEffect(() => {\n    // All fetching logic here\n  }, [companyId, dateRange]);\n\n  return { data, loading };\n};\n\nconst AdminPanel = () => {\n  const { data, loading } = useAdminGraphData(companyId, dateRange);\n  return <GraphGrid data={data} loading={loading} />;\n};\n```"
+        },
+        {
+          "title": "How to Fix SRP: AllPayRoll.js",
+          "description": "Learn about How to Fix SRP: AllPayRoll.js",
+          "type": "text",
+          "order": 9,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### 2. Split into Feature-Focused Components\n\n```javascript\n// Before: One massive component\n<AllPayRoll /> // 1,405 lines\n\n// After: Composition of focused components\n<PayrollContainer>\n  <PayrollFilters />\n  <PayrollDataTable />\n  <PayrollActions>\n    <PayrollGenerateButton />\n    <PayrollApproveButton />\n    <PayrollExportButton />\n  </PayrollActions>\n  <BulkAdjustmentUploader />\n</PayrollContainer>\n```\n\nEach component has **one clear responsibility**."
+        },
+        {
+          "title": "How to Fix SRP: AddEmployee.js",
+          "description": "Learn about How to Fix SRP: AddEmployee.js",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"Software entities should be OPEN for extension, but CLOSED for modification\""
+        }
+      ]
+    },
+    {
+      "title": "Open/Closed Principle (OCP)",
+      "description": "Learn to write extensible code with the Open/Closed Principle",
+      "order": 4,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "How to Fix SRP: AddEmployee.js",
+          "description": "Learn about How to Fix SRP: AddEmployee.js",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"Software entities should be OPEN for extension, but CLOSED for modification\""
+        },
+        {
+          "title": "OCP: The Problem",
+          "description": "Learn about OCP: The Problem",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**You should be able to add new features WITHOUT changing existing code**\n\nWhy?\n- Changing existing code can introduce bugs\n- Every change requires retesting\n- Violates \"if it works, don't touch it\"\n\nSolution?\n- Write code that can be extended through abstraction\n- Use composition, inheritance, or configuration"
+        },
+        {
+          "title": "OCP Violation #1: Duplicated Error Handling",
+          "description": "Learn about OCP Violation #1: Duplicated Error Handling",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/API/Employee/Employee.js](src/API/Employee/Employee.js)\n\n### The Problem: Same error handling in EVERY API function\n\n```javascript\nexport const getEmployeeInfoById = (employeeId) => {\n    return Axios.get(`${Config.baseApi}/employee/${employeeId}`)\n        .then(response => [response.data])\n        .catch(error => {\n            if (error.response) {\n                return ([false, \"An unexpected error occurred!\"])\n            } else if (error.request) {\n                return ([false, \"Network Error! Check your internet connection.\"])\n            } else {\n                return ([false, error.message])\n            }\n        })\n}\n\nexport const getEmployeeBasicInfoByCompanyId = (companyId) => {\n    return Axios.get(`${Config.baseApi}/employee/basic-info/${companyId}`)\n        .then(response => [response.data])\n        .catch(error => {\n            // SAME error handling REPEATED!\n            if (error.response) {\n                return ([false, \"An unexpected error occurred!\"])\n            } else if (error.request) {\n                return ([false, \"Network Error! Check your internet connection.\"])\n            } else {\n                return ([false, error.message])\n            }\n        })\n}\n```\n\n**This pattern is repeated in 50+ API functions!**"
+        },
+        {
+          "title": "OCP Violation #1: Why is this bad?",
+          "description": "Learn about OCP Violation #1: Why is this bad?",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### What happens when we need to:\n- Add logging to all API errors?\n- Add retry logic?\n- Change error messages?\n- Add Sentry error tracking?\n\n**Answer:** We have to modify 50+ functions! (Violates \"Closed for modification\")"
+        },
+        {
+          "title": "OCP Violation #2: AttendanceAdmin.js",
+          "description": "Learn about OCP Violation #2: AttendanceAdmin.js",
+          "type": "text",
+          "order": 4,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/API/Attendance/AttendanceAdmin.js](src/API/Attendance/AttendanceAdmin.js)\n\n### Hard-coded feature flag pattern\n\n```javascript\nexport const getAllAttendanceOfCompanyBySpecificDateAndLocations = (\n    companyId, selectedLocations, specificDate, attendanceAccess\n) => {\n    let url = `${config.baseApi}/attendance/admin?companyIds=${companyId?.join(',')}&locationIds=${selectedLocations?.join(',')}&date=${specificDate}`;\n\n    if (attendanceAccess) {\n        url = `${config.baseApi}/attendance/admin?companyIds=${companyId?.join(',')}&locationIds=${selectedLocations?.join(',')}&date=${specificDate}&feature=Attendance`;\n    }\n\n    return Axios.get(url)\n        .then(response => [response.data])\n        .catch(error => { /* ... same duplicated error handling ... */ });\n};\n```\n\n**Problem:** Adding new feature flags requires modifying every API function."
+        },
+        {
+          "title": "OCP Violation #3: CareerAPIs/GetAPIs.js",
+          "description": "Learn about OCP Violation #3: CareerAPIs/GetAPIs.js",
+          "type": "text",
+          "order": 5,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/API/CareerAPIs/GetAPIs.js](src/API/CareerAPIs/GetAPIs.js)\n\n### Every function repeats the same pattern\n\n```javascript\nexport const getCareerAccessibilityByEmployeeId = (employeeId) => {\n  return Axios.get(`${config.baseApi}/requisition/approval-accessibility/user/${employeeId}`)\n    .then(response => [response.data])\n    .catch(error => { /* ... identical error handling ... */ })\n};\n\nexport const getJobsByRequisitionStatus = (requisitionStatus, userId) => {\n  return Axios.get(`${config.baseApi}/requisition/jobs/${requisitionStatus}/user/${userId}`)\n    .then(response => [response.data])\n    .catch(error => { /* ... identical error handling AGAIN ... */ })\n};\n\nexport const getJobRequisitionForAdmin = (requisitionStatus) => {\n  return Axios.get(`${config.baseApi}/requisition/job-requisition/${requisitionStatus}/user`)\n    .then(response => [response.data])\n    .catch(error => { /* ... identical error handling AGAIN ... */ })\n};\n```\n\n**Pattern repeats across 15+ functions in this file alone!**"
+        },
+        {
+          "title": "How to Fix OCP Violations",
+          "description": "Learn about How to Fix OCP Violations",
+          "type": "text",
+          "order": 6,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 1: Axios Interceptor for Error Handling\n\n```javascript\n// Create once, use everywhere\n// File: src/utils/axiosInstance.js\n\nimport axios from 'axios';\n\nconst apiClient = axios.create({\n  baseURL: Config.baseApi,\n  timeout: 10000,\n});\n\n// Response interceptor (runs for ALL requests)\napiClient.interceptors.response.use(\n  (response) => [response.data],  // Success: return data\n  (error) => {\n    // Error handling logic in ONE place\n    if (error.response) {\n      return [false, \"An unexpected error occurred!\"];\n    } else if (error.request) {\n      return [false, \"Network Error! Check your internet connection.\"];\n    } else {\n      return [false, error.message];\n    }\n  }\n);\n\nexport default apiClient;\n```"
+        },
+        {
+          "title": "How to Fix OCP: Using the Abstraction",
+          "description": "Learn about How to Fix OCP: Using the Abstraction",
+          "type": "text",
+          "order": 7,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Before: Repeated error handling in every function\nexport const getEmployeeInfoById = (employeeId) => {\n    return Axios.get(`${Config.baseApi}/employee/${employeeId}`)\n        .then(response => [response.data])\n        .catch(error => {\n            if (error.response) { /* ... */ }\n            else if (error.request) { /* ... */ }\n            else { /* ... */ }\n        })\n}\n\n// After: Error handling centralized in interceptor\nexport const getEmployeeInfoById = (employeeId) => {\n    return apiClient.get(`/employee/${employeeId}`);\n    // That's it! Error handling happens automatically\n}\n```\n\n**Now OPEN for extension (add logging, retry, etc. in ONE place)**\n**And CLOSED for modification (don't touch 50+ API functions)**"
+        },
+        {
+          "title": "How to Fix OCP: URL Builder Pattern",
+          "description": "Learn about How to Fix OCP: URL Builder Pattern",
+          "type": "text",
+          "order": 8,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 2: URL Builder for Feature Flags\n\n```javascript\n// File: src/utils/urlBuilder.js\n\nclass ApiUrlBuilder {\n  constructor(basePath) {\n    this.basePath = basePath;\n    this.params = new URLSearchParams();\n  }\n\n  addCompanies(companyIds) {\n    if (companyIds?.length) {\n      this.params.set('companyIds', companyIds.join(','));\n    }\n    return this;\n  }\n\n  addLocations(locationIds) {\n    if (locationIds?.length) {\n      this.params.set('locationIds', locationIds.join(','));\n    }\n    return this;\n  }\n\n  addDate(date) {\n    if (date) this.params.set('date', date);\n    return this;\n  }\n\n  withFeature(featureName) {\n    if (featureName) this.params.set('feature', featureName);\n    return this;\n  }\n\n  build() {\n    return `${this.basePath}?${this.params.toString()}`;\n  }\n}\n```"
+        },
+        {
+          "title": "How to Fix OCP: Using URL Builder",
+          "description": "Learn about How to Fix OCP: Using URL Builder",
+          "type": "text",
+          "order": 9,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Before: Manual URL construction with conditionals\nlet url = `${config.baseApi}/attendance/admin?companyIds=${companyId?.join(',')}&locationIds=${selectedLocations?.join(',')}&date=${specificDate}`;\n\nif (attendanceAccess) {\n    url = `${config.baseApi}/attendance/admin?companyIds=${companyId?.join(',')}&locationIds=${selectedLocations?.join(',')}&date=${specificDate}&feature=Attendance`;\n}\n\n// After: Declarative URL building\nconst url = new ApiUrlBuilder('/attendance/admin')\n  .addCompanies(companyId)\n  .addLocations(selectedLocations)\n  .addDate(specificDate)\n  .withFeature(attendanceAccess ? 'Attendance' : null)\n  .build();\n```\n\n**OPEN for extension:** Add new query parameters in builder class\n**CLOSED for modification:** API functions don't change"
+        },
+        {
+          "title": "How to Fix OCP: Higher-Order Function",
+          "description": "Learn about How to Fix OCP: Higher-Order Function",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"Objects of a superclass should be replaceable with objects of a subclass without breaking the application\""
+        }
+      ]
+    },
+    {
+      "title": "Liskov Substitution Principle (LSP)",
+      "description": "Understand type substitutability and polymorphism with Liskov Substitution Principle",
+      "order": 5,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "How to Fix OCP: Higher-Order Function",
+          "description": "Learn about How to Fix OCP: Higher-Order Function",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"Objects of a superclass should be replaceable with objects of a subclass without breaking the application\""
+        },
+        {
+          "title": "LSP: The Problem",
+          "description": "Learn about LSP: The Problem",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**Subtypes must be substitutable for their base types**\n\nIn simpler terms:\n- If you have a function that accepts type A\n- And type B extends/implements type A\n- You should be able to pass type B without breaking anything"
+        },
+        {
+          "title": "LSP Violation #1: Survey Question Types",
+          "description": "Learn about LSP Violation #1: Survey Question Types",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/views/dashboard/UserGraph/SurveyFormModal.js](src/views/dashboard/UserGraph/SurveyFormModal.js:59-88)\n\n### Different question types produce incompatible structures\n\n```javascript\nlet questionResponsesStructure = props?.surveyFormData?.surveyQuestions?.map(surveyQuestion => {\n    if (surveyQuestion?.question?.questionType === 'DATE') {\n        return {\n            comment: '',\n            surveyQuestionId: surveyQuestion?.id,\n            selectedChoices: [],\n            explanation: surveyQuestion?.question?.optionSet?.[0]?.label === \"SINGLEDATE\"\n                ? `${moment().format(\"YYYY-MM-DD\")}`\n                : `${moment().format(\"YYYY-MM-DD\")} ${moment().format(\"YYYY-MM-DD\")}`\n        }\n    }\n    if (surveyQuestion?.question?.questionType === 'TEXT') {\n        return {\n            comment: '',\n            surveyQuestionId: surveyQuestion?.id,\n            selectedChoices: [],\n            explanation: ''\n        }\n    }\n    else if (!props?.surveyFormData?.surveyConfig?.commentDisabled) {\n        return {\n            surveyQuestionId: surveyQuestion?.id,\n            selectedChoices: [],\n            comment: ''\n        }\n    } else {\n        return {\n            surveyQuestionId: surveyQuestion?.id,\n            selectedChoices: [],\n        }\n    }\n})\n```"
+        },
+        {
+          "title": "LSP Violation #1: Why is this bad?",
+          "description": "Learn about LSP Violation #1: Why is this bad?",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Problems:\n1. Each question type returns a different structure\n2. Some have `explanation`, some don't\n3. Some have `comment`, some don't\n4. Consumer code must know the specific question type\n5. Can't treat all questions uniformly\n\n### Result:\n**You can't substitute one question type for another without breaking the code**"
+        },
+        {
+          "title": "LSP Violation #2: Token Types",
+          "description": "Learn about LSP Violation #2: Token Types",
+          "type": "text",
+          "order": 4,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/utils/formula-expression.js](src/utils/formula-expression.js:235-273)\n\n### Type-checking instead of polymorphism\n\n```javascript\nexport const validateExpression = (tokens, formulaReferenceMap) => {\n    let expression = \"\";\n\n    for (const token of tokens) {\n        if (token.type === \"number\") {\n            expression += Number(token.value);\n        } else if (token.type === \"operator\" || token.type === \"parenthesis\" || token.type === \"comma\") {\n            expression += token.value;\n        } else if (token.type === \"function\") {\n            expression += formulaReferenceMap[token.value];\n        } else {\n            expression += getRandomValue();\n        }\n    }\n    // ...\n}\n```\n\n**Problem:** Type-checking violates LSP because tokens aren't truly substitutable"
+        },
+        {
+          "title": "LSP Violation #3: File Upload Handling",
+          "description": "Learn about LSP Violation #3: File Upload Handling",
+          "type": "text",
+          "order": 5,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/tfhrm/employeeInfo/employee/AddEmployee.js](src/tfhrm/employeeInfo/employee/AddEmployee.js:260-287)\n\n### Switch statement on file type\n\n```javascript\nswitch (fileType) {\n    case 'nid':\n        setNIDPassPath(uploadedFile);\n        break;\n    case 'cv':\n        setCVPath(uploadedFile);\n        break;\n    case 'appointmentLetter':\n        setAppointmentLetter(uploadedFile);\n        break;\n    case 'profilePic':\n        setProfilePicPath(uploadedFile);\n        break;\n    case 'others':\n        let copyOtherDocumentPath = {...};\n        setOtherDocumentPathSingle(() => ({ ...copyOtherDocumentPath }));\n        break;\n    case 'educationCertificate':\n        let copyEducationPath = {...};\n        setEducationCertificatePath(copyEducationPath);\n        break\n    // ...\n}\n```\n\n**Problem:** Each file type handled differently, can't substitute one for another"
+        },
+        {
+          "title": "How to Fix LSP Violations",
+          "description": "Learn about How to Fix LSP Violations",
+          "type": "text",
+          "order": 6,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy: Use Polymorphism with Common Interfaces\n\n**Before: Type-checking**\n```javascript\nif (question.type === 'DATE') {\n  return { explanation: date };\n} else if (question.type === 'TEXT') {\n  return { explanation: text };\n}\n```\n\n**After: Polymorphic objects**\n```javascript\n// Base interface\nclass QuestionType {\n  getInitialResponse(surveyQuestionId) {\n    return {\n      surveyQuestionId,\n      selectedChoices: [],\n      comment: '',\n    };\n  }\n}\n\n// Specific implementations\nclass DateQuestion extends QuestionType {\n  constructor(isSingleDate) {\n    super();\n    this.isSingleDate = isSingleDate;\n  }\n\n  getInitialResponse(surveyQuestionId) {\n    const base = super.getInitialResponse(surveyQuestionId);\n    return {\n      ...base,\n      explanation: this.isSingleDate\n        ? moment().format(\"YYYY-MM-DD\")\n        : `${moment().format(\"YYYY-MM-DD\")} ${moment().format(\"YYYY-MM-DD\")}`\n    };\n  }\n}\n\nclass TextQuestion extends QuestionType {\n  getInitialResponse(surveyQuestionId) {\n    const base = super.getInitialResponse(surveyQuestionId);\n    return { ...base, explanation: '' };\n  }\n}\n```"
+        },
+        {
+          "title": "How to Fix LSP: Using Polymorphism",
+          "description": "Learn about How to Fix LSP: Using Polymorphism",
+          "type": "text",
+          "order": 7,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Question factory\nconst createQuestion = (surveyQuestion) => {\n  switch (surveyQuestion.question.questionType) {\n    case 'DATE':\n      const isSingleDate = surveyQuestion.question.optionSet?.[0]?.label === \"SINGLEDATE\";\n      return new DateQuestion(isSingleDate);\n    case 'TEXT':\n      return new TextQuestion();\n    default:\n      return new QuestionType();\n  }\n};\n\n// Now ALL questions are substitutable\nconst questionResponsesStructure = props.surveyFormData.surveyQuestions.map(sq => {\n  const question = createQuestion(sq);\n  return question.getInitialResponse(sq.id);\n});\n```\n\n**All question types now conform to the same interface!**"
+        },
+        {
+          "title": "How to Fix LSP: Token Polymorphism",
+          "description": "Learn about How to Fix LSP: Token Polymorphism",
+          "type": "text",
+          "order": 8,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Base token class\nclass Token {\n  constructor(value) {\n    this.value = value;\n  }\n\n  toExpression(formulaReferenceMap) {\n    return this.value;\n  }\n}\n\n// Specific token types\nclass NumberToken extends Token {\n  toExpression() {\n    return Number(this.value);\n  }\n}\n\nclass FunctionToken extends Token {\n  toExpression(formulaReferenceMap) {\n    return formulaReferenceMap[this.value];\n  }\n}\n\n// Usage: All tokens substitutable!\nexport const validateExpression = (tokens, formulaReferenceMap) => {\n  let expression = tokens\n    .map(token => token.toExpression(formulaReferenceMap))\n    .join('');\n  // ...\n}\n```"
+        },
+        {
+          "title": "How to Fix LSP: File Upload Strategy",
+          "description": "Learn about How to Fix LSP: File Upload Strategy",
+          "type": "text",
+          "order": 9,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"No client should be forced to depend on interfaces it does not use\""
+        }
+      ]
+    },
+    {
+      "title": "Interface Segregation Principle (ISP)",
+      "description": "Create focused interfaces with the Interface Segregation Principle",
+      "order": 6,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "How to Fix LSP: File Upload Strategy",
+          "description": "Learn about How to Fix LSP: File Upload Strategy",
+          "type": "text",
+          "order": 9,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"No client should be forced to depend on interfaces it does not use\""
+        },
+        {
+          "title": "ISP: The Problem",
+          "description": "Learn about ISP: The Problem",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**Don't force clients to implement methods they don't need**\n\nIn React/JavaScript context:\n- Don't create \"fat\" hooks that return too many things\n- Don't create giant prop interfaces\n- Split large interfaces into smaller, focused ones"
+        },
+        {
+          "title": "ISP Violation #1: Fat Hook",
+          "description": "Learn about ISP Violation #1: Fat Hook",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/hooks/useOrganizationTree.js](src/hooks/useOrganizationTree.js:104-119)\n\n### Hook returns 17 different values!\n\n```javascript\nreturn {\n    data,                      // 1\n    departments,               // 2\n    selectedDepartment,        // 3\n    setSelectedDepartment,     // 4\n    viewMode,                  // 5\n    loading,                   // 6\n    expandedNodes,             // 7\n    setExpandedNodes,          // 8\n    loadingNodes,              // 9\n    fetchDepartments,          // 10\n    fetchDepartmentOrgChart,   // 11\n    fetchEmployeeOrgChart,     // 12\n    loadMoreChildren,          // 13\n};\n```\n\n**Problem:** Components using this hook for just fetching departments still get all the employee org chart methods!"
+        },
+        {
+          "title": "ISP Violation #1: Why is this bad?",
+          "description": "Learn about ISP Violation #1: Why is this bad?",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Scenario: Component only needs department list\n\n```javascript\nconst DepartmentSelector = () => {\n  const {\n    departments,           // ✅ Need this\n    loading,              // ✅ Need this\n    fetchDepartments,     // ✅ Need this\n\n    // ❌ Don't need any of these, but forced to import them\n    data,\n    selectedDepartment,\n    setSelectedDepartment,\n    viewMode,\n    expandedNodes,\n    setExpandedNodes,\n    loadingNodes,\n    fetchDepartmentOrgChart,\n    fetchEmployeeOrgChart,\n    loadMoreChildren,\n  } = useOrganizationTree();\n\n  // Only uses 3 out of 13 returned values!\n};\n```\n\n**Violation:** Component depends on an interface larger than it needs"
+        },
+        {
+          "title": "ISP Violation #2: Barrel Export Hell",
+          "description": "Learn about ISP Violation #2: Barrel Export Hell",
+          "type": "text",
+          "order": 4,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/utils/index.js](src/utils/index.js:1-35)\n\n### Unrelated utilities bundled together\n\n```javascript\nexport {\n    // Constants\n    operators,\n    functions,\n\n    // Formula expression utils\n    buildFormulaReferenceMap,\n    checkEmptyParenthesis,\n    checkOpenParenthesesBalance,\n    formulaCreation,\n    getInvalidCharacters,\n    isValidTokenSequence,\n    tokenizeFormula,\n    checkValidToken,\n    validateExpression,\n    validateFunctionArguments,\n\n    // Time utils\n    calculateTotalWorkingHour,\n\n    // User input utils\n    containLowercaseLetter,\n    containNumber,\n    containSpecialCharacter,\n    containUppercaseLetter,\n    addCommaSeparator,\n    capitalizeFirstLetter\n};\n```"
+        },
+        {
+          "title": "ISP Violation #2: Why is this bad?",
+          "description": "Learn about ISP Violation #2: Why is this bad?",
+          "type": "text",
+          "order": 5,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### What happens when you import\n\n```javascript\nimport { containUppercaseLetter } from '@/utils';\n```\n\n**You get:**\n- Formula validation utilities (don't need)\n- Time calculation utilities (don't need)\n- All other user input utilities (might not need)\n\n**Bundle includes ALL exported functions, even unused ones!**"
+        },
+        {
+          "title": "ISP Violation #3: Component with Too Many Props",
+          "description": "Learn about ISP Violation #3: Component with Too Many Props",
+          "type": "text",
+          "order": 6,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/tfhrm/promotion/AddPromotionModal.js](src/tfhrm/promotion/AddPromotionModal.js:192-239)\n\n### 48+ state variables in one component\n\n```javascript\nconst [companyId, setCompanyId] = useState(currentCompany);\nconst [companyId2, setCompanyId2] = useState('');\nconst [companyId3, setCompanyId3] = useState(currentCompany);\nconst [errorModal, setErrorModal] = useState(false);\nconst [errorModalMessage, setErrorModalMessage] = useState('');\nconst [allDepartmentOptions, setAllDepartmentOptions] = useState([...]);\nconst [allDepartmentForTransferCompany, setAllDepartmentForTransferCompany] = useState([...]);\nconst [departmentId, setDepartmentId] = useState('');\nconst [departmentId2, setDepartmentId2] = useState();\nconst [departmentId3, setDepartmentId3] = useState();\n// ... 38 MORE state variables ...\n```\n\n**Problem:** Component interface is too broad, needs to be split"
+        },
+        {
+          "title": "How to Fix ISP Violations",
+          "description": "Learn about How to Fix ISP Violations",
+          "type": "text",
+          "order": 7,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 1: Split Fat Hooks into Focused Hooks\n\n**Before: One fat hook**\n```javascript\nconst useOrganizationTree = () => {\n  // Returns 13 different things\n};\n```\n\n**After: Multiple focused hooks**\n```javascript\n// Hook 1: Just for fetching departments\nconst useDepartments = (companyId) => {\n  const [departments, setDepartments] = useState([]);\n  const [loading, setLoading] = useState(false);\n\n  const fetchDepartments = async () => {\n    setLoading(true);\n    const data = await api.getDepartments(companyId);\n    setDepartments(data);\n    setLoading(false);\n  };\n\n  return { departments, loading, fetchDepartments };\n};\n\n// Hook 2: Just for org chart tree\nconst useOrgChartTree = (departmentId) => {\n  const [data, setData] = useState(null);\n  const [expandedNodes, setExpandedNodes] = useState([]);\n  const [loadingNodes, setLoadingNodes] = useState([]);\n\n  const fetchOrgChart = async () => { /* ... */ };\n  const loadMoreChildren = async (nodeId) => { /* ... */ };\n\n  return { data, expandedNodes, setExpandedNodes, loadingNodes, fetchOrgChart, loadMoreChildren };\n};\n```"
+        },
+        {
+          "title": "How to Fix ISP: Using Focused Hooks",
+          "description": "Learn about How to Fix ISP: Using Focused Hooks",
+          "type": "text",
+          "order": 8,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Component only needs departments\nconst DepartmentSelector = () => {\n  const { departments, loading, fetchDepartments } = useDepartments(companyId);\n  // ✅ Only gets what it needs!\n};\n\n// Component needs full org chart\nconst OrgChartViewer = ({ departmentId }) => {\n  const { data, expandedNodes, setExpandedNodes, loadingNodes, fetchOrgChart, loadMoreChildren } = useOrgChartTree(departmentId);\n  // ✅ Only gets what it needs!\n};\n\n// Component needs both\nconst FullOrgView = () => {\n  const { departments } = useDepartments(companyId);\n  const orgChart = useOrgChartTree(selectedDepartmentId);\n  // ✅ Composes both hooks, still focused!\n};\n```"
+        },
+        {
+          "title": "How to Fix ISP: Split Barrel Exports",
+          "description": "Learn about How to Fix ISP: Split Barrel Exports",
+          "type": "text",
+          "order": 9,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 2: Split utility exports by domain\n\n**Before:**\n```javascript\n// src/utils/index.js\nexport { formula utils, time utils, string utils };  // All mixed!\n```\n\n**After:**\n```javascript\n// src/utils/formula/index.js\nexport {\n  buildFormulaReferenceMap,\n  validateExpression,\n  tokenizeFormula,\n  // ... only formula-related\n};\n\n// src/utils/time/index.js\nexport {\n  calculateTotalWorkingHour,\n  // ... only time-related\n};\n\n// src/utils/string/index.js\nexport {\n  containUppercaseLetter,\n  capitalizeFirstLetter,\n  // ... only string-related\n};\n```\n\n**Now imports are focused:**\n```javascript\nimport { containUppercaseLetter } from '@/utils/string';  // ✅ Only string utils\n```"
+        },
+        {
+          "title": "How to Fix ISP: Split Component Responsibilities",
+          "description": "Learn about How to Fix ISP: Split Component Responsibilities",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"High-level modules should not depend on low-level modules. Both should depend on abstractions.\""
+        }
+      ]
+    },
+    {
+      "title": "Dependency Inversion Principle (DIP)",
+      "description": "Build flexible architectures with Dependency Inversion Principle",
+      "order": 7,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "How to Fix ISP: Split Component Responsibilities",
+          "description": "Learn about How to Fix ISP: Split Component Responsibilities",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "> \"High-level modules should not depend on low-level modules. Both should depend on abstractions.\""
+        },
+        {
+          "title": "DIP: The Problem",
+          "description": "Learn about DIP: The Problem",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**Depend on abstractions, not concrete implementations**\n\nWhy?\n- Makes code testable (can mock dependencies)\n- Makes code flexible (can swap implementations)\n- Reduces coupling between modules\n\nIn React/JavaScript:\n- Don't hard-code axios, localStorage, etc.\n- Use dependency injection via props/context\n- Create abstraction layers (services)"
+        },
+        {
+          "title": "DIP Violation #1: Global Logout Function",
+          "description": "Learn about DIP Violation #1: Global Logout Function",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/utils/axiosInstance.js](src/utils/axiosInstance.js:5-9)\n\n### Global variable for logout\n\n```javascript\nlet globalLogoutFunction = null; // ❌ Global mutable variable\n\nexport const setGlobalLogoutFunction = (logoutFn) => {\n    globalLogoutFunction = logoutFn;\n};\n\n// Later in interceptor:\nAxios.interceptors.response.use(\n    (response) => response,\n    async (error) => {\n        if (error.response?.status === 401) {\n            console.warn('Unauthorized - Clearing storage');\n            if (globalLogoutFunction) {\n                globalLogoutFunction(); // ❌ Depends on global variable\n            }\n        }\n        return Promise.reject(error);\n    }\n);\n```\n\n**Problem:** High-level interceptor depends on low-level global variable"
+        },
+        {
+          "title": "DIP Violation #2: Direct localStorage Dependency",
+          "description": "Learn about DIP Violation #2: Direct localStorage Dependency",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/utils/getCompanyInfo.js](src/utils/getCompanyInfo.js:8-49)\n\n### Hard-coded localStorage calls\n\n```javascript\nexport function getCompanyInfo(companyId, storageKey = \"company\") {\n    try {\n        const raw = localStorage.getItem(storageKey);  // ❌ Direct coupling\n        if (!raw) return { label: \"\", locations: [] };\n\n        const companies = JSON.parse(raw);  // ❌ Assumes structure\n        const idNum = Number(companyId);\n\n        const company =\n            companies.find(c => Number(c?.value) === idNum) ||\n            companies.find(c => Number(c?.details?.id) === idNum);\n\n        if (!company) return { label: \"\", locations: [] };\n\n        return {\n            label: company?.label || \"\",\n            locations: company?.details?.locations || []\n        };\n    } catch {\n        return { label: \"\", locations: [] };\n    }\n}\n```\n\n**Problem:** Function directly depends on browser localStorage API"
+        },
+        {
+          "title": "DIP Violation #2: Why is this bad?",
+          "description": "Learn about DIP Violation #2: Why is this bad?",
+          "type": "text",
+          "order": 4,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Problems with direct localStorage dependency:\n\n1. **Can't test** - No way to mock localStorage in unit tests\n2. **Can't swap storage** - Tied to browser localStorage forever\n3. **Can't add features** - Can't add encryption, compression, etc. without modifying function\n4. **Server-side rendering breaks** - localStorage doesn't exist on server\n\n### What if you want to:\n- Switch to sessionStorage?\n- Add encryption to stored data?\n- Use AsyncStorage in React Native?\n- Add caching layer?\n\n**Answer:** Modify every function that uses localStorage!"
+        },
+        {
+          "title": "DIP Violation #3: Login Component Dependencies",
+          "description": "Learn about DIP Violation #3: Login Component Dependencies",
+          "type": "text",
+          "order": 5,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/views/pages/login/Login.js](src/views/pages/login/Login.js:114-156)\n\n### Direct dependencies everywhere\n\n```javascript\nconst handleSubmitIntoFormik = (values) => {\n    setActiveAPICalling(() => ({ ...activeAPICalling, login: true }));\n\n    axios.post(`${Config.baseApi}/account/signin`, {  // ❌ Direct axios\n        username: values.userName,\n        password: values.password\n    }, { timeout: 3000 })\n    .then(response => {\n        // ...\n        localStorage.setItem(\"w_auth\", JSON.stringify(response.data));  // ❌ Direct localStorage\n\n        if (response.data.role === \"ROLE_ADMIN\") {  // ❌ Hard-coded role string\n            // ...\n        }\n    })\n    .catch(err => {\n        // ❌ Direct error message construction\n        if (err.message.includes('404')) userFeedbackMessage = \"User does not exist.\"\n        else if (err.message.includes('422')) userFeedbackMessage = \"Login restricted...\"\n    })\n};\n```\n\n**Problem:** Component tightly coupled to axios, localStorage, Config"
+        },
+        {
+          "title": "DIP Violation #4: API Layer Coupling",
+          "description": "Learn about DIP Violation #4: API Layer Coupling",
+          "type": "text",
+          "order": 6,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**File:** [src/API/Organization/OrganizationHierarchy/OrganizationHierarchyAPI.js](src/API/Organization/OrganizationHierarchy/OrganizationHierarchyAPI.js:10-28)\n\n### Every API function coupled to Axios\n\n```javascript\nexport const createOrganizationElement = async (organizationData) => {\n    try {\n        const response = await Axios.post(\n            `${config.baseApi}/organization-elements`,  // ❌ Direct config\n            organizationData,\n            { headers: { \"Content-Type\": \"application/json\" } }\n        );\n        return [response.data];\n    } catch (error) {\n        return [false, error?.response?.data?.message || error?.message];\n    }\n};\n\nexport const getAllOrganizationType = (companyId) => {\n    return Axios.get(`${config.baseApi}/organization-element-types/company/${companyId}/by-position-in-hierarchy?current=company&positionDifference=1&except=department,location`)\n        .then(response => [response.data])\n        .catch(error => {\n            console.error(error);\n            return ([false, error?.response?.data?.message || error?.message])\n        })\n};\n```\n\n**Problem:** Can't swap HTTP client or test without real HTTP calls"
+        },
+        {
+          "title": "How to Fix DIP Violations",
+          "description": "Learn about How to Fix DIP Violations",
+          "type": "text",
+          "order": 7,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 1: Create Storage Abstraction\n\n**Before: Direct localStorage**\n```javascript\nconst raw = localStorage.getItem(storageKey);\nlocalStorage.setItem(\"w_auth\", JSON.stringify(data));\n```\n\n**After: Storage service interface**\n```javascript\n// src/services/StorageService.js\nclass StorageService {\n  get(key) {\n    try {\n      const raw = localStorage.getItem(key);\n      return raw ? JSON.parse(raw) : null;\n    } catch {\n      return null;\n    }\n  }\n\n  set(key, value) {\n    try {\n      localStorage.setItem(key, JSON.stringify(value));\n      return true;\n    } catch {\n      return false;\n    }\n  }\n\n  remove(key) {\n    localStorage.removeItem(key);\n  }\n}\n\nexport const storageService = new StorageService();\n```"
+        },
+        {
+          "title": "How to Fix DIP: Using Storage Abstraction",
+          "description": "Learn about How to Fix DIP: Using Storage Abstraction",
+          "type": "text",
+          "order": 8,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Before: Direct localStorage dependency\nexport function getCompanyInfo(companyId, storageKey = \"company\") {\n    const raw = localStorage.getItem(storageKey);  // ❌\n    const companies = JSON.parse(raw);\n    // ...\n}\n\n// After: Depends on abstraction\nimport { storageService } from '@/services/StorageService';\n\nexport function getCompanyInfo(companyId, storageKey = \"company\") {\n    const companies = storageService.get(storageKey);  // ✅\n    // ...\n}\n```\n\n**Now you can:**\n- Swap to sessionStorage by changing ONE place\n- Add encryption layer\n- Mock for testing\n- Use different storage in React Native"
+        },
+        {
+          "title": "How to Fix DIP: Auth Service Abstraction",
+          "description": "Learn about How to Fix DIP: Auth Service Abstraction",
+          "type": "text",
+          "order": 9,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 2: Create Auth Service\n\n```javascript\n// src/services/AuthService.js\nclass AuthService {\n  constructor(httpClient, storage) {\n    this.httpClient = httpClient;\n    this.storage = storage;\n  }\n\n  async login(username, password) {\n    try {\n      const response = await this.httpClient.post('/account/signin', {\n        username,\n        password\n      });\n\n      this.storage.set('w_auth', response.data);\n      return { success: true, data: response.data };\n    } catch (error) {\n      return { success: false, error: this.parseError(error) };\n    }\n  }\n\n  logout() {\n    this.storage.remove('w_auth');\n    // Clear other auth data\n  }\n\n  isAuthenticated() {\n    return !!this.storage.get('w_auth');\n  }\n\n  getUserRole() {\n    const auth = this.storage.get('w_auth');\n    return auth?.role;\n  }\n\n  parseError(error) {\n    if (error.response?.status === 404) return \"User does not exist.\";\n    if (error.response?.status === 422) return \"Login restricted.\";\n    return \"An unexpected error occurred.\";\n  }\n}\n\nexport const authService = new AuthService(apiClient, storageService);\n```"
+        },
+        {
+          "title": "How to Fix DIP: Using Auth Service",
+          "description": "Learn about How to Fix DIP: Using Auth Service",
+          "type": "text",
+          "order": 10,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Before: Direct dependencies in component\nconst handleSubmitIntoFormik = (values) => {\n    axios.post(`${Config.baseApi}/account/signin`, { /* ... */ })\n        .then(response => {\n            localStorage.setItem(\"w_auth\", JSON.stringify(response.data));\n            if (response.data.role === \"ROLE_ADMIN\") { /* ... */ }\n        })\n        .catch(err => { /* manual error parsing */ });\n};\n\n// After: Depends on AuthService abstraction\nimport { authService } from '@/services/AuthService';\n\nconst handleSubmitIntoFormik = async (values) => {\n    const result = await authService.login(values.userName, values.password);\n\n    if (result.success) {\n        const role = authService.getUserRole();\n        if (role === \"ROLE_ADMIN\") {\n            // Navigate to admin dashboard\n        }\n    } else {\n        setErrorMessage(result.error);\n    }\n};\n```\n\n**Benefits:**\n- ✅ Easy to test (mock authService)\n- ✅ Easy to swap implementations\n- ✅ Centralized auth logic\n- ✅ Component doesn't know about axios or localStorage"
+        },
+        {
+          "title": "How to Fix DIP: API Client Abstraction",
+          "description": "Learn about How to Fix DIP: API Client Abstraction",
+          "type": "text",
+          "order": 11,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 3: HTTP Client Interface\n\n```javascript\n// src/services/HttpClient.js\nclass HttpClient {\n  constructor(baseURL) {\n    this.client = axios.create({ baseURL });\n    this.setupInterceptors();\n  }\n\n  setupInterceptors() {\n    this.client.interceptors.response.use(\n      (response) => response,\n      (error) => {\n        // Centralized error handling\n        if (error.response?.status === 401) {\n          // Dispatch logout event\n          window.dispatchEvent(new Event('unauthorized'));\n        }\n        return Promise.reject(error);\n      }\n    );\n  }\n\n  async get(url, config) {\n    const response = await this.client.get(url, config);\n    return response.data;\n  }\n\n  async post(url, data, config) {\n    const response = await this.client.post(url, data, config);\n    return response.data;\n  }\n\n  // ... put, delete, patch\n}\n\nexport const apiClient = new HttpClient(Config.baseApi);\n```"
+        },
+        {
+          "title": "How to Fix DIP: Using HTTP Client",
+          "description": "Learn about How to Fix DIP: Using HTTP Client",
+          "type": "text",
+          "order": 12,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "```javascript\n// Before: Direct Axios dependency\nexport const createOrganizationElement = async (organizationData) => {\n    const response = await Axios.post(\n        `${config.baseApi}/organization-elements`,\n        organizationData\n    );\n    return [response.data];\n};\n\n// After: Depends on HttpClient abstraction\nimport { apiClient } from '@/services/HttpClient';\n\nexport const createOrganizationElement = async (organizationData) => {\n    try {\n        const data = await apiClient.post('/organization-elements', organizationData);\n        return [data];\n    } catch (error) {\n        return [false, error.message];\n    }\n};\n```\n\n**Benefits:**\n- ✅ Can swap to fetch() or other HTTP library\n- ✅ Easy to mock for testing\n- ✅ Centralized request/response handling\n- ✅ No hard-coded base URLs"
+        },
+        {
+          "title": "How to Fix DIP: Dependency Injection with Context",
+          "description": "Learn about How to Fix DIP: Dependency Injection with Context",
+          "type": "text",
+          "order": 13,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Strategy 4: React Context for Services\n\n```javascript\n// src/contexts/ServicesContext.jsx\nimport React, { createContext, useContext } from 'react';\nimport { authService } from '@/services/AuthService';\nimport { storageService } from '@/services/StorageService';\nimport { apiClient } from '@/services/HttpClient';\n\nconst ServicesContext = createContext(null);\n\nexport const ServicesProvider = ({ children }) => {\n  const services = {\n    auth: authService,\n    storage: storageService,\n    api: apiClient,\n  };\n\n  return (\n    <ServicesContext.Provider value={services}>\n      {children}\n    </ServicesContext.Provider>\n  );\n};\n\nexport const useServices = () => {\n  const context = useContext(ServicesContext);\n  if (!context) {\n    throw new Error('useServices must be used within ServicesProvider');\n  }\n  return context;\n};\n```"
+        },
+        {
+          "title": "How to Fix DIP: Using Service Context",
+          "description": "Learn about How to Fix DIP: Using Service Context",
+          "type": "text",
+          "order": 14,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Putting It All Together - Summary & Action Plan",
+      "description": "Apply SOLID principles to improve your codebase with actionable strategies",
+      "order": 8,
+      "isPublished": true,
+      "lessons": [
+        {
+          "title": "How to Fix DIP: Using Service Context",
+          "description": "Learn about How to Fix DIP: Using Service Context",
+          "type": "text",
+          "order": 14,
+          "duration": 30,
+          "isPublished": true,
+          "resources": [],
+          "content": ""
+        },
+        {
+          "title": "Current State vs. SOLID State",
+          "description": "Learn about Current State vs. SOLID State",
+          "type": "text",
+          "order": 1,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "| Aspect | Current State | After SOLID |\n|--------|--------------|-------------|\n| **Component Size** | 1,405 lines | < 300 lines |\n| **Code Duplication** | 50+ duplicated error handlers | 1 centralized handler |\n| **Testing** | Hard (tightly coupled) | Easy (dependency injection) |\n| **New Features** | Modify existing code | Extend with new code |\n| **Onboarding** | Overwhelming | Manageable |\n| **Bug Fixes** | 3 hours (fear of breaking) | 30 minutes (isolated) |"
+        },
+        {
+          "title": "Action Plan for Our Team",
+          "description": "Learn about Action Plan for Our Team",
+          "type": "text",
+          "order": 2,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Phase 1: Stop Making it Worse (Week 1-2)\n1. **No new files > 300 lines** - Break up large components\n2. **Use our new abstractions** - StorageService, AuthService, HttpClient\n3. **Create custom hooks** - Extract data fetching logic\n4. **Code reviews focus on SOLID** - Team members check for violations\n\n### Phase 2: Incremental Refactoring (Week 3-8)\n1. **Refactor 1 large component per sprint**\n   - AllPayRoll.js → PayrollContainer + smaller components\n   - AddEmployee.js → Wizard pattern\n   - AdminPanel.js → Split graphs into components\n2. **Centralize API error handling**\n3. **Create service layer** for all API calls\n\n### Phase 3: Establish Patterns (Ongoing)\n1. **Document our patterns** - Component structure guide\n2. **Create reusable abstractions** - Shared utilities\n3. **Automated checks** - ESLint rules for component size\n4. **Regular refactoring sessions** - 1 hour per week"
+        },
+        {
+          "title": "Measuring Success",
+          "description": "Learn about Measuring Success",
+          "type": "text",
+          "order": 3,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Metrics to Track:\n\n1. **Average Component Size**\n   - Current: 400 lines\n   - Target: < 200 lines\n\n2. **Code Duplication**\n   - Current: High (error handling, API calls)\n   - Target: < 5% duplication\n\n3. **Test Coverage**\n   - Current: Low (hard to test)\n   - Target: > 70% coverage\n\n4. **Development Velocity**\n   - Time to add new feature\n   - Time to fix bugs\n   - Time for code reviews"
+        },
+        {
+          "title": "Key Takeaways",
+          "description": "Learn about Key Takeaways",
+          "type": "text",
+          "order": 4,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Remember:\n\n1. **SOLID is not about perfection** - It's about continuous improvement\n2. **Start small** - Refactor incrementally, not all at once\n3. **Enforce in code reviews** - Make SOLID part of our culture\n4. **Create abstractions when you see patterns** - Don't repeat yourself 3+ times\n5. **Keep learning** - These principles take time to internalize"
+        },
+        {
+          "title": "Resources for Further Learning",
+          "description": "Learn about Resources for Further Learning",
+          "type": "text",
+          "order": 5,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Books:\n- \"Clean Code\" by Robert C. Martin\n- \"Refactoring\" by Martin Fowler\n- \"Design Patterns\" by Gang of Four\n\n### Online:\n- refactoring.guru - Great visual explanations\n- sourcemaking.com/design_patterns\n- React patterns: patterns.dev\n\n### Practice:\n- Code reviews focusing on SOLID\n- Pair programming sessions\n- Refactoring katas"
+        },
+        {
+          "title": "Questions?",
+          "description": "Learn about Questions?",
+          "type": "text",
+          "order": 6,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "**Let's discuss:**\n- Which violations surprised you most?\n- Which principle do you find hardest to apply?\n- What should we prioritize refactoring first?"
+        },
+        {
+          "title": "Next Steps",
+          "description": "Learn about Next Steps",
+          "type": "text",
+          "order": 7,
+          "duration": 15,
+          "isPublished": true,
+          "resources": [],
+          "content": "### Action Items:\n1. **Today:** Review your current work for SOLID violations\n2. **This Week:** Implement at least one service abstraction (StorageService or AuthService)\n3. **Next Sprint:** Choose 1 large component to refactor together\n4. **Ongoing:** Code reviews with SOLID checklist\n\n### Let's make our codebase better, one commit at a time!\n\n\n\n**Remember:** Legacy code is just code without tests and good design.\n**We can change that, starting today.**"
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "totalChapters": 8,
+    "totalLessons": 72
+  }
+}

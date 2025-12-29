@@ -132,25 +132,6 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
                     {articles.map((article) => (
                         <ArticleCard
                             key={article._id}
-                            // article={{
-                            //     id: article._id,
-                            //     title: article.title,
-                            //     category: article.category,
-                            //     author: {
-                            //         name: article.author?.name,
-                            //         avatar: article?.author?.avatar || "",
-                            //         initials: article?.author?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || "AU"
-                            //     },
-                            //     publishDate: new Date(article.publishedAt || article.createdAt).toLocaleDateString(),
-                            //     publishTime: new Date(article.publishedAt || article.createdAt).toLocaleTimeString(),
-                            //     views: article.views,
-                            //     thumbnail: article.thumbnail || `https://picsum.photos/300/200?random=${article._id}`,
-                            //     myArticle: activeTab === 'my',
-                            //     isPublished: article.status === 'published',
-                            //     content: article.content,
-                            //     votes: { yes: article.likes, no: 0 }, // Backend doesn't have downvotes, using 0
-                            //     comments: [] // Would need to fetch comments separately
-                            // }}
                             article={{ ...article }}
                             isMyArticle={activeTab === 'my'}
                             onClick={() => {

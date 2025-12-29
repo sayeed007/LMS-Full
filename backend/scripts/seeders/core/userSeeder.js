@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const User = require('../../../src/models/User');
 
 const seedUsers = async () => {
   const hashedPassword = await bcrypt.hash('password123', 12);

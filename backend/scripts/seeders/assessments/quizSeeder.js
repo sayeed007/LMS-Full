@@ -1,6 +1,6 @@
-const Question = require('../models/Question');
-const QuestionBank = require('../models/QuestionBank');
-const { Quiz } = require('../models/Quiz');
+const Question = require('../../../src/models/Question');
+const QuestionBank = require('../../../src/models/QuestionBank');
+const { Quiz } = require('../../../src/models/Quiz');
 
 const seedQuestionBanks = async (users, courses) => {
   // Get instructors for question bank creation
@@ -557,7 +557,7 @@ const seedQuizzes = async (courses, questions, users) => {
   const createdQuizzes = await Quiz.insertMany(quizzesWithDefaults);
 
   // Update course stats with quiz counts
-  const Course = require('../models/Course');
+  const Course = require('../../../src/models/Course');
   for (const course of courses) {
     const quizCount = createdQuizzes.filter(quiz =>
       quiz.course.toString() === course._id.toString()

@@ -1,4 +1,4 @@
-const Category = require('../models/Category');
+const Category = require('../../../src/models/Category');
 
 // Helper function to create slug
 const createSlug = (name) => {

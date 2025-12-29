@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // Import models
-const QuestionBank = require('../models/QuestionBank');
-const Question = require('../models/Question');
-const Course = require('../models/Course');
-const User = require('../models/User');
+const QuestionBank = require('../../../src/models/QuestionBank');
+const Question = require('../../../src/models/Question');
+const Course = require('../../../src/models/Course');
+const User = require('../../../src/models/User');
 
 // Sample question bank data
 const questionBanksData = [

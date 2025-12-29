@@ -7,6 +7,7 @@ import { LessonContent } from "@/types/backend-models";
 import {
   BookOpen,
   CheckCircle,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Download,
@@ -17,21 +18,31 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { decodeHTMLEntities } from "@/lib/html-utils";
 
 interface LessonContentRendererProps {
   lessonId: string;
   courseId: string;
   onComplete: () => void;
   onNext?: () => void;
+  currentContentIndex?: number;
+  onContentIndexChange?: (index: number) => void;
 }
 
 export function LessonContentRenderer({
   lessonId,
   courseId,
   onComplete,
-  onNext
+  onNext,
+  currentContentIndex: externalIndex,
+  onContentIndexChange
 }: LessonContentRendererProps) {
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
+  const [internalIndex, setInternalIndex] = useState(0);
+
+  // Use external index if provided, otherwise use internal
+  const currentContentIndex = externalIndex !== undefined ? externalIndex : internalIndex;
+  const setCurrentContentIndex = onContentIndexChange || setInternalIndex;
 
   const {
     data: contentData,
@@ -54,6 +65,22 @@ export function LessonContentRenderer({
   const handleCompleteLesson = () => {
     onComplete();
   };
+
+  const handlePreviousContent = () => {
+    if (currentContentIndex > 0) {
+      setCurrentContentIndex(currentContentIndex - 1);
+    }
+  };
+
+  const handleNextContent = () => {
+    if (currentContentIndex < contentItems.length - 1) {
+      setCurrentContentIndex(currentContentIndex + 1);
+    }
+  };
+
+  const currentContent = contentItems[currentContentIndex];
+  const hasPrevious = currentContentIndex > 0;
+  const hasNext = currentContentIndex < contentItems.length - 1;
 
   if (isLoading) {
     return (
@@ -95,25 +122,25 @@ export function LessonContentRenderer({
     );
   }
 
+  const getContentIconLarge = (type: string) => {
+    switch (type) {
+      case 'video':
+        return <Video className="w-5 h-5" />;
+      case 'audio':
+        return <Headphones className="w-5 h-5" />;
+      case 'text':
+        return <FileText className="w-5 h-5" />;
+      case 'document':
+        return <Download className="w-5 h-5" />;
+      case 'block':
+        return <BookOpen className="w-5 h-5" />;
+      default:
+        return <FileText className="w-5 h-5" />;
+    }
+  };
+
   const renderContentItem = (item: LessonContent) => {
     const isCompleted = Array.from(completedItems).includes(item._id);
-
-    const getContentIcon = (type: string) => {
-      switch (type) {
-        case 'video':
-          return <Video className="w-5 h-5" />;
-        case 'audio':
-          return <Headphones className="w-5 h-5" />;
-        case 'text':
-          return <FileText className="w-5 h-5" />;
-        case 'document':
-          return <Download className="w-5 h-5" />;
-        case 'block':
-          return <BookOpen className="w-5 h-5" />;
-        default:
-          return <FileText className="w-5 h-5" />;
-      }
-    };
 
     const renderContent = () => {
       switch (item.type) {
@@ -121,7 +148,7 @@ export function LessonContentRenderer({
           return (
             <div className="prose max-w-none">
               <div
-                dangerouslySetInnerHTML={{ __html: item.data.text || '' }}
+                dangerouslySetInnerHTML={{ __html: decodeHTMLEntities(item.data.text || '') }}
                 className="text-gray-700 leading-relaxed"
               />
             </div>
@@ -210,7 +237,7 @@ export function LessonContentRenderer({
                   <h4 className="font-medium text-gray-900 mb-2">{blockItem.data.title || `Block Item ${index + 1}`}</h4>
                   <div className="text-gray-700 leading-relaxed">
                     {blockItem.type === 'text' && blockItem.data.text && (
-                      <div dangerouslySetInnerHTML={{ __html: blockItem.data.text }} />
+                      <div dangerouslySetInnerHTML={{ __html: decodeHTMLEntities(blockItem.data.text) }} />
                     )}
                     {(blockItem.type === 'image' || blockItem.type === 'video' || blockItem.type === 'audio') && blockItem.data.url && (
                       <div className="mb-2">
@@ -261,7 +288,7 @@ export function LessonContentRenderer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-                {isCompleted ? <CheckCircle className="w-5 h-5" /> : getContentIcon(item.type)}
+                {isCompleted ? <CheckCircle className="w-5 h-5" /> : getContentIconLarge(item.type)}
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
@@ -310,8 +337,36 @@ export function LessonContentRenderer({
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Content Items */}
-      {contentItems.map(renderContentItem)}
+      {/* Current Content Item */}
+      {currentContent && renderContentItem(currentContent)}
+
+      {/* Navigation Controls */}
+      {contentItems.length > 1 && (
+        <div className="flex items-center justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={handlePreviousContent}
+            disabled={!hasPrevious}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous Content
+          </Button>
+
+          <div className="text-sm text-gray-600">
+            {currentContentIndex + 1} / {contentItems.length}
+          </div>
+
+          <Button
+            onClick={handleNextContent}
+            disabled={!hasNext}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Next Content
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Lesson Completion */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -349,4 +404,22 @@ export function LessonContentRenderer({
       </div>
     </div>
   );
+}
+
+// Export content items data for use in sidebar
+export function useContentItems(courseId: string, lessonId: string) {
+  const {
+    data: contentData,
+    isLoading,
+    error
+  } = useGetContentByLessonQuery(
+    { courseId, lessonId },
+    { skip: !courseId || !lessonId }
+  );
+
+  return {
+    contentItems: contentData?.data?.content || [],
+    isLoading,
+    error
+  };
 }

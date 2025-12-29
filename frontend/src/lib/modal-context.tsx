@@ -278,7 +278,7 @@ const ModalWrapper: FC<ModalWrapperProps> = ({ modal, zIndex, onClose }) => {
             data-modal-wrapper
             role="dialog"
             aria-modal="true"
-            className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-all duration-300 p-4 ${getOverlayClasses(safeOptions.position, safeOptions.size)} ${safeOptions.overlayClassName || ''}`}
+            className={`fixed inset-0 bg-black/20 backdrop-blur-sm transition-all duration-300 p-4 ${getOverlayClasses(safeOptions.position, safeOptions.size)} ${safeOptions.overlayClassName || ''}`}
             style={{ zIndex }}
             onClick={handleBackdropClick}
         >

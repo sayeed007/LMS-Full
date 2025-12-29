@@ -1,56 +1,11 @@
 'use client';
 
-import { BookOpen, DollarSign, Star, TrendingUp, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import SearchSuggestions from './SearchSuggestions';
 import { Button } from '@/components/ui/button';
-
-const CATEGORIES = [
-  { value: 'programming', label: 'Programming' },
-  { value: 'web-development', label: 'Web Development' },
-  { value: 'mobile-development', label: 'Mobile Development' },
-  { value: 'data-science', label: 'Data Science' },
-  { value: 'machine-learning', label: 'Machine Learning' },
-  { value: 'artificial-intelligence', label: 'Artificial Intelligence' },
-  { value: 'cybersecurity', label: 'Cybersecurity' },
-  { value: 'cloud-computing', label: 'Cloud Computing' },
-  { value: 'devops', label: 'DevOps' },
-  { value: 'blockchain', label: 'Blockchain' },
-  { value: 'game-development', label: 'Game Development' },
-  { value: 'ui-ux-design', label: 'UI/UX Design' },
-  { value: 'digital-marketing', label: 'Digital Marketing' },
-  { value: 'business', label: 'Business' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'management', label: 'Management' },
-  { value: 'personal-development', label: 'Personal Development' },
-  { value: 'health-fitness', label: 'Health & Fitness' },
-  { value: 'language-learning', label: 'Language Learning' },
-  { value: 'arts-crafts', label: 'Arts & Crafts' },
-  { value: 'music', label: 'Music' },
-  { value: 'photography', label: 'Photography' },
-  { value: 'other', label: 'Other' },
-];
-
-const LEVELS = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
-];
-
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'popular', label: 'Most Popular' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'price-asc', label: 'Price: Low to High' },
-  { value: 'price-desc', label: 'Price: High to Low' },
-];
-
-const RATING_OPTIONS = [
-  { value: '4.5', label: '4.5 & up' },
-  { value: '4', label: '4 & up' },
-  { value: '3.5', label: '3.5 & up' },
-  { value: '3', label: '3 & up' },
-];
+import { BookOpen, DollarSign, Star, TrendingUp, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import SearchSuggestions from './SearchSuggestions';
+import { useGetCategoriesQuery } from '@/store/api/categoryApi';
+import { COURSE_LEVELS, SORT_OPTIONS, RATING_OPTIONS } from '@/constants/course';
 
 export interface CourseFiltersType {
   search: string;
@@ -74,9 +29,46 @@ export default function CourseFiltersModal({
   onClose,
 }: CourseFiltersModalProps) {
   const [filters, setFilters] = useState<CourseFiltersType>(initialFilters);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    parseFloat(initialFilters.minPrice) || 0,
+    parseFloat(initialFilters.maxPrice) || 1000
+  ]);
+
+  // Fetch categories from backend
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetCategoriesQuery({
+    isActive: true,
+    limit: 100
+  });
+
+  // Memoize category options
+  const categoryOptions = useMemo(() => {
+    if (!categoriesData?.data) return [];
+    return categoriesData.data
+      .filter(cat => cat.isActive)
+      .map(cat => ({
+        value: cat.name,
+        label: cat.name
+      }));
+  }, [categoriesData]);
+
+  // Shared slider thumb styles
+  const sliderThumbStyles = "absolute w-full appearance-none bg-transparent cursor-pointer pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:cursor-grab [&::-moz-range-thumb]:active:cursor-grabbing [&::-moz-range-thumb]:border-[2px] [&::-moz-range-thumb]:border-blue-600 [&::-moz-range-thumb]:shadow-lg [&::-moz-range-thumb]:hover:scale-110 [&::-moz-range-thumb]:transition-transform";
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handlePriceRangeChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'min' | 'max') => {
+    const value = parseFloat(e.target.value) || 0;
+    const newRange: [number, number] = type === 'min'
+      ? [value, priceRange[1]]
+      : [priceRange[0], value];
+    setPriceRange(newRange);
+    setFilters((prev) => ({
+      ...prev,
+      minPrice: newRange[0].toString(),
+      maxPrice: newRange[1].toString()
+    }));
   };
 
   const clearFilters = () => {
@@ -90,6 +82,7 @@ export default function CourseFiltersModal({
       sort: 'newest',
     };
     setFilters(clearedFilters);
+    setPriceRange([0, 1000]);
   };
 
   const handleApply = () => {
@@ -106,21 +99,14 @@ export default function CourseFiltersModal({
     filters.minRating;
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white rounded-lg">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900">Filter Courses</h2>
-        <button
-          onClick={onClose}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-          aria-label="Close filters"
-        >
-          <X className="w-5 h-5 text-gray-600" />
-        </button>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto overflow-x-clip px-6 py-6 space-y-6">
         {/* Search Bar with Suggestions */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -152,68 +138,164 @@ export default function CourseFiltersModal({
           </select>
         </div>
 
-        {/* Category Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <BookOpen className="w-4 h-4 inline mr-1" />
-            Category
-          </label>
-          <select
-            value={filters.category}
-            onChange={(e) => handleFilterChange('category', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-          >
-            <option value="">All Categories</option>
-            {CATEGORIES.map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Category and Difficulty Level - Side by Side */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Category Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <BookOpen className="w-4 h-4 inline mr-1" />
+              Category
+            </label>
+            <select
+              value={filters.category}
+              onChange={(e) => handleFilterChange('category', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 text-sm"
+              disabled={categoriesLoading}
+            >
+              <option value="">All Categories</option>
+              {categoryOptions.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Level Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Difficulty Level
-          </label>
-          <select
-            value={filters.level}
-            onChange={(e) => handleFilterChange('level', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-          >
-            <option value="">All Levels</option>
-            {LEVELS.map((level) => (
-              <option key={level.value} value={level.value}>
-                {level.label}
-              </option>
-            ))}
-          </select>
+          {/* Level Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Difficulty Level
+            </label>
+            <select
+              value={filters.level}
+              onChange={(e) => handleFilterChange('level', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 text-sm"
+            >
+              <option value="">All Levels</option>
+              {COURSE_LEVELS.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Price Range */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <DollarSign className="w-4 h-4 inline mr-1" />
-            Price Range
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              value={filters.minPrice}
-              onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-              placeholder="Min Price"
-              min="0"
-              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <input
-              type="number"
-              value={filters.maxPrice}
-              onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-              placeholder="Max Price"
-              min="0"
-              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <DollarSign className="w-4 h-4" />
+              Price Range
+            </label>
+            <span className="text-sm font-semibold text-blue-600">
+              ${priceRange[0]} - ${priceRange[1]}
+            </span>
+          </div>
+
+          <div className="space-y-5">
+            {/* Dual-handle range slider */}
+            <div className="relative pt-2 pb-8 px-1">
+              {/* Track background */}
+              <div className="absolute w-full h-1.5 bg-gray-200 rounded-full top-2"></div>
+
+              {/* Active track between handles */}
+              <div
+                className="absolute h-1.5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full top-2 transition-all"
+                style={{
+                  left: `${(priceRange[0] / 1000) * 100}%`,
+                  right: `${100 - (priceRange[1] / 1000) * 100}%`
+                }}
+              ></div>
+
+              {/* Min handle */}
+              <input
+                type="range"
+                min="0"
+                max="1000"
+                step="10"
+                value={priceRange[0]}
+                onChange={(e) => {
+                  const value = Math.min(Number(e.target.value), priceRange[1] - 10);
+                  const syntheticEvent = {
+                    ...e,
+                    target: { ...e.target, value: String(value) }
+                  } as React.ChangeEvent<HTMLInputElement>;
+                  handlePriceRangeChange(syntheticEvent, 'min');
+                }}
+                className={sliderThumbStyles}
+                style={{ zIndex: priceRange[0] > 1000 - 100 ? 5 : 3 }}
+              />
+
+              {/* Max handle */}
+              <input
+                type="range"
+                min="0"
+                max="1000"
+                step="10"
+                value={priceRange[1]}
+                onChange={(e) => {
+                  const value = Math.max(Number(e.target.value), priceRange[0] + 10);
+                  const syntheticEvent = {
+                    ...e,
+                    target: { ...e.target, value: String(value) }
+                  } as React.ChangeEvent<HTMLInputElement>;
+                  handlePriceRangeChange(syntheticEvent, 'max');
+                }}
+                className={sliderThumbStyles}
+                style={{ zIndex: priceRange[1] < 100 ? 5 : 4 }}
+              />
+
+              {/* Value labels below handles */}
+              <div className="absolute w-full top-6">
+                <div
+                  className="absolute -translate-x-1/2 text-xs font-medium text-gray-600 bg-white px-2 py-0.5 rounded shadow-sm"
+                  style={{ left: `${(priceRange[0] / 1000) * 100}%` }}
+                >
+                  ${priceRange[0]}
+                </div>
+                <div
+                  className="absolute -translate-x-1/2 text-xs font-medium text-gray-600 bg-white px-2 py-0.5 rounded shadow-sm"
+                  style={{ left: `${(priceRange[1] / 1000) * 100}%` }}
+                >
+                  ${priceRange[1]}
+                </div>
+              </div>
+            </div>
+
+            {/* Number inputs for precise control */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1.5">Min Price</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                  <input
+                    type="number"
+                    value={priceRange[0]}
+                    onChange={(e) => handlePriceRangeChange(e, 'min')}
+                    placeholder="0"
+                    min="0"
+                    max="1000"
+                    className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1.5">Max Price</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                  <input
+                    type="number"
+                    value={priceRange[1]}
+                    onChange={(e) => handlePriceRangeChange(e, 'max')}
+                    placeholder="1000"
+                    min="0"
+                    max="1000"
+                    className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -223,11 +305,11 @@ export default function CourseFiltersModal({
             <Star className="w-4 h-4 inline mr-1 fill-current" />
             Minimum Rating
           </label>
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
             {RATING_OPTIONS.map((option) => (
               <label
                 key={option.value}
-                className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <input
                   type="radio"
@@ -235,32 +317,33 @@ export default function CourseFiltersModal({
                   value={option.value}
                   checked={filters.minRating === option.value}
                   onChange={(e) => handleFilterChange('minRating', e.target.value)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                 />
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.floor(parseFloat(option.value))
+                <div className="flex items-center gap-1 flex-wrap">
+                  <div className="flex items-center">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3.5 h-3.5 ${i < Math.floor(parseFloat(option.value))
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                  <span className="text-sm text-gray-600 ml-1">{option.label}</span>
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-600">{option.label}</span>
                 </div>
               </label>
             ))}
-            {filters.minRating && (
-              <button
-                onClick={() => handleFilterChange('minRating', '')}
-                className="text-sm text-blue-600 hover:text-blue-700 ml-2"
-              >
-                Clear rating filter
-              </button>
-            )}
           </div>
+          {filters.minRating && (
+            <button
+              onClick={() => handleFilterChange('minRating', '')}
+              className="text-sm text-blue-600 hover:text-blue-700 mt-3"
+            >
+              Clear rating filter
+            </button>
+          )}
         </div>
       </div>
 

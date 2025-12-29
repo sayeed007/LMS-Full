@@ -19,10 +19,18 @@ const getChapters = catchAsync(async (req, res, next) => {
   // Check if user has access to course
   let canViewUnpublished = false;
 
-  if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
-    canViewUnpublished = true;
-  } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
-    canViewUnpublished = true;
+  // Check if user is authenticated
+  if (req.user) {
+    if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
+      canViewUnpublished = true;
+    } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
+      canViewUnpublished = true;
+    }
+  } else {
+    // Unauthenticated users can only view published courses
+    if (!course.isPublished) {
+      return next(new AppError('You do not have access to this course', 403));
+    }
   }
 
   let filter = {

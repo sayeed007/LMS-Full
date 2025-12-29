@@ -253,7 +253,7 @@ export function CoursePreviewClient({ courseId, error: propError }: CoursePrevie
           {/* Right Stats Card */}
           <div className="lg:w-96 flex flex-2 items-center mt-4 md:mt-0">
             <div className="text-white rounded-2xl p-4 relative overflow-hidden bg-cover bg-center min-h-[300px] w-full flex flex-col justify-between"
-              style={{ backgroundImage: `url(${course?.thumbnail || '/default-course-thumbnail.jpg'})` }}
+              style={{ backgroundImage: `url(${course?.thumbnail || '/default-course-thumbnail.png'})` }}
             >
               {/* Category Badge */}
               <div className="flex justify-end items-start mb-4">

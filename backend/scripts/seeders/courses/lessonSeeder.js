@@ -1,4 +1,4 @@
-const Lesson = require('../models/Lesson');
+const Lesson = require('../../../src/models/Lesson');
 
 const seedLessons = async (courses, users) => {
   // Get instructors for content creation
@@ -604,7 +604,7 @@ function App() {
   const createdLessons = await Lesson.insertMany(lessonsWithDefaults);
 
   // Update course stats with lesson counts
-  const Course = require('../models/Course');
+  const Course = require('../../../src/models/Course');
   for (const course of courses) {
     const lessonCount = createdLessons.filter(lesson =>
       lesson.course.toString() === course._id.toString()

@@ -1,4 +1,4 @@
-const Enrollment = require('../models/Enrollment');
+const Enrollment = require('../../../src/models/Enrollment');
 
 const seedEnrollments = async (courses, lessons, users) => {
   // Get students for enrollment
@@ -197,7 +197,7 @@ const seedEnrollments = async (courses, lessons, users) => {
   const createdEnrollments = await Enrollment.insertMany(enrollments);
 
   // Update course enrollment stats
-  const Course = require('../models/Course');
+  const Course = require('../../../src/models/Course');
   for (const course of courses) {
     const courseEnrollments = createdEnrollments.filter(enrollment =>
       enrollment.course.toString() === course._id.toString()
