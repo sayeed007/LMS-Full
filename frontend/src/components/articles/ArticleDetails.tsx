@@ -29,23 +29,27 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
     const { openLoginModal } = useLoginModal();
 
-    // API mutations
+    // API mutations and queries
     const [likeArticle, { isLoading: isLiking }] = useLikeArticleMutation();
     const [unlikeArticle, { isLoading: isUnliking }] = useUnlikeArticleMutation();
+    const [createComment, { isLoading: isSubmittingComment }] = useCreateCommentMutation();
+
+    // Fetch comments for this article
+    const { data: commentsData, isLoading: isLoadingComments } = useGetArticleCommentsQuery({
+        articleId: article._id,
+        page: 1,
+        limit: 20,
+        sortBy: 'createdAt',
+        order: 'desc'
+    });
 
     // Use editor content if provided, otherwise use mock content
     const displayContent = article.content;
     const { category, title, author, views } = article;
     const { name, avatar } = author;
 
-    // Comments will be fetched separately in the future (not yet implemented in backend)
-    const comments: Array<{
-        id: string;
-        author: { name: string; avatar: string };
-        date: string;
-        time: string;
-        content: string;
-    }> = [];
+    // Get comments from API response
+    const comments = commentsData?.data?.comments || [];
 
     // Format dates from backend data
     const articleDate = article.publishedAt || article.createdAt;
@@ -98,10 +102,12 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
         if (!newComment.trim()) return;
 
         try {
-            // TODO: Implement comment API when backend supports it
-            // await createComment({ articleId: article._id, content: newComment }).unwrap();
+            await createComment({
+                articleId: article._id,
+                data: { content: newComment.trim() }
+            }).unwrap();
 
-            showSuccessToast('Comment submitted', 'Your comment will appear once the comment feature is implemented');
+            showSuccessToast('Comment posted successfully');
             setNewComment('');
         } catch (error) {
             showErrorToast('Failed to post comment', 'Please try again');
@@ -282,25 +288,45 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                                     <div className="flex justify-end">
                                         <PrimaryActionButton
                                             onClick={handleCommentSubmit}
-                                            disabled={!newComment.trim()}>
-                                            Post
+                                            disabled={!newComment.trim() || isSubmittingComment}>
+                                            {isSubmittingComment ? 'Posting...' : 'Post'}
                                         </PrimaryActionButton>
                                     </div>
                                 </div>
 
                                 {/* Comments List */}
                                 <div className="space-y-6">
-                                    {comments?.map((comment) => (
-                                        <div key={comment.id} className="flex flex-col gap-3">
-                                            <ArticleAuthorInfo
-                                                authorName={comment.author.name || "Anonymous"}
-                                                authorAvatar={comment.author.avatar || ""}
-                                                publishDate={comment.date}
-                                                publishTime={comment.time}
-                                                comment={comment.content}
-                                            />
+                                    {isLoadingComments ? (
+                                        <div className="text-center py-8 text-gray-500">Loading comments...</div>
+                                    ) : comments.length === 0 ? (
+                                        <div className="text-center py-8 text-gray-500">
+                                            No comments yet. Be the first to comment!
                                         </div>
-                                    ))}
+                                    ) : (
+                                        comments.map((comment) => {
+                                            const commentDate = new Date(comment.createdAt).toLocaleDateString('en-US', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            });
+                                            const commentTime = new Date(comment.createdAt).toLocaleTimeString('en-US', {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            });
+
+                                            return (
+                                                <div key={comment._id} className="flex flex-col gap-3">
+                                                    <ArticleAuthorInfo
+                                                        authorName={comment.author.name || "Anonymous"}
+                                                        authorAvatar={comment.author.avatar || ""}
+                                                        publishDate={commentDate}
+                                                        publishTime={commentTime}
+                                                        comment={comment.content}
+                                                    />
+                                                </div>
+                                            );
+                                        })
+                                    )}
                                 </div>
                             </div>
                     </CardContent>

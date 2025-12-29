@@ -57,9 +57,11 @@ export function CourseCard({ course, isOwner = false }: { course: CoursePopulate
         </div>
       </div>
       <div className="flex items-center gap-4 text-xs text-grey-2 mt-2">
-        <span>📁 {course.chapters?.length || 0} Chapter</span>
-        {/* <span>📄 {course?.stats?.totalLessons || 0 } Lesson</span> */}
-        {/* <span>❓ {course.quizzes?.length || 0 } Quiz</span> */}
+        <span>⏱️ {course.duration || 0} mins</span>
+        <span>📊 {course.level}</span>
+        {course.stats?.totalEnrollments ? (
+          <span>👥 {course.stats.totalEnrollments}</span>
+        ) : null}
       </div>
     </div>
   );
