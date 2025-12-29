@@ -35,7 +35,8 @@ export function ArticleCard({
     onArticleDeleted,
     onArticleUpdated
 }: ArticleCardProps) {
-    const { thumbnail, title, author, publishedAt, views, isPublished } = article;
+    const { thumbnail, title, author, publishedAt, views, status } = article;
+    const isPublished = status === 'published';
     const { name, avatar } = author || { name: '', avatar: '' };
     const [showActionPopup, setShowActionPopup] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<string | null>(null);

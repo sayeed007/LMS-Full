@@ -417,17 +417,30 @@ export function ArticleCreationOptions() {
                         :
                         currentArticleWritingMethod === 'scratch' ?
                             <div className="container mx-auto p-6">
-                                <div className="mb-4 flex items-center justify-between">
+                                <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="text-sm text-gray-600">
-                                            Status: <span className="font-semibold">draft</span>
+                                        <div className="text-sm">
+                                            <span className="text-gray-600">Status: </span>
+                                            <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded">draft</span>
                                         </div>
-                                        <div className="text-sm text-gray-600">
-                                            Category: <span className="font-semibold">{articleCategory}</span>
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            Visibility: <span className="font-semibold">{articleVisibility}</span>
-                                        </div>
+                                        <button
+                                            onClick={handleAdvancedSetting}
+                                            className="text-sm text-gray-600 hover:text-gray-900 transition"
+                                        >
+                                            Category: <span className="font-semibold text-blue-600 underline">{articleCategory}</span>
+                                        </button>
+                                        <button
+                                            onClick={handleAdvancedSetting}
+                                            className="text-sm text-gray-600 hover:text-gray-900 transition"
+                                        >
+                                            Visibility: <span className="font-semibold text-blue-600 underline">{articleVisibility}</span>
+                                        </button>
+                                        <button
+                                            onClick={handleAdvancedSetting}
+                                            className="text-xs text-blue-600 hover:text-blue-700 font-medium px-3 py-1 border border-blue-300 rounded-md hover:bg-blue-50 transition"
+                                        >
+                                            Edit Settings
+                                        </button>
                                     </div>
                                     {isLoading && (
                                         <div className="flex items-center gap-2 text-sm text-blue-600">
