@@ -5,11 +5,14 @@ import { Container } from "@/components/ui";
 import { AvatarWithDate } from "@/components/ui/AvatarWithDate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CoursePopulated, useGetCourseByIdQuery } from "@/store/api/courseApi";
+import { CoursePopulated, useGetCourseByIdQuery, useGetChaptersQuery, useGetLessonsQuery } from "@/store/api/courseApi";
+import { useAppSelector } from "@/store/hooks";
 import { CourseChapter, CourseLesson, CourseResource } from '@/types/backend-models';
 import { BookOpen, ChevronDown, ChevronRight, Clock, Download, ExternalLink, FileText, PlayCircle } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useLoginModal } from "@/hooks/useLoginModal";
 
 
 interface CourseDetailClientProps {
@@ -27,6 +30,23 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
     skip: !courseId, // Skip query if courseId is null
   });
 
+  // Fetch chapters and lessons separately like in CoursePreviewClient
+  const {
+    data: chaptersData,
+    isLoading: isLoadingChapters
+  } = useGetChaptersQuery(
+    { courseId: courseId || "" },
+    { skip: !courseId }
+  );
+
+  const {
+    data: lessonsData,
+    isLoading: isLoadingLessons
+  } = useGetLessonsQuery(
+    { courseId: courseId || "" },
+    { skip: !courseId }
+  );
+
   const course = (courseData?.data?.course || {}) as Partial<CoursePopulated>;
   const error = propError || (queryError ? 'Failed to fetch course data' : null);
   // const [chapters, setChapters] = useState([]);
@@ -34,6 +54,8 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
   const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
   const [expandedLessons, setExpandedLessons] = useState<string[]>([]);
   const router = useRouter();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { openLoginModal } = useLoginModal();
 
   // const handleAddChapter = (chapter: { name: string }) => {
   //   setChapters((prev) => [...prev, { ...chapter, id: Date.now().toString() }]);
@@ -41,6 +63,10 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
   // };
 
   const handleContinueCourse = () => {
+    if (!isAuthenticated) {
+      openLoginModal("Please sign in to enroll in this course and access lessons.");
+      return;
+    }
     if (course?._id) {
       router.push(`/courses/${course._id}/learn`);
     }
@@ -69,6 +95,10 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
   };
 
   const handleLessonClick = (courseId: string, chapterId: string, lessonId: string) => {
+    if (!isAuthenticated) {
+      openLoginModal("Please sign in to access lesson content.");
+      return;
+    }
     router.push(`/courses/${courseId}/chapters/${chapterId}/lessons/${lessonId}`);
   };
 
@@ -82,7 +112,37 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
     router.push(`/courses/${courseId}/assignments/${assignmentId}`);
   };
 
-  if (isLoading) {
+  // Get content type icon based on lesson type
+  const getContentTypeIcon = (type: string) => {
+    const iconMap: Record<string, string> = {
+      text: '/icons/TextAa.png',
+      block: '/icons/Blocks.png',
+      video: '/icons/Video.png',
+      audio: '/icons/Audio.png',
+      document: '/icons/Document.png',
+      quiz: '/icons/Quiz.png',
+      assignment: '/icons/Assignment.png',
+    };
+    return iconMap[type] || '/icons/TextAa.png';
+  };
+
+  // Process chapters and lessons like in CoursePreviewClient
+  const chapters = useMemo(() => {
+    const chapterList = chaptersData?.data?.chapters || [];
+    return [...chapterList].sort((a, b) => (a?.order || 0) - (b?.order || 0)).map(chapter => ({
+      ...chapter,
+      lessons: chapter.lessons ? [...chapter.lessons].sort((a, b) => (a?.order || 0) - (b?.order || 0)) : []
+    }));
+  }, [chaptersData?.data?.chapters]);
+
+  const lessons = useMemo(() => {
+    const lessonList = lessonsData?.data?.lessons || [];
+    return [...lessonList].sort((a, b) => (a?.order || 0) - (b?.order || 0));
+  }, [lessonsData?.data?.lessons]);
+
+  const isLoadingData = isLoading || isLoadingChapters || isLoadingLessons;
+
+  if (isLoadingData) {
     return (
       <div className="min-h-screen bg-off-white-1 flex items-center justify-center">
         <div className="text-center">
@@ -119,13 +179,13 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
     );
   }
 
-  // Calculate course stats
-  const totalLessons = course.chapters?.reduce((acc: number, chapter: CourseChapter) => acc + (chapter.lessons?.length || 0), 0) || 0;
+  // Calculate course stats from chapters and lessons
+  const totalLessons = chapters.reduce((acc, chapter) => acc + (chapter.lessons?.length || 0), 0) +
+    lessons.filter(lesson => !lesson.chapter).length;
   // const completedLessons = 0; // TODO: Calculate from enrollment data
   // const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   return (
-    // <div className="bg-white min-h-screen">
     <Container size="xl" padding="sm" className="bg-white">
 
       {/* Main Content Area */}
@@ -142,7 +202,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
           </button>
         </div>
 
-        <div className="flex flex-col md:flex-row flex-8 justify-between">
+        <div className="flex flex-col md:flex-row flex-9 justify-between">
 
           {/* Left - Details */}
           <div className="flex-3">
@@ -181,11 +241,11 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
             <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                <span>{course.chapters?.length || 0} Chapter</span>
+                <span>{chapters?.length || 0} Chapter{(chapters?.length || 0) !== 1 ? 's' : ''}</span>
               </div>
               <span className="text-gray-400">|</span>
               <div className="flex items-center gap-2">
-                <span>{totalLessons || 0} Lesson</span>
+                <span>{totalLessons || 0} Lesson{totalLessons !== 1 ? 's' : ''}</span>
               </div>
               <span className="text-gray-400">|</span>
               <div className="flex items-center gap-2">
@@ -214,7 +274,7 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
           {/* Right Stats Card */}
           <div className="lg:w-96 flex flex-2 items-center mt-4 md:mt-0">
             <div className="text-white rounded-2xl p-4 relative overflow-hidden bg-cover bg-center min-h-[300px] w-full flex flex-col justify-between"
-              style={{ backgroundImage: `url(${course?.thumbnail || '/default-course-thumbnail.jpg'})` }}
+              style={{ backgroundImage: `url(${course?.thumbnail || '/default-course-thumbnail.png'})` }}
             >
               {/* Category Badge */}
               <div className="flex justify-end items-start mb-4">
@@ -251,11 +311,12 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
         <div className="flex-1 hidden md:flex"></div>
 
         <div className="flex-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Course Outline</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Course Outlines</h2>
 
-          {course?.chapters && [...course.chapters].sort((a: CourseChapter, b: CourseChapter) => (a.order || 0) - (b.order || 0)).map((chapter: CourseChapter) => {
-            const isChapterExpanded = expandedChapters.includes(chapter?._id);
-            const chapterLessons = chapter?.lessons ? [...chapter.lessons].sort((a: CourseLesson, b: CourseLesson) => (a.order || 0) - (b.order || 0)) : [];
+          {/* Chapters */}
+          {chapters && chapters.length > 0 && chapters.map((chapter) => {
+            const isChapterExpanded = expandedChapters.includes(chapter._id);
+            const chapterLessons = chapter.lessons || [];
 
             return (
               <div key={chapter?._id} className="mb-4">
@@ -298,11 +359,13 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
-                                {(lesson as { type?: string }).type === 'video' ? (
-                                  <PlayCircle className="w-4 h-4 text-green-600" />
-                                ) : (
-                                  <FileText className="w-4 h-4 text-green-600" />
-                                )}
+                                <Image
+                                  src={getContentTypeIcon((lesson as { type?: string }).type || 'text')}
+                                  alt={(lesson as { type?: string }).type || 'text'}
+                                  width={16}
+                                  height={16}
+                                  className="object-contain"
+                                />
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-gray-900 font-medium">{lesson?.title}</span>
@@ -435,17 +498,154 @@ export function CourseDetailClient({ courseId, error: propError }: CourseDetailC
             );
           })}
 
+          {/* Standalone Lessons */}
+          {lessons.filter(lesson => !lesson.chapter).length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Additional Lessons</h3>
+              {lessons.filter(lesson => !lesson.chapter).map((lesson) => {
+                const isLessonExpanded = expandedLessons.includes(lesson._id);
+                const hasResources = lesson?.resources && lesson.resources.length > 0;
+                const hasAssignment = Boolean((lesson as { assignmentDetails?: unknown; assignment?: unknown }).assignmentDetails || (lesson as { assignmentDetails?: unknown; assignment?: unknown }).assignment);
+                const hasQuiz = Boolean((lesson as { quiz?: unknown }).quiz);
+
+                return (
+                  <div key={lesson._id} className="bg-white border border-gray-200 rounded-lg">
+                    {/* Lesson Header */}
+                    <div
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => toggleLesson(lesson._id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 bg-green-100 rounded-md flex items-center justify-center">
+                          <Image
+                            src={getContentTypeIcon((lesson as { type?: string }).type || 'text')}
+                            alt={(lesson as { type?: string }).type || 'text'}
+                            width={16}
+                            height={16}
+                            className="object-contain"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-gray-900 font-medium">{lesson.title}</span>
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <span>{(lesson as { duration?: number }).duration || 0} min</span>
+                            {(lesson as { type?: string }).type && (
+                              <>
+                                <span>•</span>
+                                <span className="capitalize">{(lesson as { type?: string }).type}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLessonClick(course._id || '', '', lesson._id);
+                          }}
+                          className="text-blue-600 hover:bg-blue-50"
+                        >
+                          Start
+                        </Button>
+                        {(hasResources || hasAssignment || hasQuiz) && (
+                          <>
+                            {isLessonExpanded ? (
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Lesson Content (Resources, Assignments, etc.) - Reuse from chapter lessons */}
+                    {isLessonExpanded && (hasResources || hasAssignment || hasQuiz) && (
+                      <div className="border-t border-gray-100 p-3 bg-gray-50">
+                        {/* Resources */}
+                        {hasResources && (
+                          <div className="mb-3">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Resources</h4>
+                            <div className="space-y-1">
+                              {lesson.resources.map((resource: CourseResource, resourceIndex: number) => (
+                                <div
+                                  key={resourceIndex}
+                                  className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-blue-50 transition-colors"
+                                  onClick={() => handleResourceClick(resource)}
+                                >
+                                  {resource.type === 'pdf' ? (
+                                    <FileText className="w-4 h-4 text-red-500" />
+                                  ) : resource.type === 'video' ? (
+                                    <PlayCircle className="w-4 h-4 text-purple-500" />
+                                  ) : resource.downloadable ? (
+                                    <Download className="w-4 h-4 text-green-500" />
+                                  ) : (
+                                    <ExternalLink className="w-4 h-4 text-blue-500" />
+                                  )}
+                                  <span className="text-sm text-gray-700 flex-1">{resource.title}</span>
+                                  <span className="text-xs text-gray-500 capitalize">{resource.type}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Assignment */}
+                        {hasAssignment && (
+                          <div className="mb-3">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Assignment</h4>
+                            <div
+                              className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-orange-50 transition-colors"
+                              onClick={() => handleAssignmentClick(course._id || '', (lesson as { assignment?: string }).assignment || lesson._id)}
+                            >
+                              <FileText className="w-4 h-4 text-orange-500" />
+                              <div className="flex-1">
+                                <span className="text-sm text-gray-700 block">
+                                  {(lesson as { assignmentDetails?: { title?: string } }).assignmentDetails?.title || 'Course Assignment'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quiz */}
+                        {hasQuiz && (
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Quiz</h4>
+                            <div
+                              className="flex items-center gap-2 p-2 bg-white rounded border cursor-pointer hover:bg-green-50 transition-colors"
+                              onClick={() => router.push(`/courses/${course._id}/quizzes/${(lesson as { quiz?: unknown })?.quiz}`)}
+                            >
+                              <FileText className="w-4 h-4 text-green-500" />
+                              <span className="text-sm text-gray-700 flex-1">Lesson Quiz</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {(!chapters || chapters.length === 0) && (!lessons || lessons.filter(l => !l.chapter).length === 0) && (
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600">No course content available yet.</p>
+            </div>
+          )}
+
         </div>
 
         <div className="flex-1 hidden md:flex"></div>
       </div>
 
-      {/* <AddChapterModal
-        open={showAdd}
-        onOpenChange={setShowAdd}
-        onAdd={handleAddChapter}
-      /> */}
+
     </Container>
-    // </div>
   );
 }

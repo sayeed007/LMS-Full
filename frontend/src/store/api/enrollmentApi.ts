@@ -198,7 +198,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    downloadCertificate: builder.query<Blob, string>({
+    downloadEnrollmentCertificate: builder.query<Blob, string>({
       query: (enrollmentId) => ({
         url: `/enrollments/${enrollmentId}/certificate/download`,
         responseHandler: (response) => response.blob(),
@@ -266,7 +266,7 @@ export const {
   useUpdateRatingMutation,
   useDeleteRatingMutation,
   useGenerateCertificateMutation,
-  useLazyDownloadCertificateQuery,
+  useLazyDownloadEnrollmentCertificateQuery,
   useGetEnrollmentStatsQuery,
   useLazyExportEnrollmentsQuery,
   useGetProgressQuery,

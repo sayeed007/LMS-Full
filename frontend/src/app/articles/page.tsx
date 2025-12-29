@@ -2,28 +2,49 @@
 
 import ArticlesGrid from "@/components/articles/articles-grid";
 import { CreateArticleModal } from "@/components/articles/create-article-modal";
-import LoginModal from "@/components/auth/LoginModal";
 import { EmptyStateWithCreate } from "@/components/EmptyStateWithCreate";
 import { PageLayout, SearchInput, TabNav } from "@/components/ui";
 import { useModalActions } from "@/lib/modal-utils";
 import { useGetArticlesQuery, useGetMyArticlesQuery } from "@/store/api/articleApi";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useAppSelector } from "@/store/hooks";
+import { useState, useEffect, useMemo } from "react";
 
-const tabs = [
-    { key: "my", label: "My Articles" },
-    { key: "all", label: "All Articles" }
+const allTabs = [
+    { key: "my", label: "My Articles", requiresAuth: true },
+    { key: "all", label: "All Articles", requiresAuth: false }
 ];
 
 export default function ArticlesPage() {
-    const { data: session } = useSession();
     const { openModal, closeModal } = useModalActions();
-    const [activeTab, setActiveTab] = useState<"my" | "all">("my"); // Default to "all" for unauthenticated users
+
+    // Get authentication state from Redux
+    const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+    // Smart default tab: "all" for guests, "my" for authenticated users
+    const defaultTab = useMemo(() => {
+        return isAuthenticated ? "my" : "all";
+    }, [isAuthenticated]);
+
+    const [activeTab, setActiveTab] = useState<"my" | "all">(defaultTab);
     const [searchQuery, setSearchQuery] = useState("");
-    const [showLoginModal, setShowLoginModal] = useState(false);
+
+    // Update active tab when auth state changes
+    useEffect(() => {
+        // Only auto-switch if user is on "my" tab and becomes unauthenticated
+        if (!isAuthenticated && activeTab === "my") {
+            setActiveTab("all");
+        }
+    }, [isAuthenticated, activeTab]);
+
+    // Filter tabs based on authentication status
+    const tabs = useMemo(() => {
+        return isAuthenticated
+            ? allTabs
+            : allTabs.filter(tab => !tab.requiresAuth);
+    }, [isAuthenticated]);
 
     // Fetch data to determine if articles exist
-    const { data: myArticlesData } = useGetMyArticlesQuery({}, { skip: activeTab !== "my" || !session });
+    const { data: myArticlesData } = useGetMyArticlesQuery({}, { skip: activeTab !== "my" || !isAuthenticated });
     const { data: allArticlesData } = useGetArticlesQuery({}, { skip: activeTab !== "all" });
 
     // Determine if there are articles based on the active tab
@@ -32,10 +53,6 @@ export default function ArticlesPage() {
         : (allArticlesData?.data?.length ?? 0) > 0;
 
     const handleCreateNewArticle = () => {
-        if (!session) {
-            setShowLoginModal(true);
-            return;
-        }
         openModal(<CreateArticleModal onClose={() => closeModal()} />, {
             size: 'md',
             position: 'center'
@@ -43,10 +60,6 @@ export default function ArticlesPage() {
     };
 
     const handleTabChange = (tab: string) => {
-        if (tab === "my" && !session) {
-            setShowLoginModal(true);
-            return;
-        }
         setActiveTab(tab as "my" | "all");
     };
 
@@ -72,29 +85,18 @@ export default function ArticlesPage() {
                             activeTab={activeTab}
                             searchQuery={searchQuery}
                             handleCreateNewArticle={handleCreateNewArticle}
-                            isAuthenticated={!!session}
+                            isAuthenticated={isAuthenticated}
                         />
                         :
                         <EmptyStateWithCreate
                             message="No article to show"
-                            description="Article you’ve created will show up here."
+                            description="Article you've created will show up here."
                             buttonText="Create Now"
                             onClick={handleCreateNewArticle}
                         />
                     }
                 </div>
             </PageLayout>
-
-            {/* Login Modal */}
-            <LoginModal
-                isOpen={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
-                title="Sign in to continue"
-                message={activeTab === "my"
-                    ? "You need to sign in to view your articles."
-                    : "You need to sign in to create articles."
-                }
-            />
         </>
     )
 }
