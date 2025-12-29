@@ -394,6 +394,11 @@ router.get('/stats', protect, articleController.getArticleStats);
 router.get('/:id', articleController.getArticleById);
 router.get('/:id/related', articleController.getRelatedArticles);
 
+// Article versioning routes (protected)
+router.get('/:id/versions', protect, articleController.getArticleVersions);
+router.get('/:id/versions/:versionNumber', protect, articleController.getArticleVersion);
+router.post('/:id/versions/:versionNumber/restore', protect, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.restoreArticleVersion);
+
 // Apply protection to remaining routes
 router.use(protect);
 

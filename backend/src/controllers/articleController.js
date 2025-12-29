@@ -1,4 +1,5 @@
 const Article = require('../models/Article');
+const ArticleVersion = require('../models/ArticleVersion');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const DOMPurify = require('isomorphic-dompurify');
@@ -247,6 +248,12 @@ exports.updateArticle = catchAsync(async (req, res, next) => {
   // Sanitize HTML content to prevent XSS attacks
   if (req.body.content) {
     req.body.content = sanitizeHTML(req.body.content);
+  }
+
+  // Create version snapshot before updating (only for significant changes)
+  const hasSignificantChange = req.body.content || req.body.title;
+  if (hasSignificantChange) {
+    await ArticleVersion.createSnapshot(article, req.user.id, req.body.changeNote);
   }
 
   // Update article
@@ -576,5 +583,98 @@ exports.getArticleStats = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: articleStats
+  });
+});
+
+// Get article version history
+exports.getArticleVersions = catchAsync(async (req, res, next) => {
+  const article = await Article.findById(req.params.id);
+
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if user has access to view versions
+  if (article.author.toString() !== req.user.id &&
+      !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to view article versions', 403));
+  }
+
+  const limit = parseInt(req.query.limit) || 20;
+  const versions = await ArticleVersion.getVersionHistory(req.params.id, limit);
+
+  res.status(200).json({
+    status: 'success',
+    results: versions.length,
+    data: versions
+  });
+});
+
+// Get specific version
+exports.getArticleVersion = catchAsync(async (req, res, next) => {
+  const article = await Article.findById(req.params.id);
+
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if user has access
+  if (article.author.toString() !== req.user.id &&
+      !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to view article versions', 403));
+  }
+
+  const version = await ArticleVersion.getVersion(req.params.id, parseInt(req.params.versionNumber));
+
+  if (!version) {
+    return next(new AppError('Version not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: version
+  });
+});
+
+// Restore article from version
+exports.restoreArticleVersion = catchAsync(async (req, res, next) => {
+  const article = await Article.findById(req.params.id);
+
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if user has permission
+  if (article.author.toString() !== req.user.id &&
+      !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to restore article versions', 403));
+  }
+
+  const version = await ArticleVersion.getVersion(req.params.id, parseInt(req.params.versionNumber));
+
+  if (!version) {
+    return next(new AppError('Version not found', 404));
+  }
+
+  // Create snapshot of current state before restoring
+  await ArticleVersion.createSnapshot(article, req.user.id, 'Before restore');
+
+  // Restore from version
+  article.title = version.title;
+  article.content = version.content;
+  article.excerpt = version.excerpt;
+  article.category = version.category;
+  article.tags = version.tags;
+  article.thumbnail = version.thumbnail;
+
+  await article.save();
+  await article.populate('author', 'name avatar email');
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      article
+    },
+    message: `Article restored to version ${req.params.versionNumber}`
   });
 });
