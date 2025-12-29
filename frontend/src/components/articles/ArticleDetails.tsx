@@ -1,4 +1,5 @@
 "use client"
+import '@/styles/quill-content.css';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -273,10 +274,10 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
 
 
                         {/* Article Content */}
-                        <div className="prose prose-lg max-w-none mb-12">
+                        <div className="mb-12">
                             <div
                                 dangerouslySetInnerHTML={{ __html: displayContent }}
-                                className="text-gray-700 leading-relaxed"
+                                className="quill-content"
                             />
                         </div>
 

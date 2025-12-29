@@ -1,0 +1,344 @@
+/* Quill Content Styling - For displaying Quill editor output */
+/* This ensures that content created in the Quill editor renders beautifully in article views */
+
+.quill-content {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: #374151;
+}
+
+/* Headings */
+.quill-content h1,
+.quill-content .ql-size-huge {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.quill-content h2,
+.quill-content .ql-size-large {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 1.75rem;
+  margin-bottom: 0.875rem;
+  color: #1f2937;
+}
+
+.quill-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1f2937;
+}
+
+/* First heading shouldn't have top margin */
+.quill-content h1:first-child,
+.quill-content h2:first-child,
+.quill-content h3:first-child {
+  margin-top: 0;
+}
+
+/* Paragraphs */
+.quill-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+}
+
+.quill-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Text formatting */
+.quill-content strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.quill-content em {
+  font-style: italic;
+}
+
+.quill-content u {
+  text-decoration: underline;
+}
+
+.quill-content s {
+  text-decoration: line-through;
+}
+
+/* Links */
+.quill-content a {
+  color: #2563eb;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.quill-content a:hover {
+  color: #1d4ed8;
+}
+
+/* Lists */
+.quill-content ol,
+.quill-content ul {
+  margin: 1.25rem 0;
+  padding-left: 2rem;
+}
+
+.quill-content ol {
+  list-style-type: decimal;
+}
+
+.quill-content ul {
+  list-style-type: disc;
+}
+
+.quill-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+
+.quill-content li:last-child {
+  margin-bottom: 0;
+}
+
+/* Nested lists */
+.quill-content ol ol,
+.quill-content ul ul,
+.quill-content ol ul,
+.quill-content ul ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.quill-content ul ul {
+  list-style-type: circle;
+}
+
+.quill-content ul ul ul {
+  list-style-type: square;
+}
+
+/* Blockquotes */
+.quill-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #6b7280;
+  background-color: #f9fafb;
+  padding: 1rem 1.5rem;
+  border-radius: 0.25rem;
+}
+
+.quill-content blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+.quill-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Code blocks */
+.quill-content pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.quill-content pre.ql-syntax {
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+/* Inline code */
+.quill-content code {
+  background-color: #f3f4f6;
+  color: #dc2626;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.quill-content pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Images */
+.quill-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  display: block;
+}
+
+/* Horizontal rules */
+.quill-content hr {
+  border: 0;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+/* Text alignment */
+.quill-content .ql-align-center {
+  text-align: center;
+}
+
+.quill-content .ql-align-right {
+  text-align: right;
+}
+
+.quill-content .ql-align-justify {
+  text-align: justify;
+}
+
+/* Font sizes */
+.quill-content .ql-size-small {
+  font-size: 0.875rem;
+}
+
+.quill-content .ql-size-large {
+  font-size: 1.5rem;
+}
+
+.quill-content .ql-size-huge {
+  font-size: 2rem;
+}
+
+/* Colors (if using color picker) */
+.quill-content .ql-color-red {
+  color: #dc2626;
+}
+
+.quill-content .ql-color-blue {
+  color: #2563eb;
+}
+
+.quill-content .ql-color-green {
+  color: #16a34a;
+}
+
+.quill-content .ql-color-yellow {
+  color: #ca8a04;
+}
+
+/* Background colors */
+.quill-content .ql-bg-red {
+  background-color: #fee2e2;
+}
+
+.quill-content .ql-bg-blue {
+  background-color: #dbeafe;
+}
+
+.quill-content .ql-bg-green {
+  background-color: #dcfce7;
+}
+
+.quill-content .ql-bg-yellow {
+  background-color: #fef9c3;
+}
+
+/* Indentation */
+.quill-content .ql-indent-1 {
+  padding-left: 3rem;
+}
+
+.quill-content .ql-indent-2 {
+  padding-left: 6rem;
+}
+
+.quill-content .ql-indent-3 {
+  padding-left: 9rem;
+}
+
+/* Tables (if you add table support later) */
+.quill-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+}
+
+.quill-content table td,
+.quill-content table th {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.quill-content table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Video embeds (if using video module) */
+.quill-content .ql-video {
+  width: 100%;
+  height: 400px;
+  margin: 1.5rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .quill-content {
+    font-size: 1rem;
+  }
+
+  .quill-content h1,
+  .quill-content .ql-size-huge {
+    font-size: 1.875rem;
+  }
+
+  .quill-content h2,
+  .quill-content .ql-size-large {
+    font-size: 1.5rem;
+  }
+
+  .quill-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .quill-content pre {
+    font-size: 0.85rem;
+    padding: 1rem;
+  }
+
+  .quill-content .ql-video {
+    height: 250px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .quill-content {
+    font-size: 12pt;
+  }
+
+  .quill-content a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .quill-content pre {
+    background-color: #f3f4f6;
+    color: #000;
+    border: 1px solid #e5e7eb;
+  }
+}
