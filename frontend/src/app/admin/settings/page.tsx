@@ -18,6 +18,7 @@ import {
 import { RefreshCw, Save, Send } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 
 const tabs = [
   { key: 'general', label: 'General' },
@@ -31,6 +32,7 @@ const tabs = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
+  const confirm = useConfirm();
   const { data, isLoading, error } = useGetSettingsQuery();
   const [updateGeneral, { isLoading: isUpdatingGeneral }] = useUpdateGeneralSettingsMutation();
   const [updateEmail, { isLoading: isUpdatingEmail }] = useUpdateEmailSettingsMutation();
@@ -191,7 +193,15 @@ export default function SettingsPage() {
   };
 
   const handleResetSettings = async () => {
-    if (!confirm('Are you sure you want to reset all settings to default? This action cannot be undone.')) {
+    const confirmed = await confirm({
+      title: 'Reset Settings',
+      message: 'Are you sure you want to reset all settings to default? This action cannot be undone.',
+      confirmText: 'Reset',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
     try {

@@ -17,6 +17,7 @@ import BlockContentEditor from './BlockContentEditor';
 import MediaContentEditor from './MediaContentEditor';
 import QuizContentEditor from './QuizContentEditor';
 import AssignmentContentEditor from './AssignmentContentEditor';
+import { useConfirm } from '@/hooks/useConfirm';
 
 interface ContentEditorProps {
     courseId: string;
@@ -26,6 +27,7 @@ interface ContentEditorProps {
 
 export default function ContentEditor({ courseId, lessonId, contentId }: ContentEditorProps) {
     const router = useRouter();
+    const confirm = useConfirm();
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -98,9 +100,15 @@ export default function ContentEditor({ courseId, lessonId, contentId }: Content
         }
     };
 
-    const handleBack = () => {
+    const handleBack = async () => {
         if (hasUnsavedChanges) {
-            const confirmed = confirm('You have unsaved changes. Are you sure you want to leave?');
+            const confirmed = await confirm({
+                title: 'Unsaved Changes',
+                message: 'You have unsaved changes. Are you sure you want to leave?',
+                confirmText: 'Leave',
+                cancelText: 'Stay',
+                variant: 'warning'
+            });
             if (!confirmed) return;
         }
         router.push(`/courses/create/${courseId}/courseOutline`);

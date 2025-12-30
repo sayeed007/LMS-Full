@@ -13,9 +13,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState('');
@@ -40,7 +42,15 @@ export default function AdminUsersPage() {
 
   // Handlers
   const handleActivate = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to activate ${name}?`)) return;
+    const confirmed = await confirm({
+      title: 'Activate User',
+      message: `Are you sure you want to activate ${name}?`,
+      confirmText: 'Activate',
+      cancelText: 'Cancel',
+      variant: 'info'
+    });
+
+    if (!confirmed) return;
 
     try {
       await activateUser(id).unwrap();
@@ -51,7 +61,15 @@ export default function AdminUsersPage() {
   };
 
   const handleDeactivate = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to deactivate ${name}? They will not be able to login.`)) return;
+    const confirmed = await confirm({
+      title: 'Deactivate User',
+      message: `Are you sure you want to deactivate ${name}? They will not be able to login.`,
+      confirmText: 'Deactivate',
+      cancelText: 'Cancel',
+      variant: 'warning'
+    });
+
+    if (!confirmed) return;
 
     try {
       await deactivateUser(id).unwrap();
@@ -62,7 +80,15 @@ export default function AdminUsersPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete ${name}? This will deactivate their account.`)) return;
+    const confirmed = await confirm({
+      title: 'Delete User',
+      message: `Are you sure you want to delete ${name}? This will deactivate their account.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteUser(id).unwrap();

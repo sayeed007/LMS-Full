@@ -25,6 +25,7 @@ import {
 } from '@/store/api/questionApi'
 import { showSuccessToast, showErrorToast } from '@/lib/toast-utils'
 import { QuestionPopulated } from '@/store/api/questionApi'
+import { useConfirm } from '@/hooks/useConfirm'
 
 interface QuestionsPageClientProps {
     questionBankId: string
@@ -33,6 +34,7 @@ interface QuestionsPageClientProps {
 
 export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPageClientProps) {
     const router = useRouter()
+    const confirm = useConfirm()
     const [questionBankName, setQuestionBankName] = useState('')
     const [showSettingsPopup, setShowSettingsPopup] = useState(false)
     const [showAddQuestionPopup, setShowAddQuestionPopup] = useState(false)
@@ -119,7 +121,15 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
     }
 
     const handleDeleteQuestion = async (questionId: string) => {
-        if (!confirm('Are you sure you want to delete this question?')) return
+        const confirmed = await confirm({
+            title: 'Delete Question',
+            message: 'Are you sure you want to delete this question?',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            variant: 'danger'
+        })
+
+        if (!confirmed) return
 
         try {
             await deleteQuestion(questionId).unwrap()

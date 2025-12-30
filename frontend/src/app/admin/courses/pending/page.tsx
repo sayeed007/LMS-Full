@@ -8,8 +8,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export default function PendingCoursesPage() {
+  const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const limit = 10;
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -21,7 +23,15 @@ export default function PendingCoursesPage() {
   const [rejectCourse, { isLoading: isRejecting }] = useRejectCourseMutation();
 
   const handleApprove = async (courseId: string, courseTitle: string) => {
-    if (!confirm(`Are you sure you want to approve "${courseTitle}"?`)) return;
+    const confirmed = await confirm({
+      title: 'Approve Course',
+      message: `Are you sure you want to approve "${courseTitle}"?`,
+      confirmText: 'Approve',
+      cancelText: 'Cancel',
+      variant: 'info'
+    });
+
+    if (!confirmed) return;
 
     try {
       await approveCourse({ id: courseId }).unwrap();

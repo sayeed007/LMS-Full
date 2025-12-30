@@ -22,6 +22,7 @@ import { showSuccessToast, showErrorToast } from '@/lib/toast-utils';
 import { useLoginModal } from '@/hooks/useLoginModal';
 import PrimaryActionButton from '../ui/PrimaryButton';
 import PrimaryOutlineButton from '../ui/PrimaryOutlineButton';
+import { useConfirm } from '@/hooks/useConfirm';
 
 interface CommentItemProps {
     comment: Comment;
@@ -39,6 +40,7 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
     const currentUser = useAppSelector((state) => state.auth.user);
     const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
     const { openLoginModal } = useLoginModal();
+    const confirm = useConfirm();
 
     const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation();
     const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation();
@@ -79,7 +81,15 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
     };
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this comment?')) {
+        const confirmed = await confirm({
+            title: 'Delete Comment',
+            message: 'Are you sure you want to delete this comment?',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            variant: 'danger'
+        });
+
+        if (!confirmed) {
             return;
         }
 

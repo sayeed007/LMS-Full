@@ -13,11 +13,13 @@ import {
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/toast-utils';
 import Image from 'next/image';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
+  const confirm = useConfirm();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<{
@@ -76,7 +78,15 @@ export default function UserDetailPage() {
   };
 
   const handleActivate = async () => {
-    if (!confirm(`Are you sure you want to activate ${user?.name}?`)) return;
+    const confirmed = await confirm({
+      title: 'Activate User',
+      message: `Are you sure you want to activate ${user?.name}?`,
+      confirmText: 'Activate',
+      cancelText: 'Cancel',
+      variant: 'info'
+    });
+
+    if (!confirmed) return;
 
     try {
       await activateUser(userId).unwrap();
@@ -87,7 +97,15 @@ export default function UserDetailPage() {
   };
 
   const handleDeactivate = async () => {
-    if (!confirm(`Are you sure you want to deactivate ${user?.name}?`)) return;
+    const confirmed = await confirm({
+      title: 'Deactivate User',
+      message: `Are you sure you want to deactivate ${user?.name}?`,
+      confirmText: 'Deactivate',
+      cancelText: 'Cancel',
+      variant: 'warning'
+    });
+
+    if (!confirmed) return;
 
     try {
       await deactivateUser(userId).unwrap();
@@ -98,7 +116,15 @@ export default function UserDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${user?.name}? This action will deactivate their account.`)) return;
+    const confirmed = await confirm({
+      title: 'Delete User',
+      message: `Are you sure you want to delete ${user?.name}? This action will deactivate their account.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger'
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteUser(userId).unwrap();

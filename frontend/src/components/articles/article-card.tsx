@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { ArticleCardAction } from "./ArticleCardAction"
+import { useConfirm } from "@/hooks/useConfirm"
 
 interface ArticleCardProps {
     article: Article
@@ -43,6 +44,7 @@ export function ArticleCard({
     const [showActionPopup, setShowActionPopup] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<string | null>(null);
     const router = useRouter();
+    const confirm = useConfirm();
 
     // API mutations
     const [deleteArticle] = useDeleteArticleMutation();
@@ -132,9 +134,13 @@ export function ArticleCard({
         if (isLoading) return;
 
         // Show confirmation dialog
-        const confirmed = window.confirm(
-            `Are you sure you want to delete "${title}"? This action cannot be undone.`
-        );
+        const confirmed = await confirm({
+            title: 'Delete Article',
+            message: `Are you sure you want to delete "${title}"? This action cannot be undone.`,
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            variant: 'danger'
+        });
 
         if (!confirmed) return;
 
