@@ -1,6 +1,6 @@
 # Question Bank System - Improvement Roadmap
 
-> **Current Status:** 80% Complete (🔴 Critical Done! 🟡 Rich Text Done!) | **Target:** Industry Standard
+> **Current Status:** 85% Complete (🔴 Critical Done! 🟡 Rich Text & Versioning Done!) | **Target:** Industry Standard
 > **Last Updated:** 2025-12-30
 
 ---
@@ -327,17 +327,21 @@ const compactModules = {
 ### 4. Question Versioning
 
 #### 4.1 Implement Revision History
-**Status:** ❌ Not Implemented
+**Status:** ✅ **Backend COMPLETED** (2025-12-30) - Frontend Pending
 **Priority:** 🟡 HIGH
-**Estimated Effort:** 1 week
+**Actual Effort:** 4 hours (backend)
 
 **Tasks:**
-- [ ] Create QuestionVersion model
-- [ ] Track all changes with timestamps and user
-- [ ] Add version comparison UI
-- [ ] Implement restore to previous version
-- [ ] Add version diff viewer
-- [ ] Auto-create versions on save
+- [x] Create QuestionVersion model with full snapshot storage
+- [x] Track all changes with timestamps and user attribution
+- [x] Auto-create versions on question create/update
+- [x] Implement version comparison API
+- [x] Implement restore to previous version API
+- [x] Add version statistics endpoint
+- [x] Add cleanup endpoint for storage management
+- [ ] Add version comparison UI (frontend pending)
+- [ ] Add version diff viewer (frontend pending)
+- [ ] Add restore confirmation dialog (frontend pending)
 
 **Database Schema:**
 ```javascript
@@ -352,14 +356,38 @@ const questionVersionSchema = new mongoose.Schema({
 });
 ```
 
-**Files to Create:**
-- `backend/src/models/QuestionVersion.js`
-- `backend/src/controllers/questionVersionController.js`
-- `backend/src/routes/questionVersionRoutes.js`
-- `frontend/src/components/question-bank/VersionHistory.tsx`
+**API Endpoints Implemented:**
+```
+GET    /api/v1/questions/:questionId/versions              → Get all versions
+GET    /api/v1/questions/:questionId/versions/latest       → Get latest version
+GET    /api/v1/questions/:questionId/versions/stats        → Get statistics
+GET    /api/v1/questions/:questionId/versions/compare      → Compare two versions
+GET    /api/v1/questions/:questionId/versions/:version     → Get specific version
+POST   /api/v1/questions/:questionId/versions/:version/restore → Restore version
+DELETE /api/v1/questions/:questionId/versions/cleanup      → Cleanup old versions (admin)
+```
 
-**Files to Modify:**
-- `backend/src/controllers/questionController.js` (add versioning on update)
+**Features Implemented:**
+- ✅ Automatic version creation on every question save
+- ✅ Complete data snapshots (not incremental diffs)
+- ✅ Version comparison with field-level granularity
+- ✅ Restore to any previous version
+- ✅ User attribution (who made each change)
+- ✅ Optional change descriptions
+- ✅ Modified fields tracking
+- ✅ Storage size monitoring
+- ✅ Version cleanup/retention policy (keep 50 versions)
+
+**Files Created:**
+- ✅ `backend/src/models/QuestionVersion.js`
+- ✅ `backend/src/controllers/questionVersionController.js`
+- ✅ `backend/src/routes/questionVersionRoutes.js`
+- ⏳ `frontend/src/components/question-bank/VersionHistory.tsx` (pending)
+- ⏳ `frontend/src/store/api/questionVersionApi.ts` (pending)
+
+**Files Modified:**
+- ✅ `backend/src/controllers/questionController.js` - Auto-versioning on create/update
+- ✅ `backend/src/routes/questionRoutes.js` - Integrated version routes
 
 ---
 

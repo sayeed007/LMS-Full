@@ -1,5 +1,6 @@
 const Question = require('../models/Question');
 const QuestionBank = require('../models/QuestionBank');
+const QuestionVersion = require('../models/QuestionVersion');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
@@ -131,6 +132,27 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
 
   const question = await Question.create(questionData);
 
+  // Create initial version snapshot
+  const versionData = {
+    text: question.text,
+    type: question.type,
+    choices: question.choices,
+    correctAnswer: question.correctAnswer,
+    explanation: question.explanation,
+    difficulty: question.difficulty,
+    points: question.points,
+    timeLimit: question.timeLimit,
+    tags: question.tags,
+    attachments: question.attachments
+  };
+
+  await QuestionVersion.createVersion(
+    question._id,
+    versionData,
+    req.user.id,
+    'Initial version'
+  );
+
   // Update question bank stats
   await questionBank.updateStats();
 
@@ -177,6 +199,27 @@ exports.updateQuestion = catchAsync(async (req, res, next) => {
   ).populate('createdBy', 'name email avatar')
    .populate('questionBank', 'name')
    .populate('course', 'title');
+
+  // Create version snapshot after update
+  const versionData = {
+    text: updatedQuestion.text,
+    type: updatedQuestion.type,
+    choices: updatedQuestion.choices,
+    correctAnswer: updatedQuestion.correctAnswer,
+    explanation: updatedQuestion.explanation,
+    difficulty: updatedQuestion.difficulty,
+    points: updatedQuestion.points,
+    timeLimit: updatedQuestion.timeLimit,
+    tags: updatedQuestion.tags,
+    attachments: updatedQuestion.attachments
+  };
+
+  await QuestionVersion.createVersion(
+    updatedQuestion._id,
+    versionData,
+    req.user.id,
+    req.body.changeDescription || null
+  );
 
   // Update question bank stats
   const questionBank = await QuestionBank.findById(question.questionBank);

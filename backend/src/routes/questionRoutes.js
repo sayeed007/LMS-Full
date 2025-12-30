@@ -1,6 +1,7 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
 const questionController = require('../controllers/questionController');
+const questionVersionRoutes = require('./questionVersionRoutes');
 const { validate, sanitizeInputs } = require('../middleware/validate');
 const {
   questionSearchLimiter,
@@ -367,5 +368,9 @@ router.post(
   validate(duplicateQuestionSchema),
   questionController.duplicateQuestion
 );
+
+// Version history routes
+// Mount version routes at /:questionId/versions
+router.use('/:questionId/versions', questionVersionRoutes);
 
 module.exports = router;
