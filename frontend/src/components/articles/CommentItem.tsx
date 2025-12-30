@@ -14,7 +14,8 @@ import {
 import {
     useUpdateCommentMutation,
     useDeleteCommentMutation,
-    useToggleLikeCommentMutation,
+    useLikeCommentMutation,
+    useUnlikeCommentMutation,
     type Comment,
 } from '@/store/api/commentApi';
 import { useAppSelector } from '@/store/hooks';
@@ -28,12 +29,29 @@ interface CommentItemProps {
     comment: Comment;
     articleId: string;
     onReply?: (commentId: string) => void;
+    depth?: number;
 }
 
-export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) => {
+export const CommentItem = ({ comment, articleId, onReply, depth = 0 }: CommentItemProps) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(comment.content);
     const [showReplies, setShowReplies] = useState(false);
+
+    // Calculate indentation and visual styling based on depth
+    const maxVisualDepth = 5; // Support up to 5 visible levels
+    const effectiveDepth = Math.min(depth, maxVisualDepth);
+
+    // Different border colors for different depths for better visual distinction
+    const borderColors = [
+        'border-gray-300',    // Depth 0 (not used since depth 0 has no border)
+        'border-blue-400',    // Depth 1
+        'border-purple-400',  // Depth 2
+        'border-green-400',   // Depth 3
+        'border-orange-400',  // Depth 4
+        'border-pink-400'     // Depth 5+
+    ];
+    const borderColor = borderColors[Math.min(depth, borderColors.length - 1)];
+    const borderClass = depth > 0 ? `border-l-3 ${borderColor} pl-4 ml-6 md:ml-8` : '';
     const [localLikes, setLocalLikes] = useState(comment.likes || 0);
     const [hasLiked, setHasLiked] = useState(false);
 
@@ -44,9 +62,10 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
 
     const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation();
     const [deleteComment, { isLoading: isDeleting }] = useDeleteCommentMutation();
-    const [toggleLike, { isLoading: isTogglingLike }] = useToggleLikeCommentMutation();
+    const [likeComment, { isLoading: isLiking }] = useLikeCommentMutation();
+    const [unlikeComment, { isLoading: isUnliking }] = useUnlikeCommentMutation();
 
-    const isAuthor = currentUser?._id === comment.author._id;
+    const isAuthor = currentUser?._id === comment.author?._id;
 
     // Format dates
     const commentDate = new Date(comment.createdAt).toLocaleDateString('en-US', {
@@ -112,17 +131,28 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
             return;
         }
 
-        if (isTogglingLike) return;
+        if (isLiking || isUnliking) return;
 
         try {
-            const result = await toggleLike({
-                articleId,
-                commentId: comment._id
-            }).unwrap();
-
-            setHasLiked(result.data.isLiked);
-            setLocalLikes(result.data.comment.likes);
-            showSuccessToast(result.data.isLiked ? 'Comment liked' : 'Comment unliked');
+            if (hasLiked) {
+                // Unlike the comment
+                const result = await unlikeComment({
+                    articleId,
+                    commentId: comment._id
+                }).unwrap();
+                setHasLiked(false);
+                setLocalLikes(result.data.likes);
+                showSuccessToast('Comment unliked');
+            } else {
+                // Like the comment
+                const result = await likeComment({
+                    articleId,
+                    commentId: comment._id
+                }).unwrap();
+                setHasLiked(true);
+                setLocalLikes(result.data.likes);
+                showSuccessToast('Comment liked');
+            }
         } catch (error) {
             showErrorToast('Failed to update like', 'Please try again');
             console.error('Error toggling like:', error);
@@ -172,15 +202,17 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
     }
 
     return (
-        <div className="border-b border-gray-100 pb-4 last:border-0">
-            <div className="flex justify-between items-start mb-2">
-                <ArticleAuthorInfo
-                    authorName={comment.author.name || "Anonymous"}
-                    authorAvatar={comment.author.avatar || ""}
-                    publishDate={commentDate}
-                    publishTime={commentTime}
-                    comment={comment.content}
-                />
+        <div className={`pb-4 ${depth === 0 ? 'border-b border-gray-100' : ''}`}>
+            {/* Main comment container with proper indentation and border */}
+            <div className={depth > 0 ? `${borderClass} py-3` : ''}>
+                <div className="flex justify-between items-start mb-2">
+                    <ArticleAuthorInfo
+                        authorName={comment.author?.name || "Anonymous"}
+                        authorAvatar={comment.author?.avatar || ""}
+                        publishDate={commentDate}
+                        publishTime={commentTime}
+                        comment={comment.content}
+                    />
 
                 {/* Action Menu (Edit/Delete) */}
                 {isAuthor && (
@@ -219,7 +251,7 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
             <div className="flex items-center gap-4 mt-3 ml-12">
                 <PrimaryOutlineButton
                     onClick={handleLike}
-                    disabled={isTogglingLike}
+                    disabled={isLiking || isUnliking}
                     className={`text-sm py-1 px-3 ${hasLiked ? 'bg-blue-50 border-blue-500' : ''}`}
                 >
                     <ThumbsUp className={`w-3 h-3 mr-1 ${hasLiked ? 'fill-blue-500 text-blue-500' : ''}`} />
@@ -243,21 +275,23 @@ export const CommentItem = ({ comment, articleId, onReply }: CommentItemProps) =
                         {showReplies ? 'Hide' : 'View'} {comment.repliesCount} {comment.repliesCount === 1 ? 'reply' : 'replies'}
                     </button>
                 )}
-            </div>
-
-            {/* Nested Replies */}
-            {showReplies && comment.replies && comment.replies.length > 0 && (
-                <div className="ml-12 mt-4 space-y-4 border-l-2 border-gray-200 pl-4">
-                    {comment.replies.map((reply) => (
-                        <CommentItem
-                            key={reply._id}
-                            comment={reply}
-                            articleId={articleId}
-                            onReply={onReply}
-                        />
-                    ))}
                 </div>
-            )}
+
+                {/* Nested Replies */}
+                {showReplies && comment.replies && comment.replies.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                        {comment.replies.map((reply) => (
+                            <CommentItem
+                                key={reply._id}
+                                comment={reply}
+                                articleId={articleId}
+                                onReply={onReply}
+                                depth={depth + 1}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -76,7 +76,15 @@ const buildArticleFilters = (queryParams, userId = null, myArticles = false) => 
 
   // Search in title, content, and excerpt
   if (queryParams.search) {
-    filters.$text = { $search: queryParams.search };
+    // Escape special regex characters to prevent regex errors
+    const escapedSearch = queryParams.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchRegex = new RegExp(escapedSearch, 'i'); // Case-insensitive search
+    filters.$or = [
+      { title: searchRegex },
+      { excerpt: searchRegex },
+      { content: searchRegex },
+      { tags: searchRegex }
+    ];
   }
 
   return filters;
@@ -187,9 +195,14 @@ exports.getArticleById = catchAsync(async (req, res, next) => {
 
   // Check visibility permissions
   // Authors can always view their own articles
-  const isAuthor = req.user && article.author._id.toString() === req.user.id;
+  const isAuthor = req.user && article.author && article.author._id.toString() === req.user.id;
 
   if (!isAuthor) {
+    // Check if article is published - draft articles can only be viewed by author
+    if (article.status !== 'published') {
+      return next(new AppError('You do not have permission to view this article', 403));
+    }
+
     if (article.visibility === 'private') {
       // Private articles: only author can view
       return next(new AppError('You do not have permission to view this article', 403));
@@ -203,18 +216,35 @@ exports.getArticleById = catchAsync(async (req, res, next) => {
         return next(new AppError('You do not have permission to view this article', 403));
       }
     }
-    // Public articles: no restrictions
+    // Public published articles: no restrictions, allow unauthenticated access
   }
 
   // Increment views (only if not the author viewing their own article)
-  if (!req.user || article.author._id.toString() !== req.user.id) {
+  if (!req.user || !article.author || article.author._id.toString() !== req.user.id) {
     await article.incrementViews();
   }
+
+  // Check if current user has liked this article
+  const hasLiked = req.user ? article.likedBy.includes(req.user.id) : false;
+
+  // Check if current user has bookmarked this article
+  let isBookmarked = false;
+  if (req.user) {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id).select('bookmarkedArticles');
+    isBookmarked = user ? user.bookmarkedArticles.includes(article._id) : false;
+  }
+
+  // Convert to object and add computed fields without exposing full likedBy array
+  const articleData = article.toObject();
+  delete articleData.likedBy; // Remove likedBy array for privacy
+  articleData.hasLiked = hasLiked; // Add computed field
+  articleData.isBookmarked = isBookmarked; // Add computed field
 
   res.status(200).json({
     status: 'success',
     data: {
-      article
+      article: articleData
     }
   });
 });
@@ -356,7 +386,67 @@ exports.duplicateArticle = catchAsync(async (req, res, next) => {
   });
 });
 
-// Like/Unlike article
+// Like article
+exports.likeArticle = catchAsync(async (req, res, next) => {
+  const article = await Article.findById(req.params.id);
+
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if already liked
+  const isAlreadyLiked = article.likedBy.includes(req.user.id);
+
+  if (isAlreadyLiked) {
+    return next(new AppError('You have already liked this article', 400));
+  }
+
+  // Add like
+  article.likedBy.push(req.user.id);
+  article.likes += 1;
+  await article.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Article liked successfully',
+    data: {
+      liked: true,
+      likes: article.likes
+    }
+  });
+});
+
+// Unlike article
+exports.unlikeArticle = catchAsync(async (req, res, next) => {
+  const article = await Article.findById(req.params.id);
+
+  if (!article) {
+    return next(new AppError('Article not found', 404));
+  }
+
+  // Check if not liked
+  const isLiked = article.likedBy.includes(req.user.id);
+
+  if (!isLiked) {
+    return next(new AppError('You have not liked this article', 400));
+  }
+
+  // Remove like
+  article.likedBy.pull(req.user.id);
+  article.likes = Math.max(0, article.likes - 1);
+  await article.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Article unliked successfully',
+    data: {
+      liked: false,
+      likes: article.likes
+    }
+  });
+});
+
+// Keep toggleLikeArticle for backward compatibility (deprecated)
 exports.toggleLikeArticle = catchAsync(async (req, res, next) => {
   const article = await Article.findById(req.params.id);
 

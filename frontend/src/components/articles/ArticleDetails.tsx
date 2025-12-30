@@ -36,9 +36,9 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     const [newComment, setNewComment] = useState('');
     const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<'createdAt' | 'likes'>('createdAt');
-    const [hasLiked, setHasLiked] = useState(false);
+    const [hasLiked, setHasLiked] = useState(article.hasLiked || false);
     const [localLikes, setLocalLikes] = useState(article.likes || 0);
-    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(article.isBookmarked || false);
     const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
     const { openLoginModal } = useLoginModal();
 
@@ -62,7 +62,7 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     // Decode HTML entities to properly render HTML content
     const displayContent = article.content ? decodeHTMLEntities(article.content) : '';
     const { category, title, author, views } = article;
-    const { name } = author;
+    const name = author?.name || "Anonymous";
 
     // Get comments from API response
     const comments = commentsData?.data?.comments || [];

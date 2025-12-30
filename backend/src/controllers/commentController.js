@@ -34,6 +34,32 @@ const getPaginationData = (page, limit, totalResults) => {
   };
 };
 
+// Helper function to build recursive populate configuration for nested replies
+const buildNestedPopulate = (depth = 0, maxDepth = 5) => {
+  if (depth >= maxDepth) {
+    return null;
+  }
+
+  const populateConfig = {
+    path: 'replies',
+    match: { status: 'active' },
+    options: { sort: { createdAt: 1 }, limit: 50 },
+    populate: [
+      { path: 'author', select: 'name avatar' },
+      { path: 'repliesCount' }
+    ],
+    select: '-likedBy'
+  };
+
+  // Recursively add nested populate for deeper levels
+  const nestedPopulate = buildNestedPopulate(depth + 1, maxDepth);
+  if (nestedPopulate) {
+    populateConfig.populate.push(nestedPopulate);
+  }
+
+  return populateConfig;
+};
+
 // @desc    Get all comments for an article
 // @route   GET /api/v1/articles/:articleId/comments
 // @access  Public
@@ -63,17 +89,14 @@ exports.getArticleComments = catchAsync(async (req, res, next) => {
   // Get total count for pagination
   const totalResults = await Comment.countDocuments(query);
 
-  // Fetch comments with populated author and replies
+  // Fetch comments with populated author and nested replies (up to 5 levels deep)
   const comments = await Comment.find(query)
     .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
     .skip(skip)
     .limit(limit)
     .populate('author', 'name avatar')
-    .populate({
-      path: 'replies',
-      populate: { path: 'author', select: 'name avatar' },
-      options: { sort: { createdAt: 1 }, limit: 5 }
-    })
+    .populate('repliesCount')
+    .populate(buildNestedPopulate())
     .select('-likedBy'); // Exclude likedBy array for performance
 
   const pagination = getPaginationData(page, limit, totalResults);
@@ -96,11 +119,8 @@ exports.getCommentById = catchAsync(async (req, res, next) => {
 
   const comment = await Comment.findById(commentId)
     .populate('author', 'name avatar')
-    .populate({
-      path: 'replies',
-      populate: { path: 'author', select: 'name avatar' },
-      options: { sort: { createdAt: 1 } }
-    })
+    .populate('repliesCount')
+    .populate(buildNestedPopulate())
     .select('-likedBy');
 
   if (!comment || comment.status === 'deleted') {
@@ -227,7 +247,75 @@ exports.deleteComment = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Toggle like on a comment
+// @desc    Like a comment
+// @route   POST /api/v1/articles/:articleId/comments/:commentId/like
+// @access  Private
+exports.likeComment = catchAsync(async (req, res, next) => {
+  const { commentId } = req.params;
+
+  const comment = await Comment.findById(commentId);
+
+  if (!comment || comment.status === 'deleted') {
+    return next(new AppError('Comment not found', 404));
+  }
+
+  // Check if already liked
+  const isAlreadyLiked = comment.likedBy.includes(req.user.id);
+
+  if (isAlreadyLiked) {
+    return next(new AppError('You have already liked this comment', 400));
+  }
+
+  // Add like
+  comment.likedBy.push(req.user.id);
+  comment.likes += 1;
+  await comment.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Comment liked successfully',
+    data: {
+      likes: comment.likes,
+      isLiked: true
+    }
+  });
+});
+
+// @desc    Unlike a comment
+// @route   DELETE /api/v1/articles/:articleId/comments/:commentId/like
+// @access  Private
+exports.unlikeComment = catchAsync(async (req, res, next) => {
+  const { commentId } = req.params;
+
+  const comment = await Comment.findById(commentId);
+
+  if (!comment || comment.status === 'deleted') {
+    return next(new AppError('Comment not found', 404));
+  }
+
+  // Check if not liked
+  const isLiked = comment.likedBy.includes(req.user.id);
+
+  if (!isLiked) {
+    return next(new AppError('You have not liked this comment', 400));
+  }
+
+  // Remove like
+  comment.likedBy.pull(req.user.id);
+  comment.likes = Math.max(0, comment.likes - 1);
+  await comment.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Comment unliked successfully',
+    data: {
+      likes: comment.likes,
+      isLiked: false
+    }
+  });
+});
+
+// @desc    Toggle like on a comment (deprecated - use likeComment/unlikeComment instead)
 // @route   POST /api/v1/articles/:articleId/comments/:commentId/like
 // @access  Private
 exports.toggleLikeComment = catchAsync(async (req, res, next) => {

@@ -8,7 +8,7 @@ export interface Comment {
     _id: string;
     name: string;
     avatar?: string;
-  };
+  } | null; // Can be null if author is deleted
   parentComment?: string | null;
   status: 'active' | 'deleted' | 'flagged';
   likes: number;
@@ -118,6 +118,29 @@ export const commentApi = baseApi.injectEndpoints({
       ],
     }),
 
+    likeComment: builder.mutation<BaseApiResponse<{ likes: number; isLiked: boolean }>, { articleId: string; commentId: string }>({
+      query: ({ articleId, commentId }) => ({
+        url: `/articles/${articleId}/comments/${commentId}/like`,
+        method: 'POST',
+      }),
+      invalidatesTags: (result, error, { commentId, articleId }) => [
+        { type: 'Comment' as const, id: commentId },
+        { type: 'Comment' as const, id: `ARTICLE_${articleId}` },
+      ],
+    }),
+
+    unlikeComment: builder.mutation<BaseApiResponse<{ likes: number; isLiked: boolean }>, { articleId: string; commentId: string }>({
+      query: ({ articleId, commentId }) => ({
+        url: `/articles/${articleId}/comments/${commentId}/like`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { commentId, articleId }) => [
+        { type: 'Comment' as const, id: commentId },
+        { type: 'Comment' as const, id: `ARTICLE_${articleId}` },
+      ],
+    }),
+
+    // Deprecated - use likeComment/unlikeComment instead
     toggleLikeComment: builder.mutation<BaseApiResponse<{ comment: Comment; isLiked: boolean }>, { articleId: string; commentId: string }>({
       query: ({ articleId, commentId }) => ({
         url: `/articles/${articleId}/comments/${commentId}/like`,
@@ -138,5 +161,7 @@ export const {
   useCreateCommentMutation,
   useUpdateCommentMutation,
   useDeleteCommentMutation,
+  useLikeCommentMutation,
+  useUnlikeCommentMutation,
   useToggleLikeCommentMutation,
 } = commentApi;

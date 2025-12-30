@@ -128,7 +128,7 @@ commentSchema.statics.getArticleComments = function (articleId, options = {}) {
     .populate({
       path: 'replies',
       populate: { path: 'author', select: 'name avatar' },
-      options: { sort: { createdAt: 1 }, limit: 5 }
+      options: { sort: { createdAt: 1 }, limit: 50 }
     });
 };
 

@@ -2,14 +2,16 @@ import { baseApi, BaseApiResponse } from './baseApi';
 import { Article as BackendArticle } from '../../types/backend-models';
 
 // API-specific interface for populated articles
-export interface ArticlePopulated extends Omit<BackendArticle, 'author'> {
+export interface ArticlePopulated extends Omit<BackendArticle, 'author' | 'likedBy'> {
   author: {
     _id: string;
     name: string;
     email: string;
     avatar?: string;
-  };
+  } | null; // Can be null if author is deleted
   readTime?: number; // Additional computed field for frontend
+  hasLiked?: boolean; // Whether current user has liked this article
+  isBookmarked?: boolean; // Whether current user has bookmarked this article
 }
 
 export interface CreateArticleRequest {

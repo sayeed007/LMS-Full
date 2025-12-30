@@ -602,7 +602,7 @@ export interface Article extends BaseDocument {
   category: string;
   tags: string[];
   thumbnail?: string;
-  author: author; // User ObjectId
+  author: author | null; // User ObjectId - can be null if author is deleted
   status: 'draft' | 'published' | 'archived';
   visibility: 'public' | 'private' | 'organization';
   publishedAt?: string;

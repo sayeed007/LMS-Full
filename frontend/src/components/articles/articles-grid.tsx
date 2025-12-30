@@ -3,7 +3,7 @@
 
 import { useGetArticlesQuery, useGetMyArticlesQuery } from "@/store/api/articleApi";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PrimaryActionButton from "../ui/PrimaryButton";
 import { ArticleCard } from "./article-card";
 
@@ -23,24 +23,33 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
     isAuthenticated
 }) => {
     const router = useRouter()
-    // const { openModal, closeModal } = useModalActions()
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(12) // Articles per page
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery)
 
-    // Reset page when search query or tab changes
-    useMemo(() => {
+    // Debounce search query - wait 500ms after user stops typing
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Reset page when debounced search query or tab changes
+    useEffect(() => {
         setCurrentPage(1);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, activeTab]);
+    }, [debouncedSearchQuery, activeTab]);
 
-    // Fetch articles based on active tab
+    // Fetch articles based on active tab using debounced search
     const {
         data: allArticlesData,
         isLoading: isLoadingAll,
-        error: errorAll
+        error: errorAll,
+        isFetching: isFetchingAll
     } = useGetArticlesQuery(
         {
-            search: searchQuery || undefined,
+            search: debouncedSearchQuery || undefined,
             page: currentPage,
             limit: pageSize
         },
@@ -50,10 +59,11 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
     const {
         data: myArticlesData,
         isLoading: isLoadingMy,
-        error: errorMy
+        error: errorMy,
+        isFetching: isFetchingMy
     } = useGetMyArticlesQuery(
         {
-            search: searchQuery || undefined,
+            search: debouncedSearchQuery || undefined,
             page: currentPage,
             limit: pageSize
         },
@@ -76,11 +86,10 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
     }, [activeTab, allArticlesData, myArticlesData]);
 
     const isLoading = activeTab === "my" ? isLoadingMy : isLoadingAll;
+    const isFetching = activeTab === "my" ? isFetchingMy : isFetchingAll;
     const error = activeTab === "my" ? errorMy : errorAll;
 
-
-
-    // Loading state
+    // Show full loading state only on initial load
     if (isLoading) {
         return (
             <div className="py-6">
@@ -117,11 +126,18 @@ const ArticlesGrid: React.FC<ArticlesGridProps> = ({
                 </div>
             }
 
+            {/* Search indicator */}
+            {isFetching && (
+                <div className="mb-4 text-center">
+                    <span className="text-sm text-blue-600">Searching...</span>
+                </div>
+            )}
+
             {/* Articles Grid */}
             {articles.length === 0 ? (
                 <div className="flex justify-center items-center min-h-[400px]">
                     <div className="text-gray-500">
-                        {searchQuery
+                        {debouncedSearchQuery
                             ? "No articles found matching your search."
                             : `No ${activeTab === "my" ? "your" : ""} articles found.`
                         }

@@ -414,8 +414,8 @@ router.delete('/:id', restrictTo('student', 'instructor', 'org_admin', 'super_ad
 router.post('/:id/duplicate', articleCreateLimiter, restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.duplicateArticle);
 
 // Article actions (with rate limiting for likes)
-router.post('/:id/like', likeLimiter, articleController.toggleLikeArticle);
-router.delete('/:id/like', likeLimiter, articleController.toggleLikeArticle);
+router.post('/:id/like', likeLimiter, articleController.likeArticle);
+router.delete('/:id/like', likeLimiter, articleController.unlikeArticle);
 router.post('/:id/bookmark', articleController.bookmarkArticle);
 router.delete('/:id/bookmark', articleController.unbookmarkArticle);
 router.patch('/:id/publish', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), articleController.publishArticle);
@@ -431,7 +431,8 @@ router.get('/:articleId/comments/:commentId/replies', commentController.getComme
 router.post('/:articleId/comments', commentCreateLimiter, commentController.createComment);
 router.patch('/:articleId/comments/:commentId', commentController.updateComment);
 router.delete('/:articleId/comments/:commentId', commentController.deleteComment);
-router.post('/:articleId/comments/:commentId/like', likeLimiter, commentController.toggleLikeComment);
+router.post('/:articleId/comments/:commentId/like', likeLimiter, commentController.likeComment);
+router.delete('/:articleId/comments/:commentId/like', likeLimiter, commentController.unlikeComment);
 
 
 module.exports = router;

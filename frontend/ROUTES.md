@@ -11,7 +11,7 @@ Use the checkboxes to mark routes as tested.
 - [ ] `/admin/settings` (`src/app/admin/settings/page.tsx`)
 - [ ] `/admin/users` (`src/app/admin/users/page.tsx`)
 - [ ] `/admin/users/[userId]` (`src/app/admin/users/[userId]/page.tsx`)
-- [ ] `/articles` (`src/app/articles/page.tsx`)
+- [✅] `/articles` (`src/app/articles/page.tsx`)
 - [ ] `/articles/[article_id]` (`src/app/articles/[article_id]/page.tsx`)
 - [ ] `/articles/create` (`src/app/articles/create/page.tsx`)
 - [ ] `/articles/preview/[article_name]` (`src/app/articles/preview/[article_name]/page.tsx`)
