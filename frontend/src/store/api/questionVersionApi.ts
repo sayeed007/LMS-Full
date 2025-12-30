@@ -1,5 +1,11 @@
 import { baseApi } from './baseApi';
 
+interface QuestionAttachment {
+  name: string;
+  url: string;
+  type: 'image' | 'video' | 'audio' | 'document';
+}
+
 export interface QuestionVersion {
   _id: string;
   questionId: string;
@@ -17,7 +23,7 @@ export interface QuestionVersion {
     points?: number;
     timeLimit?: number;
     tags?: string[];
-    attachments?: any[];
+    attachments?: QuestionAttachment[];
   };
   changeDescription?: string;
   modifiedFields?: string[];
@@ -56,17 +62,19 @@ export interface VersionStats {
   totalContributors: number;
 }
 
+interface VersionChange {
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+}
+
 export interface VersionComparison {
   from: QuestionVersion;
   to: QuestionVersion;
   changes: {
-    added?: any[];
-    modified?: Array<{
-      field: string;
-      oldValue: any;
-      newValue: any;
-    }>;
-    removed?: any[];
+    added?: unknown[];
+    modified?: VersionChange[];
+    removed?: unknown[];
   };
 }
 
@@ -144,7 +152,7 @@ export const questionVersionApi = baseApi.injectEndpoints({
       {
         status: string;
         message: string;
-        data: { question: any };
+        data: { question: Record<string, unknown> };
       },
       { questionId: string; versionNumber: number }
     >({

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, FileText, Download } from "lucide-react";
+import Image from "next/image";
 
 interface LessonContent {
   type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
@@ -126,11 +127,10 @@ export default function MediaContentEditor({
           />
           <label
             htmlFor="media-upload"
-            className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${
-              isUploading
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${isUploading
+              ? 'bg-gray-400 text-white cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
           >
             {isUploading ? 'Processing...' : 'Select File'}
           </label>
@@ -171,7 +171,7 @@ export default function MediaContentEditor({
           <div className="bg-white rounded-lg p-4">
             {contentType === 'image' && filePreviewUrl && (
               <div className="flex justify-center">
-                <img
+                <Image
                   src={filePreviewUrl}
                   alt="Image preview"
                   className="max-w-full max-h-96 rounded object-contain"
@@ -226,11 +226,10 @@ export default function MediaContentEditor({
             />
             <label
               htmlFor="media-replace-selected"
-              className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
-                isUploading
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-gray-600 text-white hover:bg-gray-700'
-              }`}
+              className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${isUploading
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
             >
               {isUploading ? 'Processing...' : 'Replace File'}
             </label>
@@ -267,7 +266,7 @@ export default function MediaContentEditor({
           <div className="bg-gray-50 rounded-lg p-4">
             {contentType === 'image' && content.fileUrl && (
               <div className="flex justify-center">
-                <img
+                <Image
                   src={content.fileUrl}
                   alt={content.title || 'Uploaded image'}
                   className="max-w-full max-h-96 rounded object-contain"
@@ -330,11 +329,10 @@ export default function MediaContentEditor({
             />
             <label
               htmlFor="media-replace"
-              className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
-                isUploading
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-gray-600 text-white hover:bg-gray-700'
-              }`}
+              className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${isUploading
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
             >
               {isUploading ? 'Processing...' : 'Replace File'}
             </label>

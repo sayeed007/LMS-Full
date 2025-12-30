@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../index';
-import { setCredentials, logout } from '../slices/authSlice';
+import { setCredentials, logout, type User } from '../slices/authSlice';
 
 // Create base query with auth headers
 const baseQuery = fetchBaseQuery({
@@ -81,7 +81,7 @@ const baseQueryWithReauth: BaseQueryFn<
         status: string;
         token?: string;
         refreshToken?: string;
-        data?: { token: string; refreshToken: string; user: any }
+        data?: { token: string; refreshToken: string; user: User }
       };
 
       // Handle response format

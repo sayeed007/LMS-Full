@@ -1,7 +1,7 @@
 // components/RichTextEditor.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import ReactQuill to avoid SSR issues
@@ -12,6 +12,20 @@ interface RichTextEditorProps {
     value?: string;
     onChange?: (value: string) => void;
     placeholder?: string;
+}
+
+// Quill keyboard handler context
+interface QuillKeyboardContext {
+    quill: {
+        format: (name: string, value: boolean | string | number) => void;
+        getFormat: (range?: { index: number; length: number }) => Record<string, unknown>;
+    };
+}
+
+// Quill range type
+interface QuillRange {
+    index: number;
+    length: number;
 }
 
 const modules = {
@@ -32,21 +46,21 @@ const modules = {
             bold: {
                 key: 'B',
                 ctrlKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('bold', !this.quill.getFormat(range).bold);
                 }
             },
             italic: {
                 key: 'I',
                 ctrlKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('italic', !this.quill.getFormat(range).italic);
                 }
             },
             underline: {
                 key: 'U',
                 ctrlKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('underline', !this.quill.getFormat(range).underline);
                 }
             },
@@ -54,7 +68,7 @@ const modules = {
                 key: 'S',
                 ctrlKey: true,
                 shiftKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('strike', !this.quill.getFormat(range).strike);
                 }
             },
@@ -62,7 +76,7 @@ const modules = {
             link: {
                 key: 'K',
                 ctrlKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     const value = prompt('Enter link URL:');
                     if (value) {
                         this.quill.format('link', value);
@@ -74,7 +88,7 @@ const modules = {
                 key: '7',
                 ctrlKey: true,
                 shiftKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('list', this.quill.getFormat(range).list === 'ordered' ? false : 'ordered');
                 }
             },
@@ -83,7 +97,7 @@ const modules = {
                 key: '8',
                 ctrlKey: true,
                 shiftKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('list', this.quill.getFormat(range).list === 'bullet' ? false : 'bullet');
                 }
             },
@@ -92,7 +106,7 @@ const modules = {
                 key: '>',
                 ctrlKey: true,
                 shiftKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('blockquote', !this.quill.getFormat(range).blockquote);
                 }
             },
@@ -101,7 +115,7 @@ const modules = {
                 key: '1',
                 ctrlKey: true,
                 altKey: true,
-                handler: function(this: any) {
+                handler: function(this: QuillKeyboardContext) {
                     this.quill.format('header', this.quill.getFormat().header === 1 ? false : 1);
                 }
             },
@@ -109,7 +123,7 @@ const modules = {
                 key: '2',
                 ctrlKey: true,
                 altKey: true,
-                handler: function(this: any) {
+                handler: function(this: QuillKeyboardContext) {
                     this.quill.format('header', this.quill.getFormat().header === 2 ? false : 2);
                 }
             },
@@ -117,7 +131,7 @@ const modules = {
                 key: '3',
                 ctrlKey: true,
                 altKey: true,
-                handler: function(this: any) {
+                handler: function(this: QuillKeyboardContext) {
                     this.quill.format('header', this.quill.getFormat().header === 3 ? false : 3);
                 }
             },
@@ -126,7 +140,7 @@ const modules = {
                 key: 'C',
                 ctrlKey: true,
                 shiftKey: true,
-                handler: function(this: any, range: any) {
+                handler: function(this: QuillKeyboardContext, range: QuillRange) {
                     this.quill.format('code-block', !this.quill.getFormat(range)['code-block']);
                 }
             }
@@ -148,7 +162,6 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
     const [content, setContent] = useState(value);
     const [showShortcuts, setShowShortcuts] = useState(false);
-    const quillRef = useRef<any>(null);
 
     // Update internal state when value prop changes (e.g., when editing existing content)
     useEffect(() => {
@@ -191,7 +204,6 @@ export default function RichTextEditor({
             )}
 
             <ReactQuill
-                ref={quillRef}
                 theme="snow"
                 value={content}
                 onChange={handleChange}

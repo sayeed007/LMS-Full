@@ -34,11 +34,11 @@ export function QuestionBankCard({
                     {/* Status Badge */}
                     <div className={cn(
                         "px-2 p-1 rounded-3xl text-xs whitespace-nowrap",
-                        status === 'active' ? 'bg-success text-white' :
+                        status === 'published' ? 'bg-success text-white' :
                         status === 'draft' ? 'bg-warning-bg text-warning' :
                         'bg-gray-200 text-gray-600'
                     )}>
-                        {status === 'active' ? 'Active' :
+                        {status === 'published' ? 'Published' :
                          status === 'draft' ? 'Draft' :
                          'Archived'}
                     </div>

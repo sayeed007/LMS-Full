@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Download, Upload } from 'lucide-react'
 import { ImportQuestionsDialog } from './import-export/ImportQuestionsDialog'
 import { ExportQuestionsDialog } from './import-export/ExportQuestionsDialog'
@@ -22,7 +22,14 @@ export function QuestionBankActions({
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
 
-  const handleImportSuccess = (result: any) => {
+  interface ImportResult {
+    data: {
+      importedCount: number;
+      totalProvided: number;
+    };
+  }
+
+  const handleImportSuccess = (result: ImportResult) => {
     showSuccessToast(
       `Successfully imported ${result.data.importedCount} questions`,
       result.data.importedCount < result.data.totalProvided

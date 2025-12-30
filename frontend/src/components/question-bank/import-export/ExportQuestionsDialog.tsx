@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Download, FileText, Database, FileCode, CheckCircle, Loader2, Info } from 'lucide-react'
 import { ExportFormat, useLazyExportQuestionsQuery } from '@/store/api/questionImportExportApi'
@@ -257,7 +257,7 @@ export function ExportQuestionsDialog({
 
         <DialogFooter>
           {exportSuccess ? (
-            <Button variant="primary" onClick={handleClose}>
+            <Button variant="default" onClick={handleClose}>
               Done
             </Button>
           ) : (
@@ -270,7 +270,7 @@ export function ExportQuestionsDialog({
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 onClick={handleExport}
                 disabled={isExporting}
               >

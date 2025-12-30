@@ -1,24 +1,23 @@
 // src/components/question-bank/QuestionEditorWithHistory.tsx
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { showErrorToast, showSuccessToast } from '@/lib/toast-utils'
+import {
+  QuestionVersion,
+  useCompareVersionsQuery,
+  useGetQuestionVersionsQuery,
+  useRestoreVersionMutation
+} from '@/store/api/questionVersionApi'
+import { Question } from '@/types'
+import { GitCompare, History, X } from 'lucide-react'
 import { useState } from 'react'
 import { QuestionEditor } from './QuestionEditor'
-import { VersionHistory } from './version-history/VersionHistory'
-import { VersionComparison } from './version-history/VersionComparison'
 import { RestoreVersionDialog } from './version-history/RestoreVersionDialog'
-import { Button } from '@/components/ui/Button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
-import { History, GitCompare, X } from 'lucide-react'
-import { Question } from '@/types'
-import {
-  useGetQuestionVersionsQuery,
-  useCompareVersionsQuery,
-  useRestoreVersionMutation,
-  QuestionVersion
-} from '@/store/api/questionVersionApi'
-import { showSuccessToast, showErrorToast } from '@/lib/toast-utils'
-import { cn } from '@/lib/utils'
+import { VersionComparison } from './version-history/VersionComparison'
+import { VersionHistory } from './version-history/VersionHistory'
 
 interface QuestionEditorWithHistoryProps {
   question: Question
@@ -103,9 +102,10 @@ export function QuestionEditorWithHistory({
 
       // Update the question in the parent component
       if (result.data.question) {
-        onUpdate(result.data.question)
+        onUpdate(result.data.question as unknown as Question)
       }
     } catch (error) {
+      console.error('Error restoring version:', error);
       showErrorToast('Failed to restore version', 'Please try again')
     }
   }

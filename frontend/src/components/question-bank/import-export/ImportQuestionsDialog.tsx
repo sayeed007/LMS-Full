@@ -10,17 +10,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import { ExportFormat, useImportQuestionsMutation } from '@/store/api/questionImportExportApi'
 import { cn } from '@/lib/utils'
 
+interface ImportResult {
+  data: {
+    importedCount: number;
+    totalProvided: number;
+  };
+}
+
 interface ImportQuestionsDialogProps {
   isOpen: boolean
   onClose: () => void
   questionBankId: string
-  onSuccess?: (result: any) => void
+  onSuccess?: (result: ImportResult) => void
 }
 
 export function ImportQuestionsDialog({
@@ -320,7 +327,7 @@ export function ImportQuestionsDialog({
 
         <DialogFooter>
           {isSuccess ? (
-            <Button variant="primary" onClick={handleClose}>
+            <Button variant="default" onClick={handleClose}>
               Done
             </Button>
           ) : (
@@ -333,7 +340,7 @@ export function ImportQuestionsDialog({
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 onClick={handleImport}
                 disabled={!file || !fileContent || isLoading}
               >

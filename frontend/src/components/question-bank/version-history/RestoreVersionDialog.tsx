@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, RefreshCw, Clock, User, Loader2 } from 'lucide-react'
 import { QuestionVersion } from '@/store/api/questionVersionApi'
@@ -152,7 +152,7 @@ export function RestoreVersionDialog({
             Cancel
           </Button>
           <Button
-            variant="primary"
+            variant="default"
             onClick={handleConfirm}
             disabled={!confirmed || isRestoring}
           >

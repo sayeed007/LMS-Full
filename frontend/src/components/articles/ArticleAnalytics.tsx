@@ -31,11 +31,11 @@ export function ArticleAnalytics({ articleId }: ArticleAnalyticsProps) {
     );
   }
 
-  const analytics = analyticsData.data.analytics;
+  const analytics = analyticsData.data;
 
   // Stat card component
   const StatCard = ({ icon: Icon, title, value, subtitle, color = 'blue' }: {
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     title: string;
     value: string | number;
     subtitle?: string;

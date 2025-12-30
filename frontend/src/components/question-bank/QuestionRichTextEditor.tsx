@@ -1,11 +1,11 @@
 // components/question-bank/QuestionRichTextEditor.tsx
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+const ReactQuillComponent = dynamic(() => import('react-quill-new'), { ssr: false });
 import 'react-quill-new/dist/quill.snow.css';
 import 'katex/dist/katex.min.css';
 
@@ -16,6 +16,20 @@ interface QuestionRichTextEditorProps {
     compact?: boolean; // Compact mode for questions (smaller toolbar)
 }
 
+// Quill keyboard handler context
+interface QuillKeyboardContext {
+    quill: {
+        format: (name: string, value: boolean) => void;
+        getFormat: (range?: { index: number; length: number }) => Record<string, boolean>;
+    };
+}
+
+// Quill range type
+interface QuillRange {
+    index: number;
+    length: number;
+}
+
 export default function QuestionRichTextEditor({
     value = '',
     onChange,
@@ -23,7 +37,6 @@ export default function QuestionRichTextEditor({
     compact = false
 }: QuestionRichTextEditorProps) {
     const [content, setContent] = useState(value);
-    const quillRef = useRef<any>(null);
 
     // Compact toolbar for questions
     const compactModules = useMemo(() => ({
@@ -41,21 +54,21 @@ export default function QuestionRichTextEditor({
                 bold: {
                     key: 'B',
                     ctrlKey: true,
-                    handler: function(this: any, range: any) {
+                    handler: function(this: QuillKeyboardContext, range: QuillRange) {
                         this.quill.format('bold', !this.quill.getFormat(range).bold);
                     }
                 },
                 italic: {
                     key: 'I',
                     ctrlKey: true,
-                    handler: function(this: any, range: any) {
+                    handler: function(this: QuillKeyboardContext, range: QuillRange) {
                         this.quill.format('italic', !this.quill.getFormat(range).italic);
                     }
                 },
                 underline: {
                     key: 'U',
                     ctrlKey: true,
-                    handler: function(this: any, range: any) {
+                    handler: function(this: QuillKeyboardContext, range: QuillRange) {
                         this.quill.format('underline', !this.quill.getFormat(range).underline);
                     }
                 }
@@ -82,21 +95,21 @@ export default function QuestionRichTextEditor({
                 bold: {
                     key: 'B',
                     ctrlKey: true,
-                    handler: function(this: any, range: any) {
+                    handler: function(this: QuillKeyboardContext, range: QuillRange) {
                         this.quill.format('bold', !this.quill.getFormat(range).bold);
                     }
                 },
                 italic: {
                     key: 'I',
                     ctrlKey: true,
-                    handler: function(this: any, range: any) {
+                    handler: function(this: QuillKeyboardContext, range: QuillRange) {
                         this.quill.format('italic', !this.quill.getFormat(range).italic);
                     }
                 },
                 underline: {
                     key: 'U',
                     ctrlKey: true,
-                    handler: function(this: any, range: any) {
+                    handler: function(this: QuillKeyboardContext, range: QuillRange) {
                         this.quill.format('underline', !this.quill.getFormat(range).underline);
                     }
                 }
@@ -125,15 +138,14 @@ export default function QuestionRichTextEditor({
     useEffect(() => {
         if (typeof window !== 'undefined') {
             import('katex').then((katex) => {
-                (window as any).katex = katex.default;
+                (window as Window & { katex?: unknown }).katex = katex.default;
             });
         }
     }, []);
 
     return (
         <div className="bg-white rounded-lg">
-            <ReactQuill
-                ref={quillRef}
+            <ReactQuillComponent
                 theme="snow"
                 value={content}
                 onChange={handleChange}

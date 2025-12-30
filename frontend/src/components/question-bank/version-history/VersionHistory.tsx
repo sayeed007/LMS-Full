@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { Clock, User, RefreshCw, GitCompare, Loader2 } from 'lucide-react'
 import { QuestionVersion } from '@/store/api/questionVersionApi'
 import { formatDistanceToNow } from 'date-fns'
@@ -92,7 +92,7 @@ export function VersionHistory({
                 </Button>
                 {selectedForCompare.length === 2 && (
                   <Button
-                    variant="primary"
+                    variant="default"
                     size="sm"
                     onClick={handleCompare}
                   >

@@ -2,9 +2,8 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ReactNode } from 'react';
 import { GripVertical } from 'lucide-react';
-import { cli } from 'webpack';
+import { ReactNode } from 'react';
 
 interface SortableItemProps {
   id: string;

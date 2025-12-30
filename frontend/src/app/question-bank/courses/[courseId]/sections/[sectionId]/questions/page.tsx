@@ -14,7 +14,7 @@ export default async function QuestionsPage({ params }: QuestionsPageProps) {
 
     return (
         <QuestionsPageClient
-            courseId={resolvedParams.courseId}
+            questionBankId={resolvedParams.courseId}
             sectionId={resolvedParams.sectionId}
         />
     )

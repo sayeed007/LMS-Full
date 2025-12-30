@@ -21,10 +21,12 @@ import {
     useGetQuestionsByQuestionBankQuery,
     useCreateQuestionMutation,
     useUpdateQuestionMutation,
-    useDeleteQuestionMutation
+    useDeleteQuestionMutation,
+    type CreateQuestionRequest
 } from '@/store/api/questionApi'
 import { showSuccessToast, showErrorToast } from '@/lib/toast-utils'
 import { QuestionPopulated } from '@/store/api/questionApi'
+import { Question } from '@/types'
 import { useConfirm } from '@/hooks/useConfirm'
 
 interface QuestionsPageClientProps {
@@ -65,11 +67,11 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
     }, [questionBank])
 
     const createQuestionTemplate = (type: string): Partial<QuestionPopulated> => {
-        const baseQuestion: any = {
-            type,
+        const baseQuestion: Partial<QuestionPopulated> = {
+            type: type as 'single-choice' | 'multiple-choice' | 'descriptive' | 'true-false' | 'fill-blank',
             text: '',
-            questionBank: questionBankId,
-            section: sectionId,
+            questionBank: questionBankId as unknown as { _id: string; name: string },
+            section: sectionId as unknown as { _id: string; name: string },
             difficulty: 'medium',
             points: 1,
             timeLimit: 0,
@@ -91,11 +93,12 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
     const handleAddQuestion = async (type: string) => {
         try {
             const newQuestionData = createQuestionTemplate(type)
-            await createQuestion(newQuestionData).unwrap()
+            await createQuestion(newQuestionData as unknown as CreateQuestionRequest).unwrap()
             showSuccessToast('Question added successfully')
             setShowAddQuestionPopup(false)
             refetchQuestions()
         } catch (error) {
+            console.error('Error adding question:', error);
             showErrorToast('Failed to add question', 'Please try again')
         }
     }
@@ -116,6 +119,7 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
             }).unwrap()
             showSuccessToast('Question updated successfully')
         } catch (error) {
+            console.error('Error updating question:', error);
             showErrorToast('Failed to update question', 'Please try again')
         }
     }
@@ -136,6 +140,7 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
             showSuccessToast('Question deleted successfully')
             refetchQuestions()
         } catch (error) {
+            console.error('Error deleting question:', error);
             showErrorToast('Failed to delete question', 'Please try again')
         }
     }
@@ -154,6 +159,7 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
             }).unwrap()
             showSuccessToast('Question bank saved successfully')
         } catch (error) {
+            console.error('Error saving question bank:', error);
             showErrorToast('Failed to save', 'Please try again')
         }
     }
@@ -163,12 +169,13 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
             await updateQuestionBank({
                 id: questionBankId,
                 data: {
-                    settings: settings as any
-                }
+                    settings: settings as unknown as Record<string, unknown>
+                } as unknown as Record<string, unknown>
             }).unwrap()
             showSuccessToast('Settings saved successfully')
             setShowSettingsPopup(false)
         } catch (error) {
+            console.error('Error saving settings:', error);
             showErrorToast('Failed to save settings', 'Please try again')
         }
     }
@@ -273,8 +280,8 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
                             question={{
                                 ...question,
                                 id: question._id
-                            } as any}
-                            onUpdate={handleUpdateQuestion as any}
+                            } as unknown as Question}
+                            onUpdate={handleUpdateQuestion as unknown as (question: Question) => void}
                             onDelete={handleDeleteQuestion}
                         />
                     ))}

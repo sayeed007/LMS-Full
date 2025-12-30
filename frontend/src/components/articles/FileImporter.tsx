@@ -120,7 +120,7 @@ export const FileImporter = ({ onImportContent, onCancel }: FileImporterProps) =
         // Lists - Unordered
         html = html.replace(/^\* (.+)$/gim, '<li>$1</li>');
         html = html.replace(/^- (.+)$/gim, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        html = html.replace(/(<li>[\s\S]*?<\/li>)/, '<ul>$1</ul>');
 
         // Lists - Ordered
         html = html.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');

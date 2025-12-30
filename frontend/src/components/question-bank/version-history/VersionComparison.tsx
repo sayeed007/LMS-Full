@@ -1,6 +1,7 @@
 // src/components/question-bank/version-history/VersionComparison.tsx
 'use client'
 
+import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowRight, User, Clock } from 'lucide-react'
@@ -15,7 +16,7 @@ interface VersionComparisonProps {
 export function VersionComparison({ comparison }: VersionComparisonProps) {
   const { from, to, changes } = comparison
 
-  const renderValue = (value: any): string => {
+  const renderValue = (value: unknown): string => {
     if (value === null || value === undefined) {
       return 'None'
     }
@@ -31,7 +32,12 @@ export function VersionComparison({ comparison }: VersionComparisonProps) {
     return String(value)
   }
 
-  const renderChoices = (choices: any[]): JSX.Element => {
+  interface QuestionChoice {
+    text: string;
+    isCorrect: boolean;
+  }
+
+  const renderChoices = (choices: QuestionChoice[]): React.JSX.Element => {
     if (!choices || choices.length === 0) {
       return <div className="text-gray-400 italic">No choices</div>
     }
@@ -171,12 +177,12 @@ export function VersionComparison({ comparison }: VersionComparisonProps) {
                     </div>
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       {change.field === 'choices' ? (
-                        renderChoices(change.oldValue)
+                        renderChoices(change.oldValue as QuestionChoice[])
                       ) : change.field === 'text' || change.field === 'explanation' ? (
                         <div
                           className="prose prose-sm max-w-none"
                           dangerouslySetInnerHTML={{
-                            __html: change.oldValue || '<span class="text-gray-400 italic">Empty</span>'
+                            __html: (change.oldValue as string) || '<span class="text-gray-400 italic">Empty</span>'
                           }}
                         />
                       ) : (
@@ -194,12 +200,12 @@ export function VersionComparison({ comparison }: VersionComparisonProps) {
                     </div>
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       {change.field === 'choices' ? (
-                        renderChoices(change.newValue)
+                        renderChoices(change.newValue as QuestionChoice[])
                       ) : change.field === 'text' || change.field === 'explanation' ? (
                         <div
                           className="prose prose-sm max-w-none"
                           dangerouslySetInnerHTML={{
-                            __html: change.newValue || '<span class="text-gray-400 italic">Empty</span>'
+                            __html: (change.newValue as string) || '<span class="text-gray-400 italic">Empty</span>'
                           }}
                         />
                       ) : (

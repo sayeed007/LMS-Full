@@ -24,8 +24,19 @@ import { decodeHTMLEntities } from "@/lib/html-utils";
 interface ContentBlock {
   id: string;
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
-  content: string | { url?: string; text?: string;[key: string]: unknown };
+  content: string | { url?: string; text?: string; [key: string]: unknown };
   order: number;
+  title?: string;
+  description?: string;
+  textContent?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  publicId?: string;
+  resourceType?: string;
+  embedUrl?: string;
+  videoType?: 'embed' | 'upload';
 }
 
 interface LessonContent {
@@ -34,10 +45,50 @@ interface LessonContent {
   textContent?: string;
   title?: string;
   description?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  publicId?: string;
+  resourceType?: string;
+}
+
+// Backend block type
+interface BackendBlock {
+  _id?: string;
+  id?: string;
+  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  order: number;
+  data?: {
+    text?: string;
+    title?: string;
+    description?: string;
+    url?: string;
+    filename?: string;
+    size?: number;
+    mimeType?: string;
+    embedUrl?: string;
+    metadata?: {
+      publicId?: string;
+      resourceType?: string;
+    };
+  };
+  content?: unknown;
+  title?: string;
+  description?: string;
+  textContent?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileType?: string;
+  publicId?: string;
+  resourceType?: string;
+  embedUrl?: string;
+  videoType?: 'embed' | 'upload';
 }
 
 // Transform backend block format to frontend format
-const transformBlockFromBackend = (backendBlock: any): ContentBlock => {
+const transformBlockFromBackend = (backendBlock: BackendBlock): ContentBlock => {
   // Get the text content and decode HTML entities if present
   const rawTextContent = backendBlock.data?.text || backendBlock.textContent || '';
   const decodedTextContent = rawTextContent ? decodeHTMLEntities(rawTextContent) : '';
@@ -67,8 +118,51 @@ const transformBlockFromBackend = (backendBlock: any): ContentBlock => {
   return transformed;
 };
 
+// Backend format for saving
+interface BackendBlockForSave {
+  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  order: number;
+  data: {
+    text?: string;
+    title?: string;
+    description?: string;
+    url?: string;
+    filename?: string;
+    size?: number;
+    mimeType?: string;
+    embedUrl?: string;
+    metadata?: {
+      publicId?: string;
+      resourceType?: string;
+    };
+  };
+}
+
+// Parsed data from backend
+interface ParsedContentData {
+  textContent?: string;
+  text?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  fileUrl?: string;
+  filename?: string;
+  fileName?: string;
+  size?: number;
+  fileSize?: number;
+  mimeType?: string;
+  fileType?: string;
+  blocks?: BackendBlock[];
+  metadata?: {
+    publicId?: string;
+    resourceType?: string;
+  };
+  publicId?: string;
+  resourceType?: string;
+}
+
 // Transform frontend block format to backend format
-const transformBlockToBackend = (frontendBlock: any): any => {
+const transformBlockToBackend = (frontendBlock: ContentBlock): BackendBlockForSave => {
   return {
     type: frontendBlock.type,
     order: frontendBlock.order,
@@ -166,7 +260,7 @@ export default function ContentEditor() {
   useEffect(() => {
     if (isEditMode && existingContent) {
       try {
-        const parsedData = existingContent.data ? (typeof existingContent.data === 'string' ? JSON.parse(existingContent.data) : existingContent.data) : {};
+        const parsedData: ParsedContentData = existingContent.data ? (typeof existingContent.data === 'string' ? JSON.parse(existingContent.data) as ParsedContentData : existingContent.data as ParsedContentData) : {};
 
         // Decode HTML entities in textContent if present
         const textContent = parsedData.textContent || parsedData.text || "";
@@ -231,7 +325,7 @@ export default function ContentEditor() {
         // For blocks content, set file previews for each block that has a fileUrl
         if ((contentType === 'blocks' || contentType === 'block') && blocks.length > 0) {
           const blockPreviews: { [blockId: string]: string | null } = {};
-          blocks.forEach((block: any) => {
+          blocks.forEach((block: ContentBlock) => {
             if (block.fileUrl) {
               blockPreviews[block.id] = block.fileUrl;
             }
@@ -439,15 +533,17 @@ export default function ContentEditor() {
           const response = await uploadFileToCloudinary(formData).unwrap();
 
           // Update the block with Cloudinary response - map 'url' to 'fileUrl'
-          updatedBlocks[i] = {
-            ...block,
-            fileUrl: response.data.url,
-            fileName: response.data.fileName,
-            fileSize: response.data.fileSize,
-            fileType: response.data.fileType,
-            publicId: response.data.publicId,
-            resourceType: response.data.resourceType
-          } as ContentBlock;
+          if (response.data) {
+            updatedBlocks[i] = {
+              ...block,
+              fileUrl: response.data.url,
+              fileName: response.data.fileName,
+              fileSize: response.data.fileSize,
+              fileType: response.data.fileType,
+              publicId: response.data.publicId,
+              resourceType: response.data.resourceType
+            } as ContentBlock;
+          }
 
           // Clean up local file references
           setSelectedFiles(prev => {
@@ -505,18 +601,20 @@ export default function ContentEditor() {
           setUploadProgress("Processing upload...");
 
           // Update content with Cloudinary response - map 'url' to 'fileUrl'
-          const updatedContent = {
-            ...currentContent,
-            fileUrl: response.data.url,
-            fileName: response.data.fileName,
-            fileSize: response.data.fileSize,
-            fileType: response.data.fileType,
-            publicId: response.data.publicId,
-            resourceType: response.data.resourceType
-          };
+          if (response.data) {
+            const updatedContent = {
+              ...currentContent,
+              fileUrl: response.data.url,
+              fileName: response.data.fileName,
+              fileSize: response.data.fileSize,
+              fileType: response.data.fileType,
+              publicId: response.data.publicId,
+              resourceType: response.data.resourceType
+            };
 
-          setContent(updatedContent);
-          currentContent = updatedContent; // Update local variable
+            setContent(updatedContent);
+            currentContent = updatedContent; // Update local variable
+          }
 
           // Clean up local file references
           setSelectedFile(null);

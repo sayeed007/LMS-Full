@@ -17,7 +17,7 @@ import {
     showSuccessToast,
     showValidationErrorToast
 } from "@/lib/toast-utils"
-import { useCreateArticleMutation, useUpdateArticleMutation, type CreateArticleRequest } from "@/store/api/articleApi"
+import { useCreateArticleMutation, useUpdateArticleMutation, type CreateArticleRequest, type UpdateArticleRequest } from "@/store/api/articleApi"
 import { useUploadFileToCloudinaryMutation } from "@/store/api/uploadApi"
 import { Article } from "@/types/backend-models"
 import { useSession } from "next-auth/react"
@@ -156,7 +156,7 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
         const loadingToastId = showSaveLoadingToast();
 
         try {
-            const articleData: CreateArticleRequest = {
+            const articleData = {
                 title: articleName.trim(),
                 content: articleContent,
                 excerpt: articleContent ? articleContent.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : '',
@@ -175,7 +175,7 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
                 // Update existing article
                 const result = await updateArticle({
                     id: articleId,
-                    data: articleData
+                    data: articleData as UpdateArticleRequest
                 }).unwrap();
             } else {
                 // Create new article

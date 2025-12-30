@@ -141,7 +141,9 @@ export const CommentItem = ({ comment, articleId, onReply, depth = 0 }: CommentI
                     commentId: comment._id
                 }).unwrap();
                 setHasLiked(false);
-                setLocalLikes(result.data.likes);
+                if (result.data) {
+                    setLocalLikes(result.data.likes);
+                }
                 showSuccessToast('Comment unliked');
             } else {
                 // Like the comment
@@ -150,7 +152,9 @@ export const CommentItem = ({ comment, articleId, onReply, depth = 0 }: CommentI
                     commentId: comment._id
                 }).unwrap();
                 setHasLiked(true);
-                setLocalLikes(result.data.likes);
+                if (result.data) {
+                    setLocalLikes(result.data.likes);
+                }
                 showSuccessToast('Comment liked');
             }
         } catch (error) {
