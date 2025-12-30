@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
+import QuestionRichTextEditor from './QuestionRichTextEditor'
 
 
 interface QuestionEditorProps {
@@ -88,21 +89,12 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
                             </span>
                         </div>
 
-                        <div className="relative flex items-center gap-2">
-                            <Input
-                                id={`question-${question.id || question._id}`}
-                                placeholder="Type your question here"
+                        <div className="mt-1">
+                            <QuestionRichTextEditor
                                 value={localQuestion.text}
-                                onChange={(e) => updateQuestion({ text: e.target.value })}
-                                className="mt-1"
-                            />
-                            <Image
-                                src="/icons/Cross.png"
-                                alt="Cross"
-                                width={16}
-                                height={16}
-                                className="cursor-pointer absolute right-4 top-6 transform -translate-y-1/2 text-gray-400 h-4 w-4"
-                                onClick={() => updateQuestion({ text: '' })}
+                                onChange={(value) => updateQuestion({ text: value })}
+                                placeholder="Type your question here..."
+                                compact={true}
                             />
                         </div>
 
@@ -144,28 +136,19 @@ export function QuestionEditor({ question, onUpdate, onDelete }: QuestionEditorP
                                         <GripVertical className="w-5 h-5 text-gray-400 cursor-move" />
                                     </div>
 
-                                    {/* Question Input */}
+                                    {/* Choice Input */}
                                     <div className='flex w-full gap-4 flex-1'>
                                         <div className='flex-1'>
                                             <div className="text-sm font-medium text-gray-600 mb-2">
                                                 Choice {index + 1}
                                             </div>
 
-                                            <div className="relative">
-                                                <Input
-                                                    id={`choice-${choice.id || choice._id || index}`}
-                                                    placeholder={`Enter choice ${index + 1}`}
+                                            <div className="mt-1">
+                                                <QuestionRichTextEditor
                                                     value={choice.text}
-                                                    onChange={(e) => updateChoice(choice.id || choice._id || '', { text: e.target.value })}
-                                                    className="mt-1"
-                                                />
-                                                <Image
-                                                    src="/icons/Cross.png"
-                                                    alt="Cross"
-                                                    width={16}
-                                                    height={16}
-                                                    className="cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4"
-                                                    onClick={() => { updateChoice(choice.id || choice._id || '', { text: '' }) }}
+                                                    onChange={(value) => updateChoice(choice.id || choice._id || '', { text: value })}
+                                                    placeholder={`Enter choice ${index + 1}`}
+                                                    compact={true}
                                                 />
                                             </div>
                                         </div>
