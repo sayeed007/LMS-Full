@@ -1,6 +1,9 @@
 // components/articles/article-creation-options.tsx
 "use client"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { ArticleTemplate } from "@/constants/articleTemplates"
+import { decodeHTMLEntities } from "@/lib/html-utils"
 import {
     dismissToast,
     showAuthErrorToast,
@@ -15,11 +18,12 @@ import {
     showValidationErrorToast
 } from "@/lib/toast-utils"
 import { useCreateArticleMutation, useUpdateArticleMutation, type CreateArticleRequest } from "@/store/api/articleApi"
-import { useUploadImageMutation } from "@/store/api/uploadApi"
+import { useUploadFileToCloudinaryMutation } from "@/store/api/uploadApi"
+import { Article } from "@/types/backend-models"
 import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import SimplePageContainer from "../layout/SimplePageContainer"
 import { GoBackRoute } from "../reports/GoBackRoute"
 import RichTextEditor from "../RichTextEditor"
@@ -28,29 +32,34 @@ import PrimaryOutlineButton from "../ui/PrimaryOutlineButton"
 import { MoreOptionsPopup } from "./article-more-option-popup"
 import { ArticleAddThumbnailModal } from "./ArticleAddThumbnailModal"
 import { ArticleAdvancedSettingModal } from "./ArticleAdvancedSettingModal"
-import { TemplateSelector } from "./TemplateSelector"
+import { ArticleTagsModal } from "./ArticleTagsModal"
 import { FileImporter } from "./FileImporter"
-import type { ArticleTemplate } from "@/constants/articleTemplates"
-import { Article } from "@/types/backend-models"
+import { TemplateSelector } from "./TemplateSelector"
 
 interface ArticleCreationOptionsProps {
     existingArticle?: Article;
 }
 
-export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptionsProps = {}) {
+export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptionsProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { data: session } = useSession()
 
-    // Article state
+    // Article state - Initialize with existingArticle data if provided
     const [articleId, setArticleId] = useState<string | null>(existingArticle?._id || null)
     const [articleName, setArticleName] = useState<string>(existingArticle?.title || searchParams.get('name') || 'Untitled Article');
-    const [articleContent, setArticleContent] = useState(existingArticle?.content || '');
+    const [articleContent, setArticleContent] = useState(existingArticle?.content ? decodeHTMLEntities(existingArticle.content) : '');
     const [articleCategory, setArticleCategory] = useState(existingArticle?.category || 'General');
     const [articleTags, setArticleTags] = useState<string[]>(existingArticle?.tags || []);
     const [articleThumbnail, setArticleThumbnail] = useState<string>(existingArticle?.thumbnail || '');
-    const [,] = useState<'draft' | 'published'>(existingArticle?.status || 'draft');
+    const [articleStatus, setArticleStatus] = useState<'draft' | 'published' | 'archived'>(existingArticle?.status || 'draft');
     const [articleVisibility, setArticleVisibility] = useState<'public' | 'private' | 'organization'>(existingArticle?.visibility || 'public');
+
+    // Advanced settings state
+    const [allowRating, setAllowRating] = useState<boolean>(existingArticle?.allowRating ?? true);
+    const [allowComments, setAllowComments] = useState<boolean>(existingArticle?.allowComments ?? true);
+    const [showViews, setShowViews] = useState<boolean>(existingArticle?.showViews ?? true);
+    const [allowExport, setAllowExport] = useState<boolean>(existingArticle?.allowExport ?? true);
 
     // UI state
     const [showMorePopup, setShowMorePopup] = useState<boolean>(false);
@@ -58,14 +67,71 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
     const [currentArticleWritingMethod, setCurrentArticleWritingMethod] = useState<'root' | 'scratch' | 'template' | 'import'>(existingArticle ? 'scratch' : 'root')
     const [showAddThumbnailModal, setShowAddThumbnailModal] = useState(false);
     const [showAdvanceSettingModal, setShowAdvanceSettingModal] = useState(false);
+    const [showTagsModal, setShowTagsModal] = useState(false);
+    const [showAutoSaveIntervalModal, setShowAutoSaveIntervalModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+    // Auto-save settings
+    const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
+    const [autoSaveInterval, setAutoSaveInterval] = useState<number>(60); // Default 60 seconds
+    const [autoSaveCountdown, setAutoSaveCountdown] = useState<number>(60);
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [tempInterval, setTempInterval] = useState<string>('60');
+
+    // Ref to track the last saved content snapshot
+    const lastSavedSnapshot = useRef({
+        name: existingArticle?.title || '',
+        content: existingArticle?.content || '',
+        category: existingArticle?.category || 'General',
+        tags: JSON.stringify(existingArticle?.tags || []),
+        thumbnail: existingArticle?.thumbnail || '',
+        visibility: existingArticle?.visibility || 'public'
+    });
 
     // API hooks
     const [createArticle] = useCreateArticleMutation();
     const [updateArticle] = useUpdateArticleMutation();
-    const [uploadImage] = useUploadImageMutation();
+    const [uploadFile] = useUploadFileToCloudinaryMutation();
     // const { data: categoriesData } = useGetArticleCategoriesQuery();
+
+    // Effect to populate form when existingArticle is provided or changes
+    useEffect(() => {
+        if (existingArticle) {
+            const decodedContent = existingArticle.content ? decodeHTMLEntities(existingArticle.content) : '';
+
+            setArticleId(existingArticle._id);
+            setArticleName(existingArticle.title);
+            // Decode HTML entities for proper display in editor
+            setArticleContent(decodedContent);
+            setArticleCategory(existingArticle.category);
+            setArticleTags(existingArticle.tags);
+            setArticleThumbnail(existingArticle.thumbnail || '');
+            setArticleStatus(existingArticle.status);
+            setArticleVisibility(existingArticle.visibility);
+
+            // Advanced settings
+            setAllowRating(existingArticle.allowRating ?? true);
+            setAllowComments(existingArticle.allowComments ?? true);
+            setShowViews(existingArticle.showViews ?? true);
+            setAllowExport(existingArticle.allowExport ?? true);
+
+            setCurrentArticleWritingMethod('scratch');
+
+            // Update the last saved snapshot to match loaded article
+            lastSavedSnapshot.current = {
+                name: existingArticle.title,
+                content: decodedContent,
+                category: existingArticle.category,
+                tags: JSON.stringify(existingArticle.tags),
+                thumbnail: existingArticle.thumbnail || '',
+                visibility: existingArticle.visibility
+            };
+
+            // Reset unsaved changes since we just loaded saved content
+            setHasUnsavedChanges(false);
+        }
+    }, [existingArticle]);
 
 
     // Create or update article
@@ -98,7 +164,11 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
                 tags: articleTags,
                 thumbnail: articleThumbnail,
                 status,
-                visibility: articleVisibility
+                visibility: articleVisibility,
+                allowRating,
+                allowComments,
+                showViews,
+                allowExport
             };
 
             if (articleId) {
@@ -115,6 +185,19 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
 
             // Reset unsaved changes flag after successful save
             setHasUnsavedChanges(false);
+
+            // Update the last saved snapshot
+            lastSavedSnapshot.current = {
+                name: articleName.trim(),
+                content: articleContent,
+                category: articleCategory,
+                tags: JSON.stringify(articleTags),
+                thumbnail: articleThumbnail,
+                visibility: articleVisibility
+            };
+
+            // Update status after successful save
+            setArticleStatus(status);
 
             dismissToast(loadingToastId);
 
@@ -189,11 +272,11 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
 
             try {
                 const formData = new FormData();
-                formData.append('image', file);
-                formData.append('category', 'thumbnail');
+                formData.append('file', file);
+                formData.append('contentType', 'article-thumbnail');
 
-                const result = await uploadImage(formData).unwrap();
-                setArticleThumbnail(result.data?.url || '');
+                const uploadResult = await uploadFile(formData).unwrap();
+                setArticleThumbnail(uploadResult.data?.url || '');
 
                 dismissToast(uploadToastId);
                 showFileUploadSuccessToast(file.name);
@@ -217,14 +300,28 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
     }
 
     const handleAdvancedSettingsSave = (settings: {
-        category: string;
-        tags: string[];
-        visibility: 'public' | 'private' | 'organization';
+        rating: boolean;
+        comments: boolean;
+        views: boolean;
+        exportEnabled: boolean;
     }) => {
-        setArticleCategory(settings.category);
-        setArticleTags(settings.tags);
-        setArticleVisibility(settings.visibility);
+        setAllowRating(settings.rating);
+        setAllowComments(settings.comments);
+        setShowViews(settings.views);
+        setAllowExport(settings.exportEnabled);
         setShowAdvanceSettingModal(false);
+    };
+
+    const handleAutoSaveIntervalSave = () => {
+        const interval = parseInt(tempInterval);
+        if (!isNaN(interval) && interval >= 10) {
+            setAutoSaveInterval(interval);
+            setAutoSaveCountdown(interval);
+            setShowAutoSaveIntervalModal(false);
+            showSuccessToast('Auto-save interval updated', `Auto-save will now occur every ${interval} seconds.`);
+        } else {
+            showValidationErrorToast('Auto-save interval must be at least 10 seconds');
+        }
     };
 
     const handlePreview = () => {
@@ -249,26 +346,98 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
         router.push(url);
     };
 
-    // Track content changes to mark as unsaved
+    // Track content changes to mark as unsaved and reset auto-save timer
     useEffect(() => {
-        if (currentArticleWritingMethod === 'scratch' && (articleContent || articleName !== 'Untitled Article')) {
-            setHasUnsavedChanges(true);
+        if (currentArticleWritingMethod === 'scratch') {
+            // Create current snapshot
+            const currentSnapshot = {
+                name: articleName,
+                content: articleContent,
+                category: articleCategory,
+                tags: JSON.stringify(articleTags),
+                thumbnail: articleThumbnail,
+                visibility: articleVisibility
+            };
+
+            // Compare with last saved snapshot
+            const hasChanges =
+                currentSnapshot.name !== lastSavedSnapshot.current.name ||
+                currentSnapshot.content !== lastSavedSnapshot.current.content ||
+                currentSnapshot.category !== lastSavedSnapshot.current.category ||
+                currentSnapshot.tags !== lastSavedSnapshot.current.tags ||
+                currentSnapshot.thumbnail !== lastSavedSnapshot.current.thumbnail ||
+                currentSnapshot.visibility !== lastSavedSnapshot.current.visibility;
+
+            if (hasChanges) {
+                setHasUnsavedChanges(true);
+                // Reset countdown when user makes changes to avoid interrupting their flow
+                setAutoSaveCountdown(autoSaveInterval);
+            } else {
+                setHasUnsavedChanges(false);
+            }
         }
-    }, [articleContent, articleName, articleCategory, articleTags, articleThumbnail, articleVisibility, currentArticleWritingMethod]);
+    }, [articleContent, articleName, articleCategory, articleTags, articleThumbnail, articleVisibility, currentArticleWritingMethod, autoSaveInterval]);
 
-    // Auto-save functionality
+    // Auto-save countdown timer (updates every second) - only when enabled
     useEffect(() => {
-        if (currentArticleWritingMethod === 'scratch' && articleContent.trim() && articleName.trim()) {
-            const autoSaveTimer = setTimeout(() => {
-                if (session) {
-                    saveArticle('draft').catch(console.error);
-                }
-            }, 30000); // Auto-save every 30 seconds
+        if (
+            isAutoSaveEnabled &&
+            currentArticleWritingMethod === 'scratch' &&
+            articleContent.trim() &&
+            articleName.trim() &&
+            session &&
+            !isLoading &&
+            !isAutoSaving &&
+            hasUnsavedChanges
+        ) {
+            const countdownInterval = setInterval(() => {
+                setAutoSaveCountdown(prev => {
+                    if (prev <= 1) {
+                        return 0; // Set to 0 to trigger save
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
 
-            return () => clearTimeout(autoSaveTimer);
+            return () => clearInterval(countdownInterval);
+        } else if (!hasUnsavedChanges) {
+            // Reset countdown if no unsaved changes
+            setAutoSaveCountdown(autoSaveInterval);
+        }
+    }, [isAutoSaveEnabled, currentArticleWritingMethod, articleContent, articleName, session, isLoading, isAutoSaving, hasUnsavedChanges, autoSaveInterval]);
+
+    // Auto-save functionality - triggers when countdown reaches 0 (only when enabled)
+    useEffect(() => {
+        if (
+            isAutoSaveEnabled &&
+            currentArticleWritingMethod === 'scratch' &&
+            articleContent.trim() &&
+            articleName.trim() &&
+            session &&
+            !isLoading &&
+            !isAutoSaving &&
+            autoSaveCountdown === 0 && // Trigger when countdown hits 0
+            hasUnsavedChanges
+        ) {
+            const performAutoSave = async () => {
+                setIsAutoSaving(true);
+                try {
+                    await saveArticle('draft');
+                    // Reset countdown after successful save
+                    setAutoSaveCountdown(autoSaveInterval);
+                } catch (error) {
+                    console.error('Auto-save failed:', error);
+                    // Reset countdown even on error to prevent spam
+                    setAutoSaveCountdown(autoSaveInterval);
+                } finally {
+                    setIsAutoSaving(false);
+                }
+            };
+
+            performAutoSave();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [articleContent, articleName, session, currentArticleWritingMethod]);
+    }, [isAutoSaveEnabled, autoSaveCountdown, currentArticleWritingMethod, session, hasUnsavedChanges, autoSaveInterval]);
 
     // Warn user before leaving with unsaved changes
     useEffect(() => {
@@ -449,35 +618,117 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
                             <div className="container mx-auto p-6">
                                 <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="text-sm">
-                                            <span className="text-gray-600">Status: </span>
-                                            <span className="font-semibold text-gray-900 bg-yellow-100 px-2 py-1 rounded">draft</span>
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <span className="text-gray-600">Status:</span>
+                                            <span className={`font-semibold text-gray-900 px-2 py-1 rounded ${articleStatus === 'published' ? 'bg-green-100' :
+                                                articleStatus === 'archived' ? 'bg-gray-100' :
+                                                    'bg-yellow-100'
+                                                }`}>{articleStatus}</span>
                                         </div>
+
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <span className="text-gray-600">Category:</span>
+                                            <select
+                                                value={articleCategory}
+                                                onChange={(e) => setArticleCategory(e.target.value)}
+                                                className="font-semibold text-blue-600 bg-transparent border-b border-blue-600 hover:bg-blue-50 focus:bg-blue-50 outline-none cursor-pointer px-1 py-0.5"
+                                            >
+                                                <option value="General">General</option>
+                                                <option value="Technology">Technology</option>
+                                                <option value="Education">Education</option>
+                                                <option value="Business">Business</option>
+                                                <option value="Science">Science</option>
+                                                <option value="Health">Health</option>
+                                                <option value="Entertainment">Entertainment</option>
+                                                <option value="Sports">Sports</option>
+                                                <option value="News">News</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <span className="text-gray-600">Visibility:</span>
+                                            <select
+                                                value={articleVisibility}
+                                                onChange={(e) => setArticleVisibility(e.target.value as 'public' | 'private' | 'organization')}
+                                                className="font-semibold text-blue-600 bg-transparent border-b border-blue-600 hover:bg-blue-50 focus:bg-blue-50 outline-none cursor-pointer px-1 py-0.5"
+                                            >
+                                                <option value="public">Public</option>
+                                                <option value="private">Private</option>
+                                                <option value="organization">Organization</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Tags button */}
                                         <button
-                                            onClick={handleAdvancedSetting}
-                                            className="text-sm text-gray-600 hover:text-gray-900 transition"
+                                            onClick={() => setShowTagsModal(true)}
+                                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 border border-blue-300 rounded-md hover:bg-blue-50 transition"
                                         >
-                                            Category: <span className="font-semibold text-blue-600 underline">{articleCategory}</span>
-                                        </button>
-                                        <button
-                                            onClick={handleAdvancedSetting}
-                                            className="text-sm text-gray-600 hover:text-gray-900 transition"
-                                        >
-                                            Visibility: <span className="font-semibold text-blue-600 underline">{articleVisibility}</span>
-                                        </button>
-                                        <button
-                                            onClick={handleAdvancedSetting}
-                                            className="text-xs text-blue-600 hover:text-blue-700 font-medium px-3 py-1 border border-blue-300 rounded-md hover:bg-blue-50 transition"
-                                        >
-                                            Edit Settings
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                            </svg>
+                                            Tags ({articleTags?.length})
                                         </button>
                                     </div>
-                                    {isLoading && (
-                                        <div className="flex items-center gap-2 text-sm text-blue-600">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                                            Saving...
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-3">
+                                        {/* Auto-save toggle button */}
+                                        <button
+                                            onClick={() => setIsAutoSaveEnabled(!isAutoSaveEnabled)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${isAutoSaveEnabled
+                                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                }`}
+                                            title={isAutoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled'}
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                {isAutoSaveEnabled ? (
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                ) : (
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                )}
+                                            </svg>
+                                            <span>Auto-save</span>
+                                            {isAutoSaveEnabled && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setTempInterval(autoSaveInterval.toString());
+                                                        setShowAutoSaveIntervalModal(true);
+                                                    }}
+                                                    className="ml-1 text-blue-600 hover:text-blue-800 font-semibold"
+                                                    title="Configure auto-save interval"
+                                                >
+                                                    {autoSaveInterval}s
+                                                </button>
+                                            )}
+                                        </button>
+
+                                        {/* Auto-save timer indicator */}
+                                        {session && isAutoSaveEnabled && hasUnsavedChanges && !isLoading && !isAutoSaving && autoSaveCountdown > 0 && (
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span>Saving in {autoSaveCountdown}s</span>
+                                            </div>
+                                        )}
+                                        {/* Saving indicator */}
+                                        {(isLoading || isAutoSaving) && (
+                                            <div className="flex items-center gap-2 text-sm text-blue-600">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                                                {isAutoSaving ? 'Auto-saving...' : 'Saving...'}
+                                            </div>
+                                        )}
+                                        {/* Saved indicator */}
+                                        {!hasUnsavedChanges && !isLoading && !isAutoSaving && articleId && (
+                                            <div className="flex items-center gap-2 text-xs text-green-600">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span>All changes saved</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <RichTextEditor
                                     value={articleContent}
@@ -505,8 +756,72 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
                 <ArticleAdvancedSettingModal
                     open={showAdvanceSettingModal}
                     onOpenChange={setShowAdvanceSettingModal}
-                    onSave={(settings) => handleAdvancedSettingsSave(settings as unknown as { category: string; tags: string[]; visibility: "public" | "private" | "organization" })}
+                    onSave={handleAdvancedSettingsSave}
+                    initial={{
+                        rating: allowRating,
+                        comments: allowComments,
+                        views: showViews,
+                        exportEnabled: allowExport
+                    }}
                 />
+            }
+
+            {/* Tags Modal */}
+            {showTagsModal &&
+                <ArticleTagsModal
+                    open={showTagsModal}
+                    onOpenChange={setShowTagsModal}
+                    onSave={(tags) => setArticleTags(tags)}
+                    initialTags={articleTags}
+                />
+            }
+
+            {/* Auto-save Interval Modal */}
+            {showAutoSaveIntervalModal &&
+                <Dialog open={showAutoSaveIntervalModal} onOpenChange={setShowAutoSaveIntervalModal}>
+                    <DialogContent className="max-w-md w-full p-8">
+                        <DialogHeader className="border-b-2 border-gray-200 pb-4">
+                            <DialogTitle className="text-2xl font-bold text-gray-900">Configure Auto-save Interval</DialogTitle>
+                        </DialogHeader>
+
+                        <div className="flex flex-col gap-4 my-6">
+                            <p className="text-sm text-gray-600">
+                                Set how often the editor should automatically save your work (in seconds).
+                            </p>
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="intervalInput" className="text-sm font-medium text-gray-700">
+                                    Interval (seconds)
+                                </label>
+                                <Input
+                                    id="intervalInput"
+                                    type="number"
+                                    min="10"
+                                    value={tempInterval}
+                                    onChange={(e) => setTempInterval(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Enter interval in seconds (min: 10)"
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Minimum: 10 seconds. Recommended: 30-60 seconds.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <PrimaryOutlineButton
+                                onClick={() => setShowAutoSaveIntervalModal(false)}
+                            >
+                                Cancel
+                            </PrimaryOutlineButton>
+                            <Button
+                                onClick={handleAutoSaveIntervalSave}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                            >
+                                Save
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             }
 
 

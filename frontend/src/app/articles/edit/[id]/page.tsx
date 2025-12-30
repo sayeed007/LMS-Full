@@ -3,7 +3,7 @@
 import { ArticleCreationOptions } from "@/components/articles/article-creation-options";
 import { useGetArticleByIdQuery } from "@/store/api/articleApi";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 export default function EditArticlePage() {
     const params = useParams();
@@ -30,7 +30,7 @@ export default function EditArticlePage() {
         );
     }
 
-    if (!articleData?.data) {
+    if (!articleData?.data?.article) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <div className="text-center">
@@ -41,5 +41,12 @@ export default function EditArticlePage() {
     }
 
     // Use key prop to force re-render when article data changes
-    return <ArticleCreationOptions key={articleData.data._id} existingArticle={articleData.data} />;
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ArticleCreationOptions
+                key={articleData.data.article._id}
+                existingArticle={articleData.data.article}
+            />
+        </Suspense>
+    );
 }

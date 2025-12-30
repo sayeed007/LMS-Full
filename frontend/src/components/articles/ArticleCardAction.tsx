@@ -10,7 +10,7 @@ interface ArticleCardActionProps {
     onClose: () => void
     onEditArticle: () => void
     onDuplicate: () => void
-    // onMandatoryRead: () => void
+    onMandatoryRead: () => void
     onDeleteArticle: () => void
 }
 
@@ -19,7 +19,7 @@ export function ArticleCardAction({
     onClose,
     onEditArticle,
     onDuplicate,
-    // onMandatoryRead,
+    onMandatoryRead,
     onDeleteArticle
 }: ArticleCardActionProps) {
     const popupRef = useRef<HTMLDivElement>(null)
@@ -65,7 +65,7 @@ export function ArticleCardAction({
     return (
         <div
             ref={popupRef}
-            className="absolute right-8 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[200px] py-2 z-50"
+            className="absolute right-8 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[200px] py-2 z-99"
             onClick={(e) => e.stopPropagation()} // Prevent clicks inside popup from bubbling
         >
             <div className="flex flex-col px-4">
@@ -103,7 +103,7 @@ export function ArticleCardAction({
                     <span className="text-gray-700 text-sm">Duplicate</span>
                 </Button>
 
-                {/* <Button
+                <Button
                     variant="ghost"
                     className="flex items-center gap-3 px-0 py-3 text-left justify-start hover:bg-off-white-3 rounded-none border-b-1 border-off-white-4"
                     onClick={() => {
@@ -118,7 +118,7 @@ export function ArticleCardAction({
                         height={24}
                     />
                     <span className="text-gray-700 text-sm">Mandatory Read</span>
-                </Button> */}
+                </Button>
 
                 <Button
                     variant="ghost"

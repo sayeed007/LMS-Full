@@ -17,6 +17,7 @@ import { useCreateCommentMutation, useGetArticleCommentsQuery } from '@/store/ap
 import { useLoginModal } from '@/hooks/useLoginModal';
 import { CommentItem } from './CommentItem';
 import { SocialShare } from './SocialShare';
+import { decodeHTMLEntities } from '@/lib/html-utils';
 import {
     Select,
     SelectContent,
@@ -58,9 +59,10 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     });
 
     // Use editor content if provided, otherwise use mock content
-    const displayContent = article.content;
+    // Decode HTML entities to properly render HTML content
+    const displayContent = article.content ? decodeHTMLEntities(article.content) : '';
     const { category, title, author, views } = article;
-    const { name, avatar } = author;
+    const { name } = author;
 
     // Get comments from API response
     const comments = commentsData?.data?.comments || [];
@@ -275,13 +277,15 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                             {isBookmarked ? 'Bookmarked' : 'Bookmark'}
                         </Button>
 
-                        <Button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                            onClick={handleExport}
-                        >
-                            <Download className="w-4 h-4 mr-2" />
-                            Export as PDF
-                        </Button>
+                        {article.allowExport !== false && (
+                            <Button
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                                onClick={handleExport}
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Export as PDF
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -314,6 +318,22 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                             </div>
                         </div>
 
+                        {/* Tags Section */}
+                        {article.tags && article.tags.length > 0 && (
+                            <div className="mb-6">
+                                <div className="flex flex-wrap gap-2">
+                                    {article.tags.map((tag, index) => (
+                                        <Badge
+                                            key={index}
+                                            variant="outline"
+                                            className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                        >
+                                            #{tag}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Article Content */}
                         <div className="mb-12">
@@ -324,19 +344,21 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                         </div>
 
                         {/* Like Section */}
-                        <div className="border-t border-off-white-4 pt-8 mb-8">
-                            <div className="flex items-center gap-4">
-                                <span className="text-gray-700 font-bold">Was this article helpful?</span>
+                        {article.allowRating !== false && (
+                            <div className="border-t border-off-white-4 pt-8 mb-8">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-gray-700 font-bold">Was this article helpful?</span>
 
-                                <PrimaryOutlineButton
-                                    onClick={handleLike}
-                                    className={hasLiked ? 'bg-blue-50 border-blue-500' : ''}
-                                >
-                                    <ThumbsUp className={`w-4 h-4 ${hasLiked ? 'fill-blue-500 text-blue-500' : ''}`} />
-                                    Like ({localLikes})
-                                </PrimaryOutlineButton>
+                                    <PrimaryOutlineButton
+                                        onClick={handleLike}
+                                        className={hasLiked ? 'bg-blue-50 border-blue-500' : ''}
+                                    >
+                                        <ThumbsUp className={`w-4 h-4 ${hasLiked ? 'fill-blue-500 text-blue-500' : ''}`} />
+                                        Like ({localLikes})
+                                    </PrimaryOutlineButton>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Social Share Section */}
                         <div className="border-t border-off-white-4 pt-8 mb-8">
@@ -344,86 +366,90 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
                         </div>
 
                         {/* Comments Section */}
-                        <div className="border-t border-off-white-4 pt-8">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-2">
-                                    <MessageCircle className="w-5 h-5 text-gray-600" />
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        Comments ({comments.length})
-                                    </h3>
-                                </div>
-
-                                {/* Sort dropdown */}
-                                <div className="flex items-center gap-2">
-                                    <SortDesc className="w-4 h-4 text-gray-500" />
-                                    <Select value={sortBy} onValueChange={(value: 'createdAt' | 'likes') => setSortBy(value)}>
-                                        <SelectTrigger className="w-[140px] h-9">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="createdAt">Newest First</SelectItem>
-                                            <SelectItem value="likes">Most Liked</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Comment Input */}
-                            <div className="mb-8">
-                                {replyToCommentId && (
-                                    <div className="mb-3 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
-                                        <span className="text-sm text-blue-700">Replying to a comment...</span>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleCancelReply}
-                                            className="text-blue-700 hover:text-blue-900"
-                                        >
-                                            Cancel
-                                        </Button>
+                        {article.allowComments !== false && (
+                            <div className="border-t border-off-white-4 pt-8">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-2">
+                                        <MessageCircle className="w-5 h-5 text-gray-600" />
+                                        <h3 className="text-lg font-semibold text-gray-900">
+                                            Comments ({comments.length})
+                                        </h3>
                                     </div>
-                                )}
-                                <Textarea
-                                    id="comment-input"
-                                    placeholder={isAuthenticated ? (replyToCommentId ? "Write your reply here" : "Post your comment here") : "Sign in to post a comment"}
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    onFocus={() => {
-                                        if (!isAuthenticated) {
-                                            openLoginModal("Please sign in to comment on this article.");
-                                        }
-                                    }}
-                                    className="min-h-[100px] mb-4"
-                                />
-                                <div className="flex justify-end">
-                                    <PrimaryActionButton
-                                        onClick={handleCommentSubmit}
-                                        disabled={!newComment.trim() || isSubmittingComment}>
-                                        {isSubmittingComment ? 'Posting...' : (replyToCommentId ? 'Post Reply' : 'Post')}
-                                    </PrimaryActionButton>
+
+                                    {/* Sort dropdown */}
+                                    {comments.length > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <SortDesc className="w-4 h-4 text-gray-500" />
+                                            <Select value={sortBy} onValueChange={(value: 'createdAt' | 'likes') => setSortBy(value)}>
+                                                <SelectTrigger className="w-[140px] h-9">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="createdAt">Newest First</SelectItem>
+                                                    <SelectItem value="likes">Most Liked</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Comment Input */}
+                                <div className="mb-8">
+                                    {replyToCommentId && (
+                                        <div className="mb-3 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
+                                            <span className="text-sm text-blue-700">Replying to a comment...</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={handleCancelReply}
+                                                className="text-blue-700 hover:text-blue-900"
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    )}
+                                    <Textarea
+                                        id="comment-input"
+                                        placeholder={isAuthenticated ? (replyToCommentId ? "Write your reply here" : "Post your comment here") : "Sign in to post a comment"}
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        onFocus={() => {
+                                            if (!isAuthenticated) {
+                                                openLoginModal("Please sign in to comment on this article.");
+                                            }
+                                        }}
+                                        className="min-h-[100px] mb-4"
+                                    />
+                                    <div className="flex justify-end">
+                                        <PrimaryActionButton
+                                            onClick={handleCommentSubmit}
+                                            disabled={!newComment.trim() || isSubmittingComment}>
+                                            {isSubmittingComment ? 'Posting...' : (replyToCommentId ? 'Post Reply' : 'Post')}
+                                        </PrimaryActionButton>
+                                    </div>
+                                </div>
+
+                                {/* Comments List */}
+                                <div className="space-y-6">
+                                    {isLoadingComments ? (
+                                        <div className="text-center py-8 text-gray-500">Loading comments...</div>
+                                    ) : comments.length === 0 ? (
+                                        <div className="text-center py-8 text-gray-500">
+                                            No comments yet. Be the first to comment!
+                                        </div>
+                                    ) : (
+                                        comments.map((comment) => (
+                                            <CommentItem
+                                                key={comment._id}
+                                                comment={comment}
+                                                articleId={article._id}
+                                                onReply={handleReply}
+                                            />
+                                        ))
+                                    )}
                                 </div>
                             </div>
-
-                            {/* Comments List */}
-                            <div className="space-y-6">
-                                {isLoadingComments ? (
-                                    <div className="text-center py-8 text-gray-500">Loading comments...</div>
-                                ) : comments.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-500">
-                                        No comments yet. Be the first to comment!
-                                    </div>
-                                ) : (
-                                    comments.map((comment) => (
-                                        <CommentItem
-                                            key={comment._id}
-                                            comment={comment}
-                                            articleId={article._id}
-                                            onReply={handleReply}
-                                        />
-                                    ))
-                                )}
-                            </div>
-                        </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

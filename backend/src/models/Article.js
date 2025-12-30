@@ -92,6 +92,23 @@ const articleSchema = new mongoose.Schema({
   slug: {
     type: String,
     unique: true
+  },
+  // Advanced settings
+  allowRating: {
+    type: Boolean,
+    default: true
+  },
+  allowComments: {
+    type: Boolean,
+    default: true
+  },
+  showViews: {
+    type: Boolean,
+    default: true
+  },
+  allowExport: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true,

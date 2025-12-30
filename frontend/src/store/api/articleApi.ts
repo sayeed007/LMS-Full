@@ -21,6 +21,10 @@ export interface CreateArticleRequest {
   thumbnail?: string;
   status?: string;
   visibility?: string;
+  allowRating?: boolean;
+  allowComments?: boolean;
+  showViews?: boolean;
+  allowExport?: boolean;
 }
 
 export interface UpdateArticleRequest {
@@ -30,6 +34,11 @@ export interface UpdateArticleRequest {
   category?: string;
   tags?: string[];
   thumbnail?: string;
+  visibility?: 'public' | 'private' | 'organization';
+  allowRating?: boolean;
+  allowComments?: boolean;
+  showViews?: boolean;
+  allowExport?: boolean;
 }
 
 export interface ArticleListParams {

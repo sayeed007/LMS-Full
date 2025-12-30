@@ -1,5 +1,5 @@
 const express = require('express');
-const { protect, restrictTo } = require('../middleware/auth');
+const { protect, restrictTo, optionalAuth } = require('../middleware/auth');
 const articleController = require('../controllers/articleController');
 const {
   articleCreateLimiter,
@@ -392,7 +392,8 @@ router.get('/stats', protect, articleController.getArticleStats);
 router.get('/bookmarks', protect, articleController.getBookmarkedArticles);
 
 // Public article detail routes (must come after specific routes)
-router.get('/:id', articleController.getArticleById);
+// Use optionalAuth to allow both authenticated and unauthenticated access
+router.get('/:id', optionalAuth, articleController.getArticleById);
 router.get('/:id/related', articleController.getRelatedArticles);
 
 // Article versioning routes (protected)

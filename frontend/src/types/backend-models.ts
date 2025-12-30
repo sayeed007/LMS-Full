@@ -610,6 +610,11 @@ export interface Article extends BaseDocument {
   likes: number;
   likedBy?: string[]; // User ObjectIds
   organization?: string; // Organization ObjectId
+  // Advanced settings
+  allowRating: boolean;
+  allowComments: boolean;
+  showViews: boolean;
+  allowExport: boolean;
   // Deprecated field - use status instead
   isPublished?: boolean;
 }

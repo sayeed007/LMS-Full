@@ -1,4 +1,5 @@
 // components/articles/article-card.tsx
+import { useConfirm } from "@/hooks/useConfirm"
 import {
     dismissToast,
     showDeleteSuccessToast,
@@ -9,7 +10,8 @@ import {
 import { cn, getErrorMessage, getInitials, monthDateYearFormat } from "@/lib/utils"
 import {
     useDeleteArticleMutation,
-    useDuplicateArticleMutation
+    useDuplicateArticleMutation,
+    useUpdateArticleMutation
 } from "@/store/api/articleApi"
 import { Article } from "@/types/backend-models"
 import { Calendar, Eye, Loader2 } from "lucide-react"
@@ -18,7 +20,6 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { ArticleCardAction } from "./ArticleCardAction"
-import { useConfirm } from "@/hooks/useConfirm"
 
 interface ArticleCardProps {
     article: Article
@@ -49,7 +50,7 @@ export function ArticleCard({
     // API mutations
     const [deleteArticle] = useDeleteArticleMutation();
     const [duplicateArticle] = useDuplicateArticleMutation();
-    // const [updateArticle] = useUpdateArticleMutation();
+    const [updateArticle] = useUpdateArticleMutation();
 
     const handleEditArticle = () => {
         try {
@@ -61,40 +62,38 @@ export function ArticleCard({
         }
     };
 
-    // const handleMandatoryRead = async () => {
-    //     if (isLoading) return;
+    const handleMandatoryRead = async () => {
+        if (isLoading) return;
 
-    //     try {
-    //         setIsLoading('mandatory');
-    //         setShowActionPopup(false);
+        try {
+            setIsLoading('mandatory');
+            setShowActionPopup(false);
 
-    //         const toastId = showLoadingToast('Setting mandatory read status...');
+            const toastId = showLoadingToast('Setting mandatory read status...');
 
-    //         await updateArticle({
-    //             id: article._id,
-    //             data: {
-    //                 // Assuming there's a mandatory field or visibility setting
-    //                 // Adjust this based on your backend Article model
-    //                 visibility: article.visibility === 'organization' ? 'public' : 'organization'
-    //             }
-    //         }).unwrap();
+            await updateArticle({
+                id: article._id,
+                data: {
+                    visibility: article.visibility === 'organization' ? 'public' : 'organization'
+                }
+            }).unwrap();
 
-    //         dismissToast(toastId);
-    //         showSuccessToast(
-    //             'Mandatory Read Updated',
-    //             `Article is now ${article.visibility === 'organization' ? 'public' : 'organization-only'}`
-    //         );
+            dismissToast(toastId);
+            showSuccessToast(
+                'Mandatory Read Updated',
+                `Article is now ${article.visibility === 'organization' ? 'public' : 'organization-only'}`
+            );
 
-    //         onArticleUpdated?.();
-    //     } catch (error: unknown) {
-    //         showErrorToast(
-    //             'Failed to Update',
-    //             getErrorMessage(error, 'Could not update mandatory read status'
-    //         );
-    //     } finally {
-    //         setIsLoading(null);
-    //     }
-    // };
+            onArticleUpdated?.();
+        } catch (error: unknown) {
+            showErrorToast(
+                'Failed to Update',
+                getErrorMessage(error, 'Could not update mandatory read status')
+            );
+        } finally {
+            setIsLoading(null);
+        }
+    };
 
     const handleDuplicate = async () => {
         if (isLoading) return;
@@ -233,7 +232,7 @@ export function ArticleCard({
                                 }}
                                 onEditArticle={handleEditArticle}
                                 onDuplicate={handleDuplicate}
-                                // onMandatoryRead={handleMandatoryRead}
+                                onMandatoryRead={handleMandatoryRead}
                                 onDeleteArticle={handleDeleteArticle}
                             />
                         </>

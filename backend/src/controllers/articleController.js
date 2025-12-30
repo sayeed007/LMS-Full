@@ -186,9 +186,24 @@ exports.getArticleById = catchAsync(async (req, res, next) => {
   }
 
   // Check visibility permissions
-  if (article.visibility === 'private' &&
-      (!req.user || article.author._id.toString() !== req.user.id)) {
-    return next(new AppError('You do not have permission to view this article', 403));
+  // Authors can always view their own articles
+  const isAuthor = req.user && article.author._id.toString() === req.user.id;
+
+  if (!isAuthor) {
+    if (article.visibility === 'private') {
+      // Private articles: only author can view
+      return next(new AppError('You do not have permission to view this article', 403));
+    } else if (article.visibility === 'organization') {
+      // Organization articles: only users from the same organization can view
+      if (!req.user) {
+        return next(new AppError('You must be logged in to view this article', 401));
+      }
+      if (!article.organization || !req.user.organization ||
+          article.organization._id.toString() !== req.user.organization.toString()) {
+        return next(new AppError('You do not have permission to view this article', 403));
+      }
+    }
+    // Public articles: no restrictions
   }
 
   // Increment views (only if not the author viewing their own article)
