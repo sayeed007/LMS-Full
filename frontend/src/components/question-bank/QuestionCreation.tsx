@@ -8,6 +8,7 @@ import { Input } from "../ui/input"
 import PrimaryActionButton from "../ui/PrimaryButton"
 import PrimaryOutlineButton from "../ui/PrimaryOutlineButton"
 import { SettingsPopup, type SettingsData } from "./QuestionBankSettingsPopup"
+import { showValidationErrorToast } from "@/lib/toast-utils"
 
 export function QuestionCreation() {
     const router = useRouter()
@@ -19,7 +20,7 @@ export function QuestionCreation() {
 
     const handlePreview = () => {
         if (!questionBankName.trim() || !questionBankContent.trim()) {
-            alert('Please fill in both title and content');
+            showValidationErrorToast(['title', 'content']);
             return;
         }
 

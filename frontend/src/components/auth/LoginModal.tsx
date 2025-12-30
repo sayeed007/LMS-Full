@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Github, Mail, Lock, X } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
+import { showAuthErrorToast, showErrorToast, showInfoToast } from '@/lib/toast-utils'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -58,7 +59,7 @@ export default function LoginModal({
       })
 
       if (result?.error) {
-        alert('Invalid credentials. Please try again.')
+        showAuthErrorToast('Invalid credentials. Please try again.')
       } else {
         onClose()
         // Redirect to the callback URL after successful login
@@ -66,7 +67,7 @@ export default function LoginModal({
       }
     } catch (error) {
       console.error('Credentials sign in error:', error)
-      alert('An error occurred. Please try again.')
+      showErrorToast('An error occurred', 'Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -217,7 +218,7 @@ export default function LoginModal({
           <p className="text-base text-gray-600">
             Don&apos;t have an account?{' '}
             <button
-              onClick={() => alert('Registration feature coming soon!')}
+              onClick={() => showInfoToast('Registration feature coming soon!', 'This feature is currently under development.')}
               className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors duration-200"
             >
               Sign up for free

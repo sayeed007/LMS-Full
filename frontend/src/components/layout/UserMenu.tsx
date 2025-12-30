@@ -5,6 +5,7 @@ import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { showInfoToast } from '@/lib/toast-utils'
 
 interface UserMenuProps {
   user: {
@@ -132,7 +133,7 @@ export default function UserMenu({ user }: UserMenuProps) {
               onClick={() => {
                 setIsOpen(false)
                 // Add settings navigation when ready
-                alert('Settings page coming soon!')
+                showInfoToast('Settings page coming soon!', 'This feature is currently under development.')
               }}
               className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
