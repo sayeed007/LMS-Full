@@ -1,13 +1,11 @@
 // components/question-bank/QuestionBankCard.tsx
 import { cn } from "@/lib/utils"
-import { Section } from "@/types"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-// import { QuestionBankCardAction } from "./QuestionBankCardAction"
 import Image from "next/image"
-import { Course } from "@/dummyData/courseQuestionData"
+import { QuestionBank } from "@/store/api/questionBankApi"
 
 interface QuestionBankCardProps {
-    questionBank: Course
+    questionBank: QuestionBank
     onClick?: () => void
 }
 
@@ -15,11 +13,13 @@ export function QuestionBankCard({
     questionBank,
     onClick
 }: QuestionBankCardProps) {
-    const { title, description, author, isPublished, isMyCourse } = questionBank;
-    const { name, avatar, initials } = author;
+    const { name, description, createdBy, status, totalQuestions, sections } = questionBank;
+    const creatorName = createdBy?.name || 'Unknown';
+    const creatorAvatar = createdBy?.avatar;
+    const creatorInitials = creatorName.split(' ').map(n => n[0]).join('').toUpperCase();
 
-    const topicCount = questionBank?.sections?.length || 0;
-    const questionCount = questionBank?.sections.reduce((total: number, section: Section) => total + section.questions.length, 0);
+    const topicCount = sections?.length || 0;
+    const questionCount = totalQuestions || 0;
 
 
     return (
@@ -31,29 +31,31 @@ export function QuestionBankCard({
             <div className="relative mb-3">
                 <div className="flex flex-col items-start justify-between">
 
-                    {/* Publish Status */}
-                    {isMyCourse &&
-                        <div className={cn(
-                            "px-2 p-1 rounded-3xl text-xs whitespace-nowrap",
-                            isPublished ? 'bg-off-white-5 text-white' : 'bg-warning-bg text-warning'
-                        )}>
-                            {isPublished ? 'Published' : 'Draft'}
-                        </div>
-                    }
+                    {/* Status Badge */}
+                    <div className={cn(
+                        "px-2 p-1 rounded-3xl text-xs whitespace-nowrap",
+                        status === 'active' ? 'bg-success text-white' :
+                        status === 'draft' ? 'bg-warning-bg text-warning' :
+                        'bg-gray-200 text-gray-600'
+                    )}>
+                        {status === 'active' ? 'Active' :
+                         status === 'draft' ? 'Draft' :
+                         'Archived'}
+                    </div>
 
                     <h3 className="font-semibold text-gray-900 line-clamp-2 pr-2 mt-2">
-                        {title}
+                        {name}
                     </h3>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
                     <Avatar className="w-5 h-5">
-                        <AvatarImage src={avatar} />
+                        <AvatarImage src={creatorAvatar} />
                         <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                            {initials}
+                            {creatorInitials}
                         </AvatarFallback>
                     </Avatar>
-                    <span>{name}</span>
+                    <span>{creatorName}</span>
                 </div>
             </div>
 

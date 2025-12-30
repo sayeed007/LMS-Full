@@ -130,21 +130,9 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                         {questionBanks.map((questionBank) => (
                             <QuestionBankCard
                                 key={questionBank._id}
-                                questionBank={{
-                                    id: questionBank._id,
-                                    title: questionBank.name,
-                                    description: questionBank.description || '',
-                                    sections: [],
-                                    isPublished: questionBank.isActive,
-                                    isMyCourse: true, // This should be determined based on current user
-                                    author: {
-                                        name: questionBank.createdBy.name,
-                                        avatar: questionBank.createdBy.avatar,
-                                        initials: questionBank.createdBy.name.split(' ').map(n => n[0]).join('')
-                                    }
-                                }}
+                                questionBank={questionBank}
                                 onClick={() => {
-                                    router.push(`/question-bank/courses/${questionBank._id}/preview`)
+                                    router.push(`/question-bank/${questionBank._id}`)
                                 }}
                             />
                         ))}

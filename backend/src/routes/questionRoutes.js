@@ -1,6 +1,18 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
 const questionController = require('../controllers/questionController');
+const { validate, sanitizeInputs } = require('../middleware/validate');
+const {
+  questionSearchLimiter,
+  bulkQuestionCreateLimiter,
+  questionDuplicateLimiter
+} = require('../middleware/rateLimiter');
+const {
+  createQuestionSchema,
+  updateQuestionSchema,
+  bulkCreateQuestionsSchema,
+  duplicateQuestionSchema
+} = require('../validators/question.validator');
 
 const router = express.Router();
 
@@ -310,9 +322,22 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
+// Apply input sanitization to all routes
+router.use(sanitizeInputs);
+
 // Utility routes (must come before parameterized routes)
-router.post('/bulk', restrictTo('student', 'instructor', 'org_admin', 'super_admin'), questionController.bulkCreateQuestions);
-router.get('/search', questionController.searchQuestions);
+router.post(
+  '/bulk',
+  bulkQuestionCreateLimiter,
+  restrictTo('student', 'instructor', 'org_admin', 'super_admin'),
+  validate(bulkCreateQuestionsSchema),
+  questionController.bulkCreateQuestions
+);
+router.get(
+  '/search',
+  questionSearchLimiter,
+  questionController.searchQuestions
+);
 router.get('/course/:courseId', questionController.getQuestionsByCourse);
 router.get('/question-bank/:questionBankId', questionController.getQuestionsByQuestionBank);
 
@@ -320,15 +345,27 @@ router.get('/question-bank/:questionBankId', questionController.getQuestionsByQu
 router
   .route('/')
   .get(questionController.getAllQuestions)
-  .post(restrictTo('student', 'instructor', 'org_admin', 'super_admin'), questionController.createQuestion);
+  .post(
+    restrictTo('student', 'instructor', 'org_admin', 'super_admin'),
+    validate(createQuestionSchema),
+    questionController.createQuestion
+  );
 
 router
   .route('/:id')
   .get(questionController.getQuestion)
-  .patch(questionController.updateQuestion)
+  .patch(
+    validate(updateQuestionSchema),
+    questionController.updateQuestion
+  )
   .delete(questionController.deleteQuestion);
 
 // Additional utility routes
-router.post('/:id/duplicate', questionController.duplicateQuestion);
+router.post(
+  '/:id/duplicate',
+  questionDuplicateLimiter,
+  validate(duplicateQuestionSchema),
+  questionController.duplicateQuestion
+);
 
 module.exports = router;

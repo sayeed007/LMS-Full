@@ -1,6 +1,14 @@
 const express = require('express');
 const { protect, restrictTo } = require('../middleware/auth');
 const questionBankController = require('../controllers/questionBankController');
+const { validate, sanitizeInputs } = require('../middleware/validate');
+const { questionDuplicateLimiter } = require('../middleware/rateLimiter');
+const {
+  createQuestionBankSchema,
+  updateQuestionBankSchema,
+  sectionDataSchema,
+  duplicateQuestionBankSchema
+} = require('../validators/questionBank.validator');
 
 const router = express.Router();
 
@@ -194,6 +202,9 @@ const router = express.Router();
 // Protected routes
 router.use(protect);
 
+// Apply input sanitization to all routes
+router.use(sanitizeInputs);
+
 // Utility routes (must come before parameterized routes)
 router.get('/course/:courseId', questionBankController.getQuestionBanksByCourse);
 
@@ -201,17 +212,32 @@ router.get('/course/:courseId', questionBankController.getQuestionBanksByCourse)
 router
   .route('/')
   .get(questionBankController.getAllQuestionBanks)
-  .post(restrictTo('student', 'instructor', 'org_admin', 'super_admin'), questionBankController.createQuestionBank);
+  .post(
+    restrictTo('student', 'instructor', 'org_admin', 'super_admin'),
+    validate(createQuestionBankSchema),
+    questionBankController.createQuestionBank
+  );
 
 router
   .route('/:id')
   .get(questionBankController.getQuestionBank)
-  .patch(questionBankController.updateQuestionBank)
+  .patch(
+    validate(updateQuestionBankSchema),
+    questionBankController.updateQuestionBank
+  )
   .delete(questionBankController.deleteQuestionBank);
 
 // Section management routes
-router.post('/:id/sections', questionBankController.addSection);
-router.patch('/:id/sections/:sectionId', questionBankController.updateSection);
+router.post(
+  '/:id/sections',
+  validate(sectionDataSchema),
+  questionBankController.addSection
+);
+router.patch(
+  '/:id/sections/:sectionId',
+  validate(sectionDataSchema),
+  questionBankController.updateSection
+);
 router.delete('/:id/sections/:sectionId', questionBankController.deleteSection);
 
 // Status management routes
@@ -219,6 +245,11 @@ router.patch('/:id/activate', questionBankController.activateQuestionBank);
 router.patch('/:id/archive', questionBankController.archiveQuestionBank);
 
 // Duplication route
-router.post('/:id/duplicate', questionBankController.duplicateQuestionBank);
+router.post(
+  '/:id/duplicate',
+  questionDuplicateLimiter,
+  validate(duplicateQuestionBankSchema),
+  questionBankController.duplicateQuestionBank
+);
 
 module.exports = router;

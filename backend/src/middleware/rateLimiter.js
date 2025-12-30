@@ -114,6 +114,33 @@ const commentCreateLimiter = createRateLimiter({
 });
 
 /**
+ * Question search rate limiter (prevent search abuse)
+ */
+const questionSearchLimiter = createRateLimiter({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // Max 10 search requests per minute
+  message: 'Too many search requests from this IP, please try again after a minute'
+});
+
+/**
+ * Bulk question create rate limiter (prevent abuse)
+ */
+const bulkQuestionCreateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Max 5 bulk operations per hour
+  message: 'Bulk creation limit exceeded. Please try again after an hour'
+});
+
+/**
+ * Question duplicate rate limiter (prevent spam)
+ */
+const questionDuplicateLimiter = createRateLimiter({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 20, // Max 20 duplications per 5 minutes
+  message: 'Too many duplication requests from this IP, please try again later'
+});
+
+/**
  * Create a custom rate limiter with specific configuration
  */
 const customLimiter = (windowMs, max, message) => {
@@ -242,6 +269,9 @@ module.exports = {
   articleUpdateLimiter,
   likeLimiter,
   commentCreateLimiter,
+  questionSearchLimiter,
+  bulkQuestionCreateLimiter,
+  questionDuplicateLimiter,
   customLimiter,
   ipBlocker,
   suspiciousActivityDetector,
