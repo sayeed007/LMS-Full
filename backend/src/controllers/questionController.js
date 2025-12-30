@@ -4,6 +4,15 @@ const QuestionVersion = require('../models/QuestionVersion');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
+const {
+  exportToJSON,
+  exportToCSV,
+  exportToQTI,
+  importFromJSON,
+  importFromCSV,
+  getExportFormat,
+  getMimeType
+} = require('../utils/questionExporter');
 
 // Get all questions with filtering
 exports.getAllQuestions = catchAsync(async (req, res, next) => {
@@ -450,6 +459,172 @@ exports.searchQuestions = catchAsync(async (req, res, next) => {
     results: questions.length,
     data: {
       questions
+    }
+  });
+});
+
+// Export questions from a question bank
+exports.exportQuestions = catchAsync(async (req, res, next) => {
+  const { questionBankId } = req.params;
+  const { format = 'json', includeMetadata = 'true' } = req.query;
+
+  // Verify question bank exists
+  const questionBank = await QuestionBank.findById(questionBankId);
+  if (!questionBank) {
+    return next(new AppError('Question bank not found', 404));
+  }
+
+  // Check permissions
+  if (questionBank.createdBy.toString() !== req.user.id &&
+      !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to export from this question bank', 403));
+  }
+
+  // Get all questions from the question bank
+  const questions = await Question.find({
+    questionBank: questionBankId,
+    isActive: true
+  })
+    .populate('createdBy', 'name email')
+    .lean();
+
+  if (questions.length === 0) {
+    return next(new AppError('No questions found in this question bank', 404));
+  }
+
+  // Generate export based on format
+  const exportFormat = getExportFormat(format);
+  let exportData;
+  let filename;
+  let mimeType;
+
+  const options = {
+    includeMetadata: includeMetadata === 'true',
+    includeIds: true
+  };
+
+  switch (exportFormat) {
+    case 'csv':
+      exportData = exportToCSV(questions, options);
+      filename = `questions_${questionBankId}_${Date.now()}.csv`;
+      mimeType = getMimeType('csv');
+      break;
+
+    case 'qti':
+      exportData = exportToQTI(questions, {
+        assessmentTitle: questionBank.name,
+        assessmentIdentifier: questionBankId
+      });
+      filename = `questions_${questionBankId}_${Date.now()}.xml`;
+      mimeType = getMimeType('qti');
+      break;
+
+    case 'json':
+    default:
+      exportData = exportToJSON(questions, options);
+      filename = `questions_${questionBankId}_${Date.now()}.json`;
+      mimeType = getMimeType('json');
+  }
+
+  // Set headers for file download
+  res.setHeader('Content-Type', mimeType);
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  res.send(exportData);
+});
+
+// Import questions to a question bank
+exports.importQuestions = catchAsync(async (req, res, next) => {
+  const { questionBankId } = req.params;
+  const { format = 'json', data } = req.body;
+
+  if (!data) {
+    return next(new AppError('Import data is required', 400));
+  }
+
+  // Verify question bank exists
+  const questionBank = await QuestionBank.findById(questionBankId);
+  if (!questionBank) {
+    return next(new AppError('Question bank not found', 404));
+  }
+
+  // Check permissions
+  if (questionBank.createdBy.toString() !== req.user.id &&
+      !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to import to this question bank', 403));
+  }
+
+  // Parse import data based on format
+  let questions;
+  const importFormat = getExportFormat(format);
+
+  try {
+    switch (importFormat) {
+      case 'csv':
+        questions = importFromCSV(data);
+        break;
+
+      case 'json':
+      default:
+        questions = importFromJSON(data);
+    }
+  } catch (error) {
+    return next(new AppError(`Import failed: ${error.message}`, 400));
+  }
+
+  if (!questions || questions.length === 0) {
+    return next(new AppError('No valid questions found in import data', 400));
+  }
+
+  // Add question bank and user info to each question
+  const questionsData = questions.map(q => ({
+    ...q,
+    questionBank: questionBankId,
+    course: questionBank.course,
+    createdBy: req.user.id,
+    organization: req.user.organization
+  }));
+
+  // Create questions
+  const createdQuestions = await Question.insertMany(questionsData, { ordered: false });
+
+  // Create initial versions for each question
+  for (const question of createdQuestions) {
+    const versionData = {
+      text: question.text,
+      type: question.type,
+      choices: question.choices,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation,
+      difficulty: question.difficulty,
+      points: question.points,
+      timeLimit: question.timeLimit,
+      tags: question.tags,
+      attachments: question.attachments
+    };
+
+    await QuestionVersion.createVersion(
+      question._id,
+      versionData,
+      req.user.id,
+      'Initial version (imported)'
+    );
+  }
+
+  // Update question bank stats
+  await questionBank.updateStats();
+
+  res.status(201).json({
+    status: 'success',
+    message: `Successfully imported ${createdQuestions.length} questions`,
+    data: {
+      importedCount: createdQuestions.length,
+      totalProvided: questions.length,
+      questions: createdQuestions.map(q => ({
+        _id: q._id,
+        text: q.text,
+        type: q.type
+      }))
     }
   });
 });

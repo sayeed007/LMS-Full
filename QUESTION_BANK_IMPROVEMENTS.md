@@ -1,6 +1,6 @@
 # Question Bank System - Improvement Roadmap
 
-> **Current Status:** 85% Complete (🔴 Critical Done! 🟡 Rich Text & Versioning Done!) | **Target:** Industry Standard
+> **Current Status:** 90% Complete (🔴 Critical Done! 🟡 High Priority Backend Done!) | **Target:** Industry Standard
 > **Last Updated:** 2025-12-30
 
 ---
@@ -391,61 +391,88 @@ DELETE /api/v1/questions/:questionId/versions/cleanup      → Cleanup old versi
 
 ---
 
-### 5. Import/Export Functionality
+### 5. Import/Export Functionality ✅
 
-#### 5.1 CSV Import/Export
-**Status:** ❌ Not Implemented
+#### 5.1 Multiple Format Support
+**Status:** ✅ **Backend COMPLETED** (2025-12-30) - Frontend Pending
 **Priority:** 🟡 HIGH
-**Estimated Effort:** 4 days
+**Actual Effort:** 3 hours
 
 **Tasks:**
-- [ ] Install `csv-parser` and `csv-stringify`
-- [ ] Define CSV template format
-- [ ] Implement CSV parsing with validation
-- [ ] Create export endpoint with filters
-- [ ] Add import UI with file upload
-- [ ] Show import preview before confirmation
-- [ ] Handle errors and provide detailed feedback
+- [x] Create CSV parser and generator utilities
+- [x] Define CSV template format with choices markup
+- [x] Implement CSV parsing with validation
+- [x] Create JSON import/export with metadata
+- [x] Implement QTI 2.1 export format
+- [x] Create export endpoint with format selection
+- [x] Create import endpoint with validation
+- [x] Handle errors and provide detailed feedback
+- [ ] Add import/export UI with file upload (frontend pending)
+- [ ] Show import preview before confirmation (frontend pending)
 
-**CSV Format Example:**
+**Formats Supported:**
+- ✅ **CSV:** Simple text format with pipe-separated choices
+- ✅ **JSON:** Complete question data with metadata
+- ✅ **QTI 2.1:** Industry-standard IMS QTI XML format
+
+**CSV Format:**
 ```csv
-question_text,type,choice_1,choice_2,choice_3,choice_4,correct_answer,difficulty,points,explanation
-"What is 2+2?",single-choice,3,4,5,6,2,easy,1,"Basic addition"
+text,type,choices,explanation,difficulty,points,timeLimit,tags
+"What is 2+2?",single-choice,"3|4[*]|5|6","Basic addition",easy,1,60,"math;basic"
 ```
 
-**Files to Create:**
-- `backend/src/services/csvParser.js`
-- `backend/src/controllers/importExportController.js`
-- `frontend/src/components/question-bank/ImportDialog.tsx`
-- `frontend/src/components/question-bank/ExportDialog.tsx`
+**Choice Format:** `Choice 1|Choice 2[*]|Choice 3`
+- `[*]` indicates correct answer
+- `|` separates choices
 
----
+**JSON Format:**
+```json
+{
+  "version": "1.0",
+  "exportDate": "2025-12-30T...",
+  "questionCount": 10,
+  "questions": [
+    {
+      "text": "What is 2+2?",
+      "type": "single-choice",
+      "choices": [
+        { "text": "3", "isCorrect": false },
+        { "text": "4", "isCorrect": true }
+      ],
+      "difficulty": "easy",
+      "points": 1,
+      "metadata": { ... }
+    }
+  ]
+}
+```
 
-#### 5.2 JSON Bulk Operations
-**Status:** ⚠️ Partially Implemented (backend only)
-**Priority:** 🟡 HIGH
-**Estimated Effort:** 2 days
+**API Endpoints:**
+```
+GET  /api/v1/questions/question-bank/:questionBankId/export?format=csv|json|qti
+POST /api/v1/questions/question-bank/:questionBankId/import
+```
 
-**Tasks:**
-- [ ] Create JSON export format documentation
-- [ ] Add validation for JSON imports
-- [ ] Implement UI for JSON import/export
-- [ ] Support nested structures (sections, questions)
+**Features Implemented:**
+- ✅ CSV parsing with intelligent type normalization
+- ✅ HTML stripping for CSV (plain text export)
+- ✅ JSON with optional metadata inclusion
+- ✅ QTI 2.1 XML generation (compatible with LMS platforms)
+- ✅ Automatic version creation for imported questions
+- ✅ Validation and sanitization of imported data
+- ✅ Error handling with detailed feedback
+- ✅ Permission checks (owner, admin)
+- ✅ Question bank stats auto-update
 
----
+**Files Created:**
+- ✅ `backend/src/utils/csvParser.js` - CSV utilities
+- ✅ `backend/src/utils/questionExporter.js` - Export/import logic
+- ⏳ `frontend/src/components/question-bank/ImportDialog.tsx` (pending)
+- ⏳ `frontend/src/components/question-bank/ExportDialog.tsx` (pending)
 
-#### 5.3 QTI Format Support (Future)
-**Status:** ❌ Not Implemented
-**Priority:** 🟡 HIGH
-**Estimated Effort:** 2 weeks
-
-**Tasks:**
-- [ ] Research QTI 2.1 specification
-- [ ] Install QTI parsing library
-- [ ] Map QTI item types to internal types
-- [ ] Implement QTI import
-- [ ] Implement QTI export
-- [ ] Handle unsupported question types gracefully
+**Files Modified:**
+- ✅ `backend/src/controllers/questionController.js` - Added export/import endpoints
+- ✅ `backend/src/routes/questionRoutes.js` - Added import/export routes
 
 ---
 

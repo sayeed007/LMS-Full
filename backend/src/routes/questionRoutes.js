@@ -369,6 +369,18 @@ router.post(
   questionController.duplicateQuestion
 );
 
+// Import/Export routes
+router.get(
+  '/question-bank/:questionBankId/export',
+  questionController.exportQuestions
+);
+
+router.post(
+  '/question-bank/:questionBankId/import',
+  restrictTo('student', 'instructor', 'org_admin', 'super_admin'),
+  questionController.importQuestions
+);
+
 // Version history routes
 // Mount version routes at /:questionId/versions
 router.use('/:questionId/versions', questionVersionRoutes);
