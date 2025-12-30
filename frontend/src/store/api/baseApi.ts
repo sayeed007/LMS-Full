@@ -134,6 +134,7 @@ export const baseApi = createApi({
     'QuestionBanks',
     'Question',
     'Questions',
+    'QuestionVersion',
     'Quiz',
     'Category',
     'Categories',
