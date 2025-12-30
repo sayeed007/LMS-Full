@@ -29,9 +29,10 @@ import {
 
 interface SingleArticleDetailsProps {
     article: ArticlePopulated;
+    isPreviewMode?: boolean;
 }
 
-const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
+const SingleArticleDetails = ({ article, isPreviewMode = false }: SingleArticleDetailsProps) => {
 
     const [newComment, setNewComment] = useState('');
     const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
@@ -49,13 +50,15 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     const [bookmarkArticle, { isLoading: isBookmarking }] = useBookmarkArticleMutation();
     const [unbookmarkArticle, { isLoading: isUnbookmarking }] = useUnbookmarkArticleMutation();
 
-    // Fetch comments for this article with sorting
+    // Fetch comments for this article with sorting (skip in preview mode)
     const { data: commentsData, isLoading: isLoadingComments } = useGetArticleCommentsQuery({
         articleId: article._id,
         page: 1,
         limit: 50,
         sortBy: sortBy,
         order: 'desc'
+    }, {
+        skip: isPreviewMode
     });
 
     // Use editor content if provided, otherwise use mock content
@@ -80,6 +83,20 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     }) : '';
 
     const handleLike = async () => {
+        // Preview mode - just toggle locally
+        if (isPreviewMode) {
+            if (hasLiked) {
+                setHasLiked(false);
+                setLocalLikes(prev => Math.max(0, prev - 1));
+                showSuccessToast('Preview mode', 'Likes are not saved in preview mode');
+            } else {
+                setHasLiked(true);
+                setLocalLikes(prev => prev + 1);
+                showSuccessToast('Preview mode', 'Likes are not saved in preview mode');
+            }
+            return;
+        }
+
         // Check authentication first
         if (!isAuthenticated) {
             openLoginModal("Please sign in to like this article.");
@@ -109,6 +126,14 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     };
 
     const handleCommentSubmit = async () => {
+        // Preview mode - show message
+        if (isPreviewMode) {
+            showSuccessToast('Preview mode', 'Comments are not saved in preview mode');
+            setNewComment('');
+            setReplyToCommentId(null);
+            return;
+        }
+
         // Check authentication first
         if (!isAuthenticated) {
             openLoginModal("Please sign in to comment on this article.");
@@ -148,6 +173,13 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     };
 
     const handleBookmark = async () => {
+        // Preview mode - show message
+        if (isPreviewMode) {
+            showSuccessToast('Preview mode', 'Bookmarks are not saved in preview mode');
+            setIsBookmarked(!isBookmarked);
+            return;
+        }
+
         // Check authentication first
         if (!isAuthenticated) {
             openLoginModal("Please sign in to bookmark this article.");
@@ -260,11 +292,29 @@ const SingleArticleDetails = ({ article }: SingleArticleDetailsProps) => {
     return (
         <PageLayout title="">
             <div className="space-y-6">
+                {/* Preview Mode Banner */}
+                {isPreviewMode && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-yellow-700">
+                                    <strong className="font-medium">Preview Mode:</strong> This is a preview. Actions like likes, comments, and bookmarks are not saved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Top Bar with Back Button and Export */}
                 <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-2 text-gray-600 hover:text-gray-900 cursor-pointer'>
                         <GoBackRoute />
-                        <span className="text-sm font-medium">Back to Articles</span>
+                        <span className="text-sm font-medium">{isPreviewMode ? 'Back to Editor' : 'Back to Articles'}</span>
                     </div>
 
                     <div className="flex items-center gap-2">

@@ -335,12 +335,22 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
             return;
         }
 
+        // Calculate excerpt from content
+        const excerpt = articleContent ? articleContent.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : '';
+
         const params = new URLSearchParams();
         params.set('content', encodeURIComponent(articleContent));
         params.set('title', encodeURIComponent(articleName));
         params.set('author', encodeURIComponent(session?.user?.name || 'Anonymous'));
         params.set('category', encodeURIComponent(articleCategory));
+        params.set('tags', encodeURIComponent(JSON.stringify(articleTags)));
+        params.set('excerpt', encodeURIComponent(excerpt));
         params.set('thumbnail', encodeURIComponent(articleThumbnail));
+        params.set('visibility', encodeURIComponent(articleVisibility));
+        params.set('allowComments', allowComments.toString());
+        params.set('allowRating', allowRating.toString());
+        params.set('showViews', showViews.toString());
+        params.set('allowExport', allowExport.toString());
 
         const url = `/articles/preview/${encodeURIComponent(articleName)}?${params.toString()}`;
         router.push(url);
@@ -654,8 +664,8 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
                                                 className="font-semibold text-blue-600 bg-transparent border-b border-blue-600 hover:bg-blue-50 focus:bg-blue-50 outline-none cursor-pointer px-1 py-0.5"
                                             >
                                                 <option value="public">Public</option>
-                                                <option value="private">Private</option>
-                                                <option value="organization">Organization</option>
+                                                {/* <option value="private">Private</option> */}
+                                                {/* <option value="organization">Organization</option> */}
                                             </select>
                                         </div>
 
