@@ -349,7 +349,7 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
     .skip((parseInt(page) - 1) * parseInt(limit));
 
   // Get enrollment stats for each learner
-  const learnersWithStats = await Promise.all(learners.map(async (learner) => {
+  let learnersWithStats = await Promise.all(learners.map(async (learner) => {
     const enrollments = await Enrollment.find({ user: learner._id });
 
     const stats = {
@@ -370,6 +370,20 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
       ...stats
     };
   }));
+
+  // Apply status filter if provided
+  if (status && status !== 'all') {
+    learnersWithStats = learnersWithStats.filter(learner => {
+      if (status === 'completed') {
+        return learner.completed > 0;
+      } else if (status === 'in_progress') {
+        return learner.inProgress > 0;
+      } else if (status === 'yet_to_start') {
+        return learner.yetToStart > 0 && learner.inProgress === 0 && learner.completed === 0;
+      }
+      return true;
+    });
+  }
 
   // Calculate summary stats from ALL learners (not just current page)
   const allLearners = await User.find(userQuery).select('_id');

@@ -4,6 +4,7 @@ import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
 import { Pagination } from '@/components/reports/Pagination';
 import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
+import { AdvancedFilters } from '@/components/reports/AdvancedFilters';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Download, Loader2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -24,6 +25,7 @@ export default function MultipleLearnerReport() {
         start: null,
         end: null
     });
+    const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
     // Debounce search
     useEffect(() => {
@@ -39,19 +41,25 @@ export default function MultipleLearnerReport() {
     const [fetchReport, { data, isLoading, error }] = useGetMultipleLearnersReportMutation();
     const [exportCSV, { isLoading: isExporting }] = useExportMultipleLearnersCSVMutation();
 
-    // Fetch data on mount and when search/page/date range changes
+    // Fetch data on mount and when search/page/date range/status changes
     useEffect(() => {
         fetchReport({
             search: debouncedSearch || undefined,
             page: currentPage,
             limit: pageSize,
             startDate: dateRange.start,
-            endDate: dateRange.end
+            endDate: dateRange.end,
+            status: selectedStatus || undefined
         });
-    }, [debouncedSearch, currentPage, pageSize, dateRange, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, dateRange, selectedStatus, fetchReport]);
 
     const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
         setDateRange({ start: startDate, end: endDate });
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handleStatusChange = (status: string | null) => {
+        setSelectedStatus(status);
         setCurrentPage(1); // Reset to first page when filter changes
     };
 
@@ -142,6 +150,11 @@ export default function MultipleLearnerReport() {
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Multiple Learner Report</h1>
                 <div className="flex items-center gap-4">
+                    <AdvancedFilters
+                        showStatusFilter={true}
+                        selectedStatus={selectedStatus}
+                        onStatusChange={handleStatusChange}
+                    />
                     <DateRangeFilter
                         onDateRangeChange={handleDateRangeChange}
                         label="Filter by Join Date"

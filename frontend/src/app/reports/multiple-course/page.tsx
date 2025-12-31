@@ -3,10 +3,12 @@ import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
 import { Pagination } from '@/components/reports/Pagination';
 import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
+import { AdvancedFilters } from '@/components/reports/AdvancedFilters';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useGetMultipleCoursesReportMutation } from '@/store/api/reportApi';
+import { useGetCategoriesQuery } from '@/store/api/categoryApi';
 import { toast } from 'sonner';
 
 export default function MultipleCourseReport() {
@@ -18,6 +20,8 @@ export default function MultipleCourseReport() {
         start: null,
         end: null
     });
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedPublished, setSelectedPublished] = useState<boolean | null>(null);
 
     // Debounce search
     useEffect(() => {
@@ -32,19 +36,38 @@ export default function MultipleCourseReport() {
     // Fetch multiple courses report
     const [fetchReport, { data, isLoading, error }] = useGetMultipleCoursesReportMutation();
 
-    // Fetch data on mount and when search/page/date range changes
+    // Fetch categories for filter
+    const { data: categoriesData } = useGetCategoriesQuery({ isActive: true, limit: 100 });
+    const categories = categoriesData?.data?.map(cat => ({
+        value: cat._id,
+        label: cat.name
+    })) || [];
+
+    // Fetch data on mount and when search/page/date range/category/published changes
     useEffect(() => {
         fetchReport({
             search: debouncedSearch || undefined,
             page: currentPage,
             limit: pageSize,
             startDate: dateRange.start,
-            endDate: dateRange.end
+            endDate: dateRange.end,
+            category: selectedCategory || undefined,
+            isPublished: selectedPublished !== null ? selectedPublished : undefined
         });
-    }, [debouncedSearch, currentPage, pageSize, dateRange, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, dateRange, selectedCategory, selectedPublished, fetchReport]);
 
     const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
         setDateRange({ start: startDate, end: endDate });
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handleCategoryChange = (category: string | null) => {
+        setSelectedCategory(category);
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handlePublishedChange = (published: boolean | null) => {
+        setSelectedPublished(published);
         setCurrentPage(1); // Reset to first page when filter changes
     };
 
@@ -108,6 +131,15 @@ export default function MultipleCourseReport() {
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Multiple Course Report</h1>
                 <div className="flex items-center gap-4">
+                    <AdvancedFilters
+                        showCategoryFilter={true}
+                        categories={categories}
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={handleCategoryChange}
+                        showPublishedFilter={true}
+                        selectedPublished={selectedPublished}
+                        onPublishedChange={handlePublishedChange}
+                    />
                     <DateRangeFilter
                         onDateRangeChange={handleDateRangeChange}
                         label="Filter by Created Date"
