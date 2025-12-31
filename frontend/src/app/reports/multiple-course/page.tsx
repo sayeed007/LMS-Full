@@ -4,10 +4,11 @@ import { StatsCard } from '@/components/reports/StatsCard';
 import { Pagination } from '@/components/reports/Pagination';
 import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
 import { AdvancedFilters } from '@/components/reports/AdvancedFilters';
+import { SortableTableHeader } from '@/components/reports/SortableTableHeader';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useGetMultipleCoursesReportMutation, useExportMultipleCoursesCSVMutation } from '@/store/api/reportApi';
+import { useGetMultipleCoursesReportMutation, useExportMultipleCoursesCSVMutation, useExportMultipleCoursesPDFMutation } from '@/store/api/reportApi';
 import { useGetCategoriesQuery } from '@/store/api/categoryApi';
 import { toast } from 'sonner';
 
@@ -22,6 +23,8 @@ export default function MultipleCourseReport() {
     });
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedPublished, setSelectedPublished] = useState<boolean | null>(null);
+    const [sortBy, setSortBy] = useState<string>('title');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     // Debounce search
     useEffect(() => {
@@ -39,6 +42,9 @@ export default function MultipleCourseReport() {
     // CSV export
     const [exportCSV, { isLoading: isExporting }] = useExportMultipleCoursesCSVMutation();
 
+    // PDF export
+    const [exportPDF, { isLoading: isExportingPDF }] = useExportMultipleCoursesPDFMutation();
+
     // Fetch categories for filter
     const { data: categoriesData } = useGetCategoriesQuery({ isActive: true, limit: 100 });
     const categories = categoriesData?.data?.map(cat => ({
@@ -46,7 +52,7 @@ export default function MultipleCourseReport() {
         label: cat.name
     })) || [];
 
-    // Fetch data on mount and when search/page/date range/category/published changes
+    // Fetch data on mount and when search/page/date range/category/published/sorting changes
     useEffect(() => {
         fetchReport({
             search: debouncedSearch || undefined,
@@ -55,9 +61,11 @@ export default function MultipleCourseReport() {
             startDate: dateRange.start,
             endDate: dateRange.end,
             category: selectedCategory || undefined,
-            isPublished: selectedPublished !== null ? selectedPublished : undefined
+            isPublished: selectedPublished !== null ? selectedPublished : undefined,
+            sortBy,
+            sortOrder
         });
-    }, [debouncedSearch, currentPage, pageSize, dateRange, selectedCategory, selectedPublished, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, dateRange, selectedCategory, selectedPublished, sortBy, sortOrder, fetchReport]);
 
     const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
         setDateRange({ start: startDate, end: endDate });
@@ -72,6 +80,12 @@ export default function MultipleCourseReport() {
     const handlePublishedChange = (published: boolean | null) => {
         setSelectedPublished(published);
         setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handleSort = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+        setSortBy(newSortBy);
+        setSortOrder(newSortOrder);
+        setCurrentPage(1); // Reset to first page when sorting changes
     };
 
     const reportData = data?.data;
@@ -97,10 +111,36 @@ export default function MultipleCourseReport() {
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            toast.success('Report exported successfully');
+            toast.success('CSV report exported successfully');
         } catch (err) {
             console.error('Export error:', err);
-            toast.error('Failed to export report');
+            toast.error('Failed to export CSV report');
+        }
+    };
+
+    // Handle PDF export
+    const handleExportPDF = async () => {
+        try {
+            const result = await exportPDF({
+                search: debouncedSearch || undefined,
+                startDate: dateRange.start,
+                endDate: dateRange.end,
+                category: selectedCategory || undefined,
+                isPublished: selectedPublished !== null ? selectedPublished : undefined
+            }).unwrap();
+
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `multiple-courses-report-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export PDF report');
         }
     };
 
@@ -182,12 +222,30 @@ export default function MultipleCourseReport() {
                         {isExporting ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Exporting...
+                                Exporting CSV...
                             </>
                         ) : (
                             <>
                                 <Download className="h-4 w-4" />
                                 Export CSV
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        onClick={handleExportPDF}
+                        disabled={isExportingPDF}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExportingPDF ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export PDF
                             </>
                         )}
                     </Button>
@@ -240,11 +298,41 @@ export default function MultipleCourseReport() {
                         <thead className="bg-off-white-2 border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SL</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Learners</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yet to Start</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                                <SortableTableHeader
+                                    label="Course"
+                                    sortKey="title"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Total Learners"
+                                    sortKey="totalLearners"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Yet to Start"
+                                    sortKey="yetToStart"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="In Progress"
+                                    sortKey="inProgress"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Completed"
+                                    sortKey="completed"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">

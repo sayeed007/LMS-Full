@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { ArrowRight, Download, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useGetCoursesListQuery, useGetIndividualCourseReportQuery, useLazyExportIndividualCourseCSVQuery } from '@/store/api/reportApi';
+import { useGetCoursesListQuery, useGetIndividualCourseReportQuery, useLazyExportIndividualCourseCSVQuery, useLazyExportIndividualCoursePDFQuery } from '@/store/api/reportApi';
 import { toast } from 'sonner';
 
 // Helper function to format time
@@ -67,6 +67,9 @@ export default function IndividualCourseReportPage() {
     // CSV export
     const [exportCSV, { isLoading: isExporting }] = useLazyExportIndividualCourseCSVQuery();
 
+    // PDF export
+    const [exportPDF, { isLoading: isExportingPDF }] = useLazyExportIndividualCoursePDFQuery();
+
     // Auto-select first course when list loads
     useEffect(() => {
         if (courses.length > 0 && !selectedCourse) {
@@ -109,10 +112,34 @@ export default function IndividualCourseReportPage() {
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            toast.success('Report exported successfully');
+            toast.success('CSV report exported successfully');
         } catch (err) {
             console.error('Export error:', err);
-            toast.error('Failed to export report');
+            toast.error('Failed to export CSV report');
+        }
+    };
+
+    // Handle PDF export
+    const handleExportPDF = async () => {
+        if (!selectedCourse) {
+            toast.error('Please select a course to export');
+            return;
+        }
+
+        try {
+            const result = await exportPDF(selectedCourse).unwrap();
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `individual-course-report-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export PDF report');
         }
     };
 
@@ -157,24 +184,44 @@ export default function IndividualCourseReportPage() {
                     </div>
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Individual Course Report</h1>
-                <Button
-                    onClick={handleExportCSV}
-                    disabled={!selectedCourse || isExporting}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                >
-                    {isExporting ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Exporting...
-                        </>
-                    ) : (
-                        <>
-                            <Download className="h-4 w-4" />
-                            Export CSV
-                        </>
-                    )}
-                </Button>
+                <div className="flex items-center gap-4">
+                    <Button
+                        onClick={handleExportCSV}
+                        disabled={!selectedCourse || isExporting}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExporting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting CSV...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        onClick={handleExportPDF}
+                        disabled={!selectedCourse || isExportingPDF}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExportingPDF ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export PDF
+                            </>
+                        )}
+                    </Button>
+                </div>
             </div>
 
             {/* Content when no course selected */}

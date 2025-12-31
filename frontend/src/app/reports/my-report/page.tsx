@@ -7,7 +7,7 @@ import { CompletionChart } from '@/components/reports/CompletionChart'
 import { Button } from '@/components/ui/button'
 import { ChevronRight, Download, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useGetMyReportQuery, useLazyExportMyReportCSVQuery } from '@/store/api/reportApi'
+import { useGetMyReportQuery, useLazyExportMyReportCSVQuery, useLazyExportMyReportPDFQuery } from '@/store/api/reportApi'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 
@@ -16,7 +16,12 @@ export default function MyReportPage() {
 
     // Fetch report data
     const { data, isLoading, error } = useGetMyReportQuery();
+
+    // CSV export
     const [exportCSV, { isLoading: isExporting }] = useLazyExportMyReportCSVQuery();
+
+    // PDF export
+    const [exportPDF, { isLoading: isExportingPDF }] = useLazyExportMyReportPDFQuery();
 
     const reportData = data?.data;
     const stats = reportData?.stats;
@@ -27,7 +32,6 @@ export default function MyReportPage() {
         try {
             const result = await exportCSV().unwrap();
 
-            // Create download link
             const url = window.URL.createObjectURL(result);
             const link = document.createElement('a');
             link.href = url;
@@ -37,10 +41,30 @@ export default function MyReportPage() {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
-            toast.success('Report exported successfully');
+            toast.success('CSV report exported successfully');
         } catch (err) {
             console.error('Export error:', err);
-            toast.error('Failed to export report');
+            toast.error('Failed to export CSV report');
+        }
+    };
+
+    // Handle PDF export
+    const handleExportPDF = async () => {
+        try {
+            const result = await exportPDF().unwrap();
+
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `my-report-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export PDF report');
         }
     };
 
@@ -112,23 +136,44 @@ export default function MyReportPage() {
                     <GoBackRoute />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">My Report</h1>
-                <Button
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                    onClick={handleExportCSV}
-                    disabled={isExporting}
-                >
-                    {isExporting ? (
-                        <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Exporting...
-                        </>
-                    ) : (
-                        <>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export as CSV
-                        </>
-                    )}
-                </Button>
+                <div className="flex items-center gap-4">
+                    <Button
+                        onClick={handleExportCSV}
+                        disabled={isExporting}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExporting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting CSV...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        onClick={handleExportPDF}
+                        disabled={isExportingPDF}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExportingPDF ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export PDF
+                            </>
+                        )}
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards */}

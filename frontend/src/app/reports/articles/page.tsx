@@ -3,10 +3,11 @@ import { GoBackRoute } from '@/components/reports/GoBackRoute'
 import { StatsCard } from '@/components/reports/StatsCard'
 import { Pagination } from '@/components/reports/Pagination'
 import { DateRangeFilter } from '@/components/reports/DateRangeFilter'
+import { SortableTableHeader } from '@/components/reports/SortableTableHeader'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2, Search } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useGetArticlesReportQuery, useLazyExportArticlesReportCSVQuery } from '@/store/api/reportApi'
+import { useGetArticlesReportQuery, useLazyExportArticlesReportCSVQuery, useLazyExportArticlesReportPDFQuery } from '@/store/api/reportApi'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 
@@ -19,6 +20,8 @@ export default function ArticlesReportPage() {
         start: null,
         end: null
     });
+    const [sortBy, setSortBy] = useState<string>('createdAt');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
     // Debounce search
     useEffect(() => {
@@ -36,7 +39,9 @@ export default function ArticlesReportPage() {
         page: currentPage,
         limit: pageSize,
         startDate: dateRange.start,
-        endDate: dateRange.end
+        endDate: dateRange.end,
+        sortBy,
+        sortOrder
     });
 
     const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
@@ -44,7 +49,17 @@ export default function ArticlesReportPage() {
         setCurrentPage(1); // Reset to first page when filter changes
     };
 
+    const handleSort = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+        setSortBy(newSortBy);
+        setSortOrder(newSortOrder);
+        setCurrentPage(1); // Reset to first page when sorting changes
+    };
+
+    // CSV export
     const [exportCSV, { isLoading: isExporting }] = useLazyExportArticlesReportCSVQuery();
+
+    // PDF export
+    const [exportPDF, { isLoading: isExportingPDF }] = useLazyExportArticlesReportPDFQuery();
 
     const reportData = data?.data;
     const stats = reportData?.stats;
@@ -55,6 +70,8 @@ export default function ArticlesReportPage() {
         try {
             const result = await exportCSV({
                 search: debouncedSearch || undefined,
+                startDate: dateRange.start,
+                endDate: dateRange.end
             }).unwrap();
 
             const url = window.URL.createObjectURL(result);
@@ -66,10 +83,34 @@ export default function ArticlesReportPage() {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
-            toast.success('Report exported successfully');
+            toast.success('CSV report exported successfully');
         } catch (err) {
             console.error('Export error:', err);
-            toast.error('Failed to export report');
+            toast.error('Failed to export CSV report');
+        }
+    };
+
+    // Handle PDF export
+    const handleExportPDF = async () => {
+        try {
+            const result = await exportPDF({
+                search: debouncedSearch || undefined,
+                startDate: dateRange.start,
+                endDate: dateRange.end
+            }).unwrap();
+
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `articles-report-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export PDF report');
         }
     };
 
@@ -114,23 +155,44 @@ export default function ArticlesReportPage() {
                     <GoBackRoute />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Articles Overview</h1>
-                <Button
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                    onClick={handleExportCSV}
-                    disabled={isExporting}
-                >
-                    {isExporting ? (
-                        <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Exporting...
-                        </>
-                    ) : (
-                        <>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export as CSV
-                        </>
-                    )}
-                </Button>
+                <div className="flex items-center gap-4">
+                    <Button
+                        onClick={handleExportCSV}
+                        disabled={isExporting}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExporting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting CSV...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        onClick={handleExportPDF}
+                        disabled={isExportingPDF}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExportingPDF ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export PDF
+                            </>
+                        )}
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -199,24 +261,48 @@ export default function ArticlesReportPage() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         SL
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Article Name
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Total Viewer
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Comments
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Rating
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Yes Rating
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        No Rating
-                                    </th>
+                                    <SortableTableHeader
+                                        label="Article Name"
+                                        sortKey="title"
+                                        currentSortBy={sortBy}
+                                        currentSortOrder={sortOrder}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableTableHeader
+                                        label="Total Viewer"
+                                        sortKey="totalViewer"
+                                        currentSortBy={sortBy}
+                                        currentSortOrder={sortOrder}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableTableHeader
+                                        label="Comments"
+                                        sortKey="comments"
+                                        currentSortBy={sortBy}
+                                        currentSortOrder={sortOrder}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableTableHeader
+                                        label="Rating"
+                                        sortKey="rating"
+                                        currentSortBy={sortBy}
+                                        currentSortOrder={sortOrder}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableTableHeader
+                                        label="Yes Rating"
+                                        sortKey="yesRating"
+                                        currentSortBy={sortBy}
+                                        currentSortOrder={sortOrder}
+                                        onSort={handleSort}
+                                    />
+                                    <SortableTableHeader
+                                        label="No Rating"
+                                        sortKey="noRating"
+                                        currentSortBy={sortBy}
+                                        currentSortOrder={sortOrder}
+                                        onSort={handleSort}
+                                    />
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">

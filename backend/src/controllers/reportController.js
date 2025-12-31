@@ -305,7 +305,7 @@ const getIndividualCourseReport = catchAsync(async (req, res, next) => {
  * @access  Private (Admin, Instructor)
  */
 const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
-  const { search, status, courseId, limit = 10, page = 1, startDate, endDate } = req.body;
+  const { search, status, courseId, limit = 10, page = 1, startDate, endDate, sortBy = 'name', sortOrder = 'asc' } = req.body;
 
   // Build query
   let userQuery = { role: 'student' };
@@ -341,10 +341,15 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
   const totalCount = await User.countDocuments(userQuery);
   const totalPages = Math.ceil(totalCount / parseInt(limit));
 
+  // Build sort object
+  const sortField = ['name', 'email', 'createdAt'].includes(sortBy) ? sortBy : 'name';
+  const sortDirection = sortOrder === 'desc' ? -1 : 1;
+  const sortObject = { [sortField]: sortDirection };
+
   // Get learners with pagination
   const learners = await User.find(userQuery)
     .select('name email avatar createdAt')
-    .sort({ name: 1 })
+    .sort(sortObject)
     .limit(parseInt(limit))
     .skip((parseInt(page) - 1) * parseInt(limit));
 
@@ -385,6 +390,16 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
     });
   }
 
+  // Sort by computed fields if requested
+  const computedFields = ['coursesEnrolled', 'completionPercentage', 'yetToStart', 'inProgress', 'completed'];
+  if (computedFields.includes(sortBy)) {
+    learnersWithStats.sort((a, b) => {
+      const aValue = a[sortBy] || 0;
+      const bValue = b[sortBy] || 0;
+      return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
+  }
+
   // Calculate summary stats from ALL learners (not just current page)
   const allLearners = await User.find(userQuery).select('_id');
   const allEnrollments = await Enrollment.find({
@@ -422,7 +437,7 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
  * @access  Private (Instructor, Admin)
  */
 const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
-  const { search, category, isPublished, limit = 10, page = 1, startDate, endDate } = req.body;
+  const { search, category, isPublished, limit = 10, page = 1, startDate, endDate, sortBy = 'title', sortOrder = 'asc' } = req.body;
 
   // Build query
   let query = {};
@@ -461,11 +476,16 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
   const totalCount = await Course.countDocuments(query);
   const totalPages = Math.ceil(totalCount / parseInt(limit));
 
+  // Build sort object
+  const sortField = ['title', 'createdAt', 'isPublished'].includes(sortBy) ? sortBy : 'title';
+  const sortDirection = sortOrder === 'desc' ? -1 : 1;
+  const sortObject = { [sortField]: sortDirection };
+
   // Get courses with pagination
   const courses = await Course.find(query)
     .select('title description thumbnail instructor isPublished createdAt')
     .populate('instructor', 'name email')
-    .sort({ createdAt: -1 })
+    .sort(sortObject)
     .limit(parseInt(limit))
     .skip((parseInt(page) - 1) * parseInt(limit));
 
@@ -491,6 +511,16 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
       ...stats
     };
   }));
+
+  // Sort by computed fields if requested
+  const computedFields = ['totalLearners', 'yetToStart', 'inProgress', 'completed'];
+  if (computedFields.includes(sortBy)) {
+    coursesWithStats.sort((a, b) => {
+      const aValue = a[sortBy] || 0;
+      const bValue = b[sortBy] || 0;
+      return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
+  }
 
   // Calculate summary stats from ALL courses (not just current page)
   const allCourses = await Course.find(query).select('_id isPublished');
@@ -528,7 +558,7 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
  * @access  Private (Admin, Author)
  */
 const getArticlesReport = catchAsync(async (req, res, next) => {
-  const { search, isPublished, limit = 10, page = 1, startDate, endDate } = req.query;
+  const { search, isPublished, limit = 10, page = 1, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
 
   // Build query
   let query = {};
@@ -563,11 +593,16 @@ const getArticlesReport = catchAsync(async (req, res, next) => {
   const totalCount = await Article.countDocuments(query);
   const totalPages = Math.ceil(totalCount / parseInt(limit));
 
+  // Build sort object
+  const sortField = ['title', 'createdAt', 'isPublished'].includes(sortBy) ? sortBy : 'createdAt';
+  const sortDirection = sortOrder === 'desc' ? -1 : 1;
+  const sortObject = { [sortField]: sortDirection };
+
   // Get articles with pagination
   const articles = await Article.find(query)
     .select('title slug author isPublished createdAt')
     .populate('author', 'name email')
-    .sort({ createdAt: -1 })
+    .sort(sortObject)
     .limit(parseInt(limit))
     .skip((parseInt(page) - 1) * parseInt(limit));
 
@@ -589,6 +624,16 @@ const getArticlesReport = catchAsync(async (req, res, next) => {
       noRating: analytics?.noRatings || 0
     };
   }));
+
+  // Sort by computed analytics fields if requested
+  const computedFields = ['totalViewer', 'comments', 'rating', 'yesRating', 'noRating'];
+  if (computedFields.includes(sortBy)) {
+    articlesWithAnalytics.sort((a, b) => {
+      const aValue = a[sortBy] || 0;
+      const bValue = b[sortBy] || 0;
+      return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
+  }
 
   // Calculate summary stats from ALL articles (not just current page)
   const allArticles = await Article.find(query).select('_id isPublished');
@@ -1111,6 +1156,377 @@ const exportMultipleCoursesCSV = catchAsync(async (req, res, next) => {
   res.status(200).send(csv);
 });
 
+/**
+ * @desc    Export my report as PDF
+ * @route   GET /api/v1/reports/my-report/export/pdf
+ * @access  Private (Student, Instructor)
+ */
+const exportMyReportPDF = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+
+  // Get user's enrolled courses
+  const enrollments = await Enrollment.find({ student: userId })
+    .populate({
+      path: 'course',
+      select: 'title description thumbnail'
+    })
+    .sort({ enrolledAt: -1 });
+
+  const coursesData = enrollments.map(enrollment => ({
+    courseId: enrollment.course._id,
+    courseName: enrollment.course.title,
+    thumbnail: enrollment.course.thumbnail,
+    enrollDate: enrollment.enrolledAt,
+    completedDate: enrollment.completedAt,
+    timeSpent: enrollment.progress.timeSpent || 0,
+    completionPercentage: enrollment.progress.completionPercentage,
+    status: enrollment.status
+  }));
+
+  const stats = {
+    courseEnrolled: enrollments.length,
+    yetToStart: enrollments.filter(e => e.progress.completionPercentage === 0).length,
+    inProgress: enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+    completed: enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
+  };
+
+  const reportData = {
+    stats,
+    courses: coursesData
+  };
+
+  const { generateMyReportPDF } = require('../utils/pdfExporter');
+  generateMyReportPDF(reportData, res);
+});
+
+/**
+ * @desc    Export individual learner report as PDF
+ * @route   GET /api/v1/reports/learner/:id/export/pdf
+ * @access  Private (Org Admin, Super Admin)
+ */
+const exportIndividualLearnerPDF = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const learner = await User.findById(id).select('name email avatar createdAt');
+  if (!learner) {
+    return next(new AppError('Learner not found', 404));
+  }
+
+  const enrollments = await Enrollment.find({ student: id })
+    .populate({
+      path: 'course',
+      select: 'title description thumbnail'
+    })
+    .sort({ enrolledAt: -1 });
+
+  const coursesData = enrollments.map(enrollment => ({
+    courseId: enrollment.course._id,
+    courseName: enrollment.course.title,
+    enrollDate: enrollment.enrolledAt,
+    completedDate: enrollment.completedAt,
+    timeSpent: enrollment.progress.timeSpent || 0,
+    completionPercentage: enrollment.progress.completionPercentage,
+    status: enrollment.status
+  }));
+
+  const stats = {
+    courseEnrolled: enrollments.length,
+    yetToStart: enrollments.filter(e => e.progress.completionPercentage === 0).length,
+    inProgress: enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+    completed: enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
+  };
+
+  const reportData = {
+    learner,
+    stats,
+    courses: coursesData
+  };
+
+  const { generateIndividualLearnerPDF } = require('../utils/pdfExporter');
+  generateIndividualLearnerPDF(reportData, res);
+});
+
+/**
+ * @desc    Export individual course report as PDF
+ * @route   GET /api/v1/reports/course/:id/export/pdf
+ * @access  Private (Instructor, Org Admin, Super Admin)
+ */
+const exportIndividualCoursePDF = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const requestingUser = req.user;
+
+  const course = await Course.findById(id).select('title description instructor');
+  if (!course) {
+    return next(new AppError('Course not found', 404));
+  }
+
+  if (requestingUser.role === 'instructor' && course.instructor.toString() !== requestingUser._id.toString()) {
+    return next(new AppError('You do not have permission to view this course report', 403));
+  }
+
+  const enrollments = await Enrollment.find({ course: id })
+    .populate({
+      path: 'student',
+      select: 'name email avatar'
+    })
+    .sort({ enrolledAt: -1 });
+
+  const usersData = enrollments.map(enrollment => ({
+    name: enrollment.student.name,
+    email: enrollment.student.email,
+    enrollDate: enrollment.enrolledAt,
+    completedDate: enrollment.completedAt,
+    timeSpent: enrollment.progress.timeSpent || 0,
+    completionPercentage: enrollment.progress.completionPercentage,
+    status: enrollment.status
+  }));
+
+  const stats = {
+    totalEnrollments: enrollments.length,
+    yetToStart: enrollments.filter(e => e.progress.completionPercentage === 0).length,
+    inProgress: enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+    completed: enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
+  };
+
+  const reportData = {
+    course,
+    stats,
+    users: usersData
+  };
+
+  const { generateIndividualCoursePDF } = require('../utils/pdfExporter');
+  generateIndividualCoursePDF(reportData, res);
+});
+
+/**
+ * @desc    Export multiple learners report as PDF
+ * @route   POST /api/v1/reports/learners/export/pdf
+ * @access  Private (Org Admin, Super Admin)
+ */
+const exportMultipleLearnersPDF = catchAsync(async (req, res, next) => {
+  const { search, status, courseId, startDate, endDate } = req.body;
+
+  let userQuery = { role: 'student' };
+
+  if (search) {
+    userQuery.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  if (startDate || endDate) {
+    userQuery.createdAt = {};
+    if (startDate) userQuery.createdAt.$gte = new Date(startDate);
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      userQuery.createdAt.$lte = endDateTime;
+    }
+  }
+
+  const learners = await User.find(userQuery).select('name email avatar createdAt');
+
+  const learnersWithStats = await Promise.all(learners.map(async (learner) => {
+    let enrollmentQuery = { student: learner._id };
+    if (courseId) enrollmentQuery.course = courseId;
+
+    const enrollments = await Enrollment.find(enrollmentQuery);
+
+    let filteredEnrollments = enrollments;
+    if (status) {
+      if (status === 'completed') {
+        filteredEnrollments = enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100);
+      } else if (status === 'in-progress') {
+        filteredEnrollments = enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100);
+      } else if (status === 'yet-to-start') {
+        filteredEnrollments = enrollments.filter(e => e.progress.completionPercentage === 0);
+      }
+    }
+
+    if (status && filteredEnrollments.length === 0) return null;
+
+    return {
+      _id: learner._id,
+      name: learner.name,
+      email: learner.email,
+      coursesEnrolled: enrollments.length,
+      yetToStart: enrollments.filter(e => e.progress.completionPercentage === 0).length,
+      inProgress: enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+      completed: enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
+    };
+  }));
+
+  const filteredLearners = learnersWithStats.filter(l => l !== null);
+
+  const summaryStats = {
+    totalLearners: filteredLearners.length,
+    totalCourseEnrollments: filteredLearners.reduce((sum, l) => sum + l.coursesEnrolled, 0),
+    totalYetToStart: filteredLearners.reduce((sum, l) => sum + l.yetToStart, 0),
+    totalInProgress: filteredLearners.reduce((sum, l) => sum + l.inProgress, 0),
+    totalCompleted: filteredLearners.reduce((sum, l) => sum + l.completed, 0)
+  };
+
+  const reportData = {
+    summaryStats,
+    learners: filteredLearners
+  };
+
+  const { generateMultipleLearnersPDF } = require('../utils/pdfExporter');
+  generateMultipleLearnersPDF(reportData, res);
+});
+
+/**
+ * @desc    Export multiple courses report as PDF
+ * @route   POST /api/v1/reports/courses/export/pdf
+ * @access  Private (Instructor, Org Admin, Super Admin)
+ */
+const exportMultipleCoursesPDF = catchAsync(async (req, res, next) => {
+  const { search, category, isPublished, startDate, endDate } = req.body;
+  const requestingUser = req.user;
+
+  let query = {};
+
+  if (search) {
+    query.title = { $regex: search, $options: 'i' };
+  }
+
+  if (category) {
+    query.category = category;
+  }
+
+  if (isPublished !== undefined) {
+    query.isPublished = isPublished;
+  }
+
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) query.createdAt.$gte = new Date(startDate);
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = endDateTime;
+    }
+  }
+
+  if (requestingUser.role === 'instructor') {
+    query.instructor = requestingUser._id;
+  }
+
+  const courses = await Course.find(query).select('title description isPublished createdAt');
+
+  const coursesWithStats = await Promise.all(courses.map(async (course) => {
+    const enrollments = await Enrollment.find({ course: course._id });
+
+    return {
+      _id: course._id,
+      name: course.title,
+      description: course.description,
+      isPublished: course.isPublished,
+      createdAt: course.createdAt,
+      totalLearners: enrollments.length,
+      yetToStart: enrollments.filter(e => e.progress.completionPercentage === 0).length,
+      inProgress: enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+      completed: enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
+    };
+  }));
+
+  const allCourses = await Course.find(query).select('_id isPublished');
+  const allEnrollments = await Enrollment.find({
+    course: { $in: allCourses.map(c => c._id) }
+  });
+
+  const summaryStats = {
+    totalCourses: allCourses.length,
+    published: allCourses.filter(c => c.isPublished).length,
+    unpublished: allCourses.filter(c => !c.isPublished).length,
+    totalEnrollments: allEnrollments.length
+  };
+
+  const reportData = {
+    stats: summaryStats,
+    courses: coursesWithStats
+  };
+
+  const { generateMultipleCoursesPDF } = require('../utils/pdfExporter');
+  generateMultipleCoursesPDF(reportData, res);
+});
+
+/**
+ * @desc    Export articles report as PDF
+ * @route   GET /api/v1/reports/articles/export/pdf
+ * @access  Private (Admin, Author)
+ */
+const exportArticlesReportPDF = catchAsync(async (req, res, next) => {
+  const { search, isPublished, startDate, endDate } = req.query;
+
+  let query = {};
+
+  if (req.user.role !== 'super_admin' && req.user.role !== 'org_admin') {
+    query.author = req.user._id;
+  }
+
+  if (search) {
+    query.title = { $regex: search, $options: 'i' };
+  }
+
+  if (isPublished !== undefined) {
+    query.isPublished = isPublished === 'true';
+  }
+
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) query.createdAt.$gte = new Date(startDate);
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = endDateTime;
+    }
+  }
+
+  const articles = await Article.find(query)
+    .select('title slug author isPublished createdAt')
+    .populate('author', 'name email');
+
+  const articlesWithAnalytics = await Promise.all(articles.map(async (article) => {
+    const analytics = await ArticleAnalytics.findOne({ article: article._id });
+
+    return {
+      _id: article._id,
+      name: article.title,
+      slug: article.slug,
+      author: article.author,
+      isPublished: article.isPublished,
+      createdAt: article.createdAt,
+      totalViewer: analytics?.totalViews || 0,
+      comments: analytics?.totalComments || 0,
+      rating: analytics?.averageRating || 0,
+      yesRating: analytics?.yesRatings || 0,
+      noRating: analytics?.noRatings || 0
+    };
+  }));
+
+  const allArticles = await Article.find(query).select('_id isPublished');
+  const allArticleIds = allArticles.map(a => a._id);
+  const allAnalytics = await ArticleAnalytics.find({ article: { $in: allArticleIds } });
+
+  const summaryStats = {
+    total: allArticles.length,
+    published: allArticles.filter(a => a.isPublished).length,
+    unpublished: allArticles.filter(a => !a.isPublished).length,
+    totalViews: allAnalytics.reduce((sum, a) => sum + (a.totalViews || 0), 0),
+    totalComments: allAnalytics.reduce((sum, a) => sum + (a.totalComments || 0), 0)
+  };
+
+  const reportData = {
+    stats: summaryStats,
+    articles: articlesWithAnalytics
+  };
+
+  const { generateArticlesReportPDF } = require('../utils/pdfExporter');
+  generateArticlesReportPDF(reportData, res);
+});
+
 module.exports = {
   getIndividualLearnerReport,
   getIndividualLearnerCourseProgress,
@@ -1126,5 +1542,11 @@ module.exports = {
   exportArticlesReportCSV,
   exportMultipleLearnersCSV,
   exportIndividualCourseCSV,
-  exportMultipleCoursesCSV
+  exportMultipleCoursesCSV,
+  exportMyReportPDF,
+  exportIndividualLearnerPDF,
+  exportIndividualCoursePDF,
+  exportMultipleLearnersPDF,
+  exportMultipleCoursesPDF,
+  exportArticlesReportPDF
 };

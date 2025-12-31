@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { ChevronRight, Download, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useGetIndividualLearnerReportQuery, useLazyExportLearnerReportCSVQuery } from '@/store/api/reportApi';
+import { useGetIndividualLearnerReportQuery, useLazyExportLearnerReportCSVQuery, useLazyExportLearnerReportPDFQuery } from '@/store/api/reportApi';
 import { toast } from 'sonner';
 
 export default function IndividualLearnerReport() {
@@ -21,7 +21,12 @@ export default function IndividualLearnerReport() {
 
     // Fetch individual learner report
     const { data, isLoading, error, refetch } = useGetIndividualLearnerReportQuery(learnerId);
+
+    // CSV export
     const [exportCSV, { isLoading: isExporting }] = useLazyExportLearnerReportCSVQuery();
+
+    // PDF export
+    const [exportPDF, { isLoading: isExportingPDF }] = useLazyExportLearnerReportPDFQuery();
 
     const reportData = data?.data;
     const learner = reportData?.learner;
@@ -42,10 +47,30 @@ export default function IndividualLearnerReport() {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
-            toast.success('Report exported successfully');
+            toast.success('CSV report exported successfully');
         } catch (err) {
             console.error('Export error:', err);
-            toast.error('Failed to export report');
+            toast.error('Failed to export CSV report');
+        }
+    };
+
+    // Handle PDF export
+    const handleExportPDF = async () => {
+        try {
+            const result = await exportPDF(learnerId).unwrap();
+
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `learner-${learner?.name || learnerId}-report-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export PDF report');
         }
     };
 
@@ -122,19 +147,38 @@ export default function IndividualLearnerReport() {
                 </h1>
                 <div className="flex items-center gap-4">
                     <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
                         onClick={handleExportCSV}
                         disabled={isExporting}
+                        variant="outline"
+                        className="flex items-center gap-2"
                     >
                         {isExporting ? (
                             <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Exporting...
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting CSV...
                             </>
                         ) : (
                             <>
-                                <Download className="w-4 h-4 mr-2" />
-                                Export as CSV
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        onClick={handleExportPDF}
+                        disabled={isExportingPDF}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExportingPDF ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export PDF
                             </>
                         )}
                     </Button>

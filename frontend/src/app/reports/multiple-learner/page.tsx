@@ -6,13 +6,15 @@ import { Pagination } from '@/components/reports/Pagination';
 import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
 import { AdvancedFilters } from '@/components/reports/AdvancedFilters';
 import { ProgressBar } from '@/components/reports/ProgressBar';
+import { SortableTableHeader } from '@/components/reports/SortableTableHeader';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Download, Loader2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
     useGetMultipleLearnersReportMutation,
-    useExportMultipleLearnersCSVMutation
+    useExportMultipleLearnersCSVMutation,
+    useExportMultipleLearnersPDFMutation
 } from '@/store/api/reportApi';
 import { toast } from 'sonner';
 
@@ -27,6 +29,8 @@ export default function MultipleLearnerReport() {
         end: null
     });
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+    const [sortBy, setSortBy] = useState<string>('name');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     // Debounce search
     useEffect(() => {
@@ -40,9 +44,14 @@ export default function MultipleLearnerReport() {
 
     // Fetch multiple learners report
     const [fetchReport, { data, isLoading, error }] = useGetMultipleLearnersReportMutation();
+
+    // CSV export
     const [exportCSV, { isLoading: isExporting }] = useExportMultipleLearnersCSVMutation();
 
-    // Fetch data on mount and when search/page/date range/status changes
+    // PDF export
+    const [exportPDF, { isLoading: isExportingPDF }] = useExportMultipleLearnersPDFMutation();
+
+    // Fetch data on mount and when search/page/date range/status/sorting changes
     useEffect(() => {
         fetchReport({
             search: debouncedSearch || undefined,
@@ -50,9 +59,11 @@ export default function MultipleLearnerReport() {
             limit: pageSize,
             startDate: dateRange.start,
             endDate: dateRange.end,
-            status: selectedStatus || undefined
+            status: selectedStatus || undefined,
+            sortBy,
+            sortOrder
         });
-    }, [debouncedSearch, currentPage, pageSize, dateRange, selectedStatus, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, dateRange, selectedStatus, sortBy, sortOrder, fetchReport]);
 
     const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
         setDateRange({ start: startDate, end: endDate });
@@ -62,6 +73,12 @@ export default function MultipleLearnerReport() {
     const handleStatusChange = (status: string | null) => {
         setSelectedStatus(status);
         setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handleSort = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+        setSortBy(newSortBy);
+        setSortOrder(newSortOrder);
+        setCurrentPage(1); // Reset to first page when sorting changes
     };
 
     const reportData = data?.data;
@@ -84,10 +101,35 @@ export default function MultipleLearnerReport() {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
-            toast.success('Report exported successfully');
+            toast.success('CSV report exported successfully');
         } catch (err) {
             console.error('Export error:', err);
-            toast.error('Failed to export report');
+            toast.error('Failed to export CSV report');
+        }
+    };
+
+    // Handle PDF export
+    const handleExportPDF = async () => {
+        try {
+            const result = await exportPDF({
+                search: debouncedSearch || undefined,
+                startDate: dateRange.start,
+                endDate: dateRange.end,
+                status: selectedStatus || undefined
+            }).unwrap();
+
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `multiple-learners-report-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export PDF report');
         }
     };
 
@@ -161,19 +203,38 @@ export default function MultipleLearnerReport() {
                         label="Filter by Join Date"
                     />
                     <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
                         onClick={handleExportCSV}
                         disabled={isExporting}
+                        variant="outline"
+                        className="flex items-center gap-2"
                     >
                         {isExporting ? (
                             <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Exporting...
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting CSV...
                             </>
                         ) : (
                             <>
-                                <Download className="w-4 h-4 mr-2" />
-                                Export as CSV
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        onClick={handleExportPDF}
+                        disabled={isExportingPDF}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExportingPDF ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export PDF
                             </>
                         )}
                     </Button>
@@ -236,13 +297,55 @@ export default function MultipleLearnerReport() {
                         <thead className="bg-off-white-2 border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SL</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Learner</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email Address</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Courses Enrolled</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yet to Start</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">In Progress</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion %</th>
+                                <SortableTableHeader
+                                    label="Learner"
+                                    sortKey="name"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Email Address"
+                                    sortKey="email"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Courses Enrolled"
+                                    sortKey="coursesEnrolled"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Yet to Start"
+                                    sortKey="yetToStart"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="In Progress"
+                                    sortKey="inProgress"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Completed"
+                                    sortKey="completed"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
+                                <SortableTableHeader
+                                    label="Completion %"
+                                    sortKey="completionPercentage"
+                                    currentSortBy={sortBy}
+                                    currentSortOrder={sortOrder}
+                                    onSort={handleSort}
+                                />
                                 <th className="px-6 py-3"></th>
                             </tr>
                         </thead>

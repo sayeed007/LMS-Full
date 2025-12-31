@@ -15,7 +15,13 @@ const {
   exportArticlesReportCSV,
   exportMultipleLearnersCSV,
   exportIndividualCourseCSV,
-  exportMultipleCoursesCSV
+  exportMultipleCoursesCSV,
+  exportMyReportPDF,
+  exportIndividualLearnerPDF,
+  exportIndividualCoursePDF,
+  exportMultipleLearnersPDF,
+  exportMultipleCoursesPDF,
+  exportArticlesReportPDF
 } = require('../controllers/reportController');
 
 const router = express.Router();
@@ -271,7 +277,7 @@ router.post(
  */
 router.get('/articles', getArticlesReport);
 
-// Export routes
+// CSV Export routes
 router.get('/my-report/export/csv', exportMyReportCSV);
 router.get('/learner/:id/export/csv', exportLearnerReportCSV);
 router.get('/articles/export/csv', exportArticlesReportCSV);
@@ -289,6 +295,30 @@ router.post(
   '/courses/export/csv',
   restrictTo('instructor', 'org_admin', 'super_admin'),
   exportMultipleCoursesCSV
+);
+
+// PDF Export routes
+router.get('/my-report/export/pdf', exportMyReportPDF);
+router.get(
+  '/learner/:id/export/pdf',
+  restrictTo('org_admin', 'super_admin'),
+  exportIndividualLearnerPDF
+);
+router.get('/articles/export/pdf', exportArticlesReportPDF);
+router.post(
+  '/learners/export/pdf',
+  restrictTo('org_admin', 'super_admin'),
+  exportMultipleLearnersPDF
+);
+router.get(
+  '/course/:id/export/pdf',
+  restrictTo('instructor', 'org_admin', 'super_admin'),
+  exportIndividualCoursePDF
+);
+router.post(
+  '/courses/export/pdf',
+  restrictTo('instructor', 'org_admin', 'super_admin'),
+  exportMultipleCoursesPDF
 );
 
 module.exports = router;

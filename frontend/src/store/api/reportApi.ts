@@ -162,6 +162,8 @@ export interface MultipleLearnersRequest {
   courseId?: string;
   limit?: number;
   page?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
   startDate?: string | null;
   endDate?: string | null;
 }
@@ -173,6 +175,8 @@ export interface ArticlesReportParams {
   page?: number;
   startDate?: string | null;
   endDate?: string | null;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface LearnerListItem {
@@ -266,6 +270,8 @@ export interface MultipleCoursesRequest {
   page?: number;
   startDate?: string | null;
   endDate?: string | null;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // RTK Query API
@@ -407,6 +413,54 @@ export const reportApi = baseApi.injectEndpoints({
         responseHandler: (response) => response.blob(),
       }),
     }),
+
+    // PDF Export Endpoints
+    exportMyReportPDF: builder.query<Blob, void>({
+      query: () => ({
+        url: '/reports/my-report/export/pdf',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    exportLearnerReportPDF: builder.query<Blob, string>({
+      query: (learnerId) => ({
+        url: `/reports/learner/${learnerId}/export/pdf`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    exportArticlesReportPDF: builder.query<Blob, ArticlesReportParams | void>({
+      query: (params) => ({
+        url: '/reports/articles/export/pdf',
+        params: params || {},
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    exportMultipleLearnersPDF: builder.mutation<Blob, MultipleLearnersRequest>({
+      query: (data) => ({
+        url: '/reports/learners/export/pdf',
+        method: 'POST',
+        body: data,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    exportIndividualCoursePDF: builder.query<Blob, string>({
+      query: (courseId) => ({
+        url: `/reports/course/${courseId}/export/pdf`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    exportMultipleCoursesPDF: builder.mutation<Blob, MultipleCoursesRequest>({
+      query: (data) => ({
+        url: '/reports/courses/export/pdf',
+        method: 'POST',
+        body: data,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
@@ -426,4 +480,10 @@ export const {
   useExportMultipleLearnersCSVMutation,
   useLazyExportIndividualCourseCSVQuery,
   useExportMultipleCoursesCSVMutation,
+  useLazyExportMyReportPDFQuery,
+  useLazyExportLearnerReportPDFQuery,
+  useLazyExportArticlesReportPDFQuery,
+  useExportMultipleLearnersPDFMutation,
+  useLazyExportIndividualCoursePDFQuery,
+  useExportMultipleCoursesPDFMutation,
 } = reportApi;

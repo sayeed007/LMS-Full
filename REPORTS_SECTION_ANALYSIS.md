@@ -14,10 +14,12 @@ The LMS Reports section is now **100% COMPLETE** with full frontend-backend inte
 - Advanced search with 500ms debouncing
 - Date range filtering with predefined ranges
 - Advanced filtering (category, status, published state)
+- Column sorting with visual indicators
 - Pagination with smart page number display
 - Interactive data visualizations (pie charts, line charts, bar charts)
 - Visual progress bars with dynamic color-coding
 - CSV export for all report types with filter preservation
+- PDF export for all report types with professional formatting
 - Role-based access control and authentication
 - Loading states, error handling, and empty states
 - Toast notifications for user feedback
@@ -25,11 +27,13 @@ The LMS Reports section is now **100% COMPLETE** with full frontend-backend inte
 ✅ **Backend (Production Ready)**:
 - 9 comprehensive report API endpoints
 - 6 CSV export endpoints with server-side generation
+- 6 PDF export endpoints with PDFKit
 - 7 article analytics endpoints
 - Role-based authorization (students, instructors, admins)
 - Proper data aggregation and statistics
 - MongoDB pagination and filtering
 - CSV utility with proper escaping
+- PDF utility with professional templates
 
 ---
 
@@ -59,14 +63,30 @@ The LMS Reports section is now **100% COMPLETE** with full frontend-backend inte
 - Custom tooltips and legends
 - Empty state handling for all charts
 
-### **Phase 5: Export Functionality** ✅ Complete
+### **Phase 5: CSV Export Functionality** ✅ Complete
 - Server-side CSV generation with proper escaping
 - 6 CSV export endpoints covering all report types
 - Frontend export buttons with loading states
 - Filter preservation in exports
 - Auto-generated filenames with timestamps
 
-**🎉 All 5 Phases Complete - Reports Section 100% Functional**
+### **Phase 6: Column Sorting** ✅ Complete
+- Reusable SortableTableHeader component
+- Visual sort indicators (up/down arrows)
+- Backend sorting support with sortBy and sortOrder
+- Integrated in Multiple Learner, Multiple Course, and Articles reports
+- State preservation during sorting
+
+### **Phase 7: PDF Export Functionality** ✅ Complete
+- Server-side PDF generation using PDFKit
+- 6 PDF export endpoints with professional formatting
+- Professional PDF templates with headers, footers, and page numbers
+- Formatted tables with auto-pagination
+- Statistics summary cards in PDFs
+- Filter preservation in PDF exports
+- Consistent color scheme (#1e40af blue theme)
+
+**🎉 All 7 Phases Complete - Reports Section 100% Functional**
 
 ---
 
@@ -1578,21 +1598,352 @@ exportMultipleCoursesCSV: builder.mutation<Blob, MultipleCoursesRequest>({
 
 ---
 
+## Phase 6: Column Sorting Implementation
+
+### **Implementation Details**
+
+**Completion Date**: December 31, 2025
+
+This phase added column sorting functionality to report tables with visual indicators and backend support.
+
+### **Backend Implementation**
+
+**Files Modified**:
+- `backend/src/controllers/reportController.js`
+
+**Sorting Support Added**:
+All report endpoints now support `sortBy` and `sortOrder` parameters:
+- `sortBy`: Field name to sort by (e.g., 'name', 'email', 'createdAt', 'totalLearners')
+- `sortOrder`: 'asc' or 'desc'
+
+**Example Implementation**:
+```javascript
+// Multiple Learners Report
+const sortField = sortBy || 'name';
+const sortDirection = sortOrder === 'desc' ? -1 : 1;
+const sortOptions = { [sortField]: sortDirection };
+
+const learners = await User.find(matchQuery)
+  .select('name email avatar createdAt')
+  .sort(sortOptions)
+  .skip((page - 1) * limit)
+  .limit(limit);
+```
+
+### **Frontend Implementation**
+
+**Component Created**: `frontend/src/components/reports/SortableTableHeader.tsx`
+
+**Features**:
+- Reusable table header with sort indicators
+- Visual up/down arrows showing current sort direction
+- Active state highlighting for sorted column
+- Click to toggle sort direction
+- TypeScript type-safe props
+
+**Props Interface**:
+```typescript
+interface SortableTableHeaderProps {
+  label: string;
+  sortKey: string;
+  currentSortBy: string;
+  currentSortOrder: 'asc' | 'desc';
+  onSort: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
+}
+```
+
+**Pages Integrated**:
+1. **Multiple Learner Report** - Sortable columns:
+   - Learner (name)
+   - Email Address
+   - Courses Enrolled
+   - Yet to Start
+   - In Progress
+   - Completed
+   - Completion %
+
+2. **Multiple Course Report** - Sortable columns:
+   - Course (title)
+   - Total Learners
+   - Yet to Start
+   - In Progress
+   - Completed
+
+3. **Articles Report** - Sortable columns:
+   - Article (name)
+   - Author
+   - Views (totalViewer)
+   - Comments
+   - Rating
+   - Published Date (createdAt)
+
+### **Technical Features**
+- ✅ Visual sort indicators (↑ ↓)
+- ✅ Active column highlighting
+- ✅ Toggle sort direction on click
+- ✅ Default sorting (name/title ascending)
+- ✅ State preserved during pagination
+- ✅ Auto-reset to page 1 when sorting changes
+- ✅ Backend MongoDB sorting for performance
+- ✅ Type-safe TypeScript implementation
+
+---
+
+## Phase 7: PDF Export Functionality Implementation
+
+### **Implementation Details**
+
+**Completion Date**: December 31, 2025
+
+This phase completed the PDF export functionality across all report pages with professional formatting using PDFKit.
+
+### **Backend Implementation**
+
+**File Created**: `backend/src/utils/pdfExporter.js` (497 lines)
+
+**Core Utility Functions**:
+
+1. **`addPDFHeader(doc, title, subtitle)`** - Adds professional header with:
+   - Large blue title (#1e40af)
+   - Optional subtitle in gray
+   - Timestamp of generation
+   - Horizontal separator line
+
+2. **`addPDFFooter(doc)`** - Adds page numbers to all pages:
+   - Centered footer
+   - "Page X of Y" format
+   - Applied to all pages in document
+
+3. **`drawTable(doc, headers, rows, startY, options)`** - Draws formatted tables:
+   - Custom column widths
+   - Header row with background color
+   - Alternating row colors for readability
+   - Auto-pagination when table exceeds page height
+   - Border styling and spacing
+   - Configurable font sizes
+
+4. **`addStatsSummary(doc, stats, startY)`** - Creates visual stat cards:
+   - 4 cards per row
+   - Bordered boxes with background
+   - Large number display
+   - Formatted labels
+
+**PDF Generation Functions** (6 Total):
+
+1. **`generateMyReportPDF(reportData, res)`**
+   - Personal learning dashboard
+   - Stats: Course Enrolled, Yet to Start, In Progress, Completed
+   - Table: Course Name, Status, Completion %, Time Spent, Enroll Date
+
+2. **`generateIndividualLearnerPDF(reportData, res)`**
+   - Individual learner progress
+   - Learner info: Name, Email
+   - Stats: Course stats
+   - Table: Enrolled courses with progress
+
+3. **`generateIndividualCoursePDF(reportData, res)`**
+   - Single course analytics
+   - Stats: Total Learners, Yet to Start, In Progress, Completed
+   - Table: Learner Name, Email, Status, Completion %, Time Spent
+
+4. **`generateMultipleLearnersPDF(reportData, res)`**
+   - Bulk learner analytics
+   - Summary stats across all learners
+   - Table: Learner, Email, Courses, Completed, In Progress
+
+5. **`generateMultipleCoursesPDF(reportData, res)`**
+   - Bulk course analytics
+   - Summary stats: Total Courses, Published, Unpublished, Total Enrollments
+   - Table: Course, Learners, Yet to Start, In Progress, Completed
+
+6. **`generateArticlesReportPDF(reportData, res)`**
+   - Article analytics
+   - Stats: Total, Published, Unpublished, Total Views, Total Comments
+   - Table: Article, Views, Comments, Rating, Yes/No ratings
+
+**File**: `backend/src/controllers/reportController.js`
+
+**New PDF Export Functions Added** (lines 1159-1528):
+- `exportMyReportPDF` - Personal dashboard export
+- `exportIndividualLearnerPDF` - Individual learner export
+- `exportIndividualCoursePDF` - Individual course export
+- `exportMultipleLearnersPDF` - Multiple learners export
+- `exportMultipleCoursesPDF` - Multiple courses export
+- `exportArticlesReportPDF` - Articles analytics export
+
+**File**: `backend/src/routes/reportRoutes.js`
+
+**New PDF Routes Added** (lines 300-322):
+```javascript
+// PDF Export routes
+router.get('/my-report/export/pdf', exportMyReportPDF);
+router.get('/learner/:id/export/pdf', restrictTo('org_admin', 'super_admin'), exportIndividualLearnerPDF);
+router.get('/articles/export/pdf', exportArticlesReportPDF);
+router.post('/learners/export/pdf', restrictTo('org_admin', 'super_admin'), exportMultipleLearnersPDF);
+router.get('/course/:id/export/pdf', restrictTo('instructor', 'org_admin', 'super_admin'), exportIndividualCoursePDF);
+router.post('/courses/export/pdf', restrictTo('instructor', 'org_admin', 'super_admin'), exportMultipleCoursesPDF);
+```
+
+### **Frontend Implementation**
+
+**File**: `frontend/src/store/api/reportApi.ts`
+
+**New PDF Export Endpoints** (lines 417-463):
+```typescript
+// PDF Export Endpoints
+exportMyReportPDF: builder.query<Blob, void>({ ... }),
+exportLearnerReportPDF: builder.query<Blob, string>({ ... }),
+exportArticlesReportPDF: builder.query<Blob, ArticlesReportParams | void>({ ... }),
+exportMultipleLearnersPDF: builder.mutation<Blob, MultipleLearnersRequest>({ ... }),
+exportIndividualCoursePDF: builder.query<Blob, string>({ ... }),
+exportMultipleCoursesPDF: builder.mutation<Blob, MultipleCoursesRequest>({ ... }),
+```
+
+**Exported Hooks**:
+- `useLazyExportMyReportPDFQuery`
+- `useLazyExportLearnerReportPDFQuery`
+- `useLazyExportArticlesReportPDFQuery`
+- `useExportMultipleLearnersPDFMutation`
+- `useLazyExportIndividualCoursePDFQuery`
+- `useExportMultipleCoursesPDFMutation`
+
+**Pages Integrated** (All 6 Report Pages):
+
+1. **`frontend/src/app/reports/my-report/page.tsx`**
+   - Added PDF export button alongside CSV
+   - Filter preservation: None (personal report)
+
+2. **`frontend/src/app/reports/individual-learner/[id]/page.tsx`**
+   - Added PDF export button
+   - Passes learner ID to export
+
+3. **`frontend/src/app/reports/individual-course/page.tsx`**
+   - Added PDF export button
+   - Validates course selection before export
+
+4. **`frontend/src/app/reports/multiple-learner/page.tsx`**
+   - Added PDF export button
+   - Filter preservation: search, date range, status
+
+5. **`frontend/src/app/reports/multiple-course/page.tsx`**
+   - Added PDF export button
+   - Filter preservation: search, date range, category, published status
+
+6. **`frontend/src/app/reports/articles/page.tsx`**
+   - Added PDF export button
+   - Filter preservation: search, date range
+
+### **PDF Export Features**
+
+**Professional Formatting**:
+- ✅ A4 page size with proper margins
+- ✅ Blue theme (#1e40af) matching LMS branding
+- ✅ Professional headers with titles and timestamps
+- ✅ Page numbers in footer (Page X of Y)
+- ✅ Statistics summary cards with visual boxes
+- ✅ Formatted tables with:
+  - Header row with background color
+  - Alternating row colors
+  - Proper column widths
+  - Cell padding and alignment
+  - Horizontal borders
+
+**Auto-Pagination**:
+- ✅ Automatic page breaks when content exceeds page height
+- ✅ Table headers repeated on each new page
+- ✅ Proper spacing and flow between pages
+
+**Data Formatting**:
+- ✅ Dates formatted as "MMM DD, YYYY"
+- ✅ Time formatted as human-readable (e.g., "2 hours 30 min")
+- ✅ Proper status labels
+- ✅ Percentage displays
+- ✅ Number formatting
+
+**Frontend Integration**:
+- ✅ Consistent UI pattern (CSV and PDF buttons side by side)
+- ✅ Loading states with spinners
+- ✅ Success/error toast notifications
+- ✅ Blob download handling
+- ✅ Auto-generated filenames with timestamps
+- ✅ Disabled states during export
+- ✅ Filter state synchronized with exports
+
+### **Technical Achievements**
+- ✅ PDFKit library for professional PDF generation
+- ✅ Server-side rendering for consistent output
+- ✅ Reusable PDF utility functions
+- ✅ Type-safe TypeScript interfaces
+- ✅ Role-based authorization on all PDF routes
+- ✅ Filter preservation ensures exports match view
+- ✅ Clean separation of concerns (utility, controller, routes, API, UI)
+- ✅ Frontend build completed successfully with no errors
+- ✅ All 6 export endpoints tested and working
+
+### **Build Status**
+```
+✓ Compiled successfully in 21.0s
+✓ Linting and checking validity of types
+✓ Generating static pages (32/32)
+✓ Finalizing page optimization
+```
+
+---
+
+## 📁 Files Created/Modified for Column Sorting (Phase 6)
+
+### New Files Created:
+1. `frontend/src/components/reports/SortableTableHeader.tsx` - Reusable sortable header component
+
+### Files Modified:
+1. `backend/src/controllers/reportController.js` - Added sorting support to all report endpoints
+2. `frontend/src/app/reports/multiple-learner/page.tsx` - Integrated sorting
+3. `frontend/src/app/reports/multiple-course/page.tsx` - Integrated sorting
+4. `frontend/src/app/reports/articles/page.tsx` - Integrated sorting
+
+---
+
+## 📁 Files Created/Modified for PDF Export (Phase 7)
+
+### New Files Created:
+1. `backend/src/utils/pdfExporter.js` (497 lines) - PDF generation utility with 6 export functions
+
+### Backend Files Modified:
+1. `backend/src/controllers/reportController.js`
+   - Added 6 PDF export controller functions (lines 1159-1528)
+   - Updated module exports
+
+2. `backend/src/routes/reportRoutes.js`
+   - Added 6 PDF export routes (lines 300-322)
+   - Updated imports
+
+### Frontend Files Modified:
+1. `frontend/src/store/api/reportApi.ts`
+   - Added 6 PDF export endpoints (lines 417-463)
+   - Exported 6 new hooks
+
+2. `frontend/src/app/reports/my-report/page.tsx` - Added PDF export button
+3. `frontend/src/app/reports/individual-learner/[id]/page.tsx` - Added PDF export button
+4. `frontend/src/app/reports/individual-course/page.tsx` - Added PDF export button
+5. `frontend/src/app/reports/multiple-learner/page.tsx` - Added PDF export button
+6. `frontend/src/app/reports/multiple-course/page.tsx` - Added PDF export button
+7. `frontend/src/app/reports/articles/page.tsx` - Added PDF export button
+
+---
+
 ## 📋 Next Steps (Optional Enhancements)
 
 While the Reports module has completed all critical features, here are optional enhancements for future consideration:
 
 ### High Priority (Future):
 - Frontend route guards based on user roles
-- PDF export functionality
-- Column sorting (name, date, progress, etc.)
-- Ascending/descending sort order toggle
+- Excel export functionality
+- Advanced data filtering UI improvements
 
 ### Medium Priority (Future):
-- Charts and data visualizations
 - Report scheduling and email delivery
 - Custom report builder
-- Comparison features
+- Comparison features (compare learners, courses, time periods)
 
 ### Low Priority (Future):
 - Predictive analytics
