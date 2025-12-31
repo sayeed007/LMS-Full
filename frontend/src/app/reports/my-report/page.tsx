@@ -2,6 +2,8 @@
 import { GoBackRoute } from '@/components/reports/GoBackRoute'
 import { StatsCard } from '@/components/reports/StatsCard'
 import { StatusBadge } from '@/components/reports/StatusBadge'
+import { ProgressBar } from '@/components/reports/ProgressBar'
+import { CompletionChart } from '@/components/reports/CompletionChart'
 import { Button } from '@/components/ui/button'
 import { ChevronRight, Download, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -160,6 +162,18 @@ export default function MyReportPage() {
                 />
             </div>
 
+            {/* Completion Chart */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Course Completion Overview</h2>
+                <CompletionChart
+                    completed={stats?.completed || 0}
+                    inProgress={stats?.inProgress || 0}
+                    yetToStart={stats?.yetToStart || 0}
+                    showLegend={true}
+                    height={300}
+                />
+            </div>
+
             {/* Course Table */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
@@ -205,8 +219,13 @@ export default function MyReportPage() {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {course.timeSpent}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {course.completion || course.completionPercentage || 0}%
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <ProgressBar
+                                            value={course.completion || course.completionPercentage || 0}
+                                            showLabel={true}
+                                            height="md"
+                                            className="min-w-[150px]"
+                                        />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <StatusBadge status={course.status} />

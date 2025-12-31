@@ -4,6 +4,8 @@ import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
 import { StatusBadge } from '@/components/reports/StatusBadge';
 import { ProgressBar } from '@/components/reports/ProgressBar';
+import { CompletionChart } from '@/components/reports/CompletionChart';
+import { ProgressOverTimeChart } from '@/components/reports/ProgressOverTimeChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronRight, Download, Loader2 } from 'lucide-react';
@@ -193,6 +195,30 @@ export default function IndividualLearnerReport() {
                         title="Completed"
                         value={stats?.completed || 0}
                     />
+                </div>
+
+                {/* Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Completion Overview Chart */}
+                    <Card className="p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Course Completion Overview</h2>
+                        <CompletionChart
+                            completed={stats?.completed || 0}
+                            inProgress={stats?.inProgress || 0}
+                            yetToStart={stats?.yetToStart || 0}
+                            showLegend={true}
+                            height={250}
+                        />
+                    </Card>
+
+                    {/* Progress Over Time Chart - Placeholder for future backend integration */}
+                    <Card className="p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Progress Over Time</h2>
+                        <ProgressOverTimeChart
+                            data={[]}
+                            height={250}
+                        />
+                    </Card>
                 </div>
 
                 {/* Courses Table */}

@@ -2,6 +2,8 @@
 "use client";
 import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
+import { ProgressBar } from '@/components/reports/ProgressBar';
+import { EngagementMetricsChart } from '@/components/reports/EngagementMetricsChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/ui/CustomSelect';
@@ -188,6 +190,23 @@ export default function IndividualCourseReportPage() {
                         />
                     </div>
 
+                    {/* Engagement Metrics Chart */}
+                    {lessonStats.length > 0 && (
+                        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Lesson Engagement Overview</h2>
+                            <EngagementMetricsChart
+                                data={lessonStats.slice(0, 10).map(lesson => ({
+                                    name: lesson.lesson.length > 20 ? lesson.lesson.substring(0, 20) + '...' : lesson.lesson,
+                                    enrollments: lesson.yetToStart + lesson.inProgress + lesson.completed,
+                                    completed: lesson.completed,
+                                    inProgress: lesson.inProgress,
+                                    yetToStart: lesson.yetToStart
+                                }))}
+                                height={350}
+                            />
+                        </div>
+                    )}
+
                     {/* Tabs */}
                     <div className="flex border-b border-gray-200 mb-0">
                         <button
@@ -246,7 +265,14 @@ export default function IndividualCourseReportPage() {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(user.enrollDate)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(user.completedDate)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatTimeSpent(user.timeSpent)}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.completionPercentage}%</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <ProgressBar
+                                                        value={user.completionPercentage}
+                                                        showLabel={true}
+                                                        height="md"
+                                                        className="min-w-[150px]"
+                                                    />
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <Badge variant="secondary" className={getStatusBadgeClass(user.status)}>
                                                         {user.status}
