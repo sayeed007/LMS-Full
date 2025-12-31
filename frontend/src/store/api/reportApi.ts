@@ -391,6 +391,22 @@ export const reportApi = baseApi.injectEndpoints({
         responseHandler: (response) => response.blob(),
       }),
     }),
+
+    exportIndividualCourseCSV: builder.query<Blob, string>({
+      query: (courseId) => ({
+        url: `/reports/course/${courseId}/export/csv`,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
+
+    exportMultipleCoursesCSV: builder.mutation<Blob, MultipleCoursesRequest>({
+      query: (data) => ({
+        url: '/reports/courses/export/csv',
+        method: 'POST',
+        body: data,
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
@@ -408,4 +424,6 @@ export const {
   useLazyExportLearnerReportCSVQuery,
   useLazyExportArticlesReportCSVQuery,
   useExportMultipleLearnersCSVMutation,
+  useLazyExportIndividualCourseCSVQuery,
+  useExportMultipleCoursesCSVMutation,
 } = reportApi;

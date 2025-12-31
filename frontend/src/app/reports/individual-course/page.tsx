@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { ArrowRight, Download, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useGetCoursesListQuery, useGetIndividualCourseReportQuery } from '@/store/api/reportApi';
+import { useGetCoursesListQuery, useGetIndividualCourseReportQuery, useLazyExportIndividualCourseCSVQuery } from '@/store/api/reportApi';
 import { toast } from 'sonner';
 
 // Helper function to format time
@@ -64,6 +64,9 @@ export default function IndividualCourseReportPage() {
         { skip: !selectedCourse }
     );
 
+    // CSV export
+    const [exportCSV, { isLoading: isExporting }] = useLazyExportIndividualCourseCSVQuery();
+
     // Auto-select first course when list loads
     useEffect(() => {
         if (courses.length > 0 && !selectedCourse) {
@@ -88,6 +91,30 @@ export default function IndividualCourseReportPage() {
     const stats = report?.stats;
     const users = report?.users || [];
     const lessonStats = report?.lessonStats || [];
+
+    // Handle CSV export
+    const handleExportCSV = async () => {
+        if (!selectedCourse) {
+            toast.error('Please select a course to export');
+            return;
+        }
+
+        try {
+            const result = await exportCSV(selectedCourse).unwrap();
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `individual-course-report-${Date.now()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export report');
+        }
+    };
 
 
     const UserAvatar = ({ name }: { name: string }) => {
@@ -130,7 +157,24 @@ export default function IndividualCourseReportPage() {
                     </div>
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Individual Course Report</h1>
-                <div className="w-[140px]"></div>
+                <Button
+                    onClick={handleExportCSV}
+                    disabled={!selectedCourse || isExporting}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                >
+                    {isExporting ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Exporting...
+                        </>
+                    ) : (
+                        <>
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </>
+                    )}
+                </Button>
             </div>
 
             {/* Content when no course selected */}

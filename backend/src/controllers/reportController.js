@@ -989,6 +989,128 @@ const getLearnersList = catchAsync(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Export individual course report as CSV
+ * @route   GET /api/v1/reports/course/:id/export/csv
+ * @access  Private (Instructor for own courses, Admin for all)
+ */
+const exportIndividualCourseCSV = catchAsync(async (req, res, next) => {
+  const courseId = req.params.id;
+  const requestingUser = req.user;
+
+  // Get course
+  const course = await Course.findById(courseId)
+    .populate('instructor', 'name email');
+
+  if (!course) {
+    return next(new AppError('Course not found', 404));
+  }
+
+  // Authorization check for instructors
+  if (
+    requestingUser.role === 'instructor' &&
+    course.instructor._id.toString() !== requestingUser._id.toString()
+  ) {
+    return next(new AppError('You can only export reports for your own courses', 403));
+  }
+
+  // Get all enrollments for the course
+  const enrollments = await Enrollment.find({ course: courseId })
+    .populate('user', 'name email');
+
+  const csvData = enrollments.map((enrollment, index) => ({
+    sl: index + 1,
+    learner: enrollment.user?.name || 'N/A',
+    email: enrollment.user?.email || 'N/A',
+    enrollDate: formatDateForCSV(enrollment.enrolledAt),
+    completedDate: enrollment.completedAt ? formatDateForCSV(enrollment.completedAt) : '--',
+    timeSpent: formatTimeForCSV(enrollment.progress.timeSpent || 0),
+    completionPercentage: enrollment.progress.completionPercentage || 0,
+    status: getStatusText(enrollment)
+  }));
+
+  const headers = [
+    { label: 'SL', key: 'sl' },
+    { label: 'Learner', key: 'learner' },
+    { label: 'Email Address', key: 'email' },
+    { label: 'Enroll Date', key: 'enrollDate' },
+    { label: 'Completed Date', key: 'completedDate' },
+    { label: 'Time Spent', key: 'timeSpent' },
+    { label: 'Completion Percentage', key: 'completionPercentage' },
+    { label: 'Status', key: 'status' }
+  ];
+
+  const csv = convertToCSV(csvData, headers);
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename=course-${course.title.replace(/[^a-z0-9]/gi, '-')}-report-${Date.now()}.csv`);
+  res.status(200).send(csv);
+});
+
+/**
+ * @desc    Export multiple courses report as CSV
+ * @route   POST /api/v1/reports/courses/export/csv
+ * @access  Private (Instructor, Admin)
+ */
+const exportMultipleCoursesCSV = catchAsync(async (req, res, next) => {
+  const { search } = req.body;
+  const requestingUser = req.user;
+
+  // Build query
+  let query = {};
+
+  // Add search filter
+  if (search) {
+    query.title = { $regex: search, $options: 'i' };
+  }
+
+  // If instructor, only show their courses
+  if (requestingUser.role === 'instructor') {
+    query.instructor = requestingUser._id;
+  }
+
+  // Get courses
+  const courses = await Course.find(query)
+    .select('title description category level isPublished createdAt')
+    .sort({ createdAt: -1 });
+
+  const coursesWithStats = await Promise.all(courses.map(async (course, index) => {
+    const enrollments = await Enrollment.find({ course: course._id });
+
+    return {
+      sl: index + 1,
+      course: course.title,
+      description: course.description || 'N/A',
+      category: course.category || 'N/A',
+      level: course.level || 'N/A',
+      published: course.isPublished ? 'Yes' : 'No',
+      totalLearners: enrollments.length,
+      yetToStart: enrollments.filter(e => e.progress.completionPercentage === 0).length,
+      inProgress: enrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+      completed: enrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
+    };
+  }));
+
+  const headers = [
+    { label: 'SL', key: 'sl' },
+    { label: 'Course', key: 'course' },
+    { label: 'Description', key: 'description' },
+    { label: 'Category', key: 'category' },
+    { label: 'Level', key: 'level' },
+    { label: 'Published', key: 'published' },
+    { label: 'Total Learners', key: 'totalLearners' },
+    { label: 'Yet to Start', key: 'yetToStart' },
+    { label: 'In Progress', key: 'inProgress' },
+    { label: 'Completed', key: 'completed' }
+  ];
+
+  const csv = convertToCSV(coursesWithStats, headers);
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename=multiple-courses-report-${Date.now()}.csv`);
+  res.status(200).send(csv);
+});
+
 module.exports = {
   getIndividualLearnerReport,
   getIndividualLearnerCourseProgress,
@@ -1002,5 +1124,7 @@ module.exports = {
   exportMyReportCSV,
   exportLearnerReportCSV,
   exportArticlesReportCSV,
-  exportMultipleLearnersCSV
+  exportMultipleLearnersCSV,
+  exportIndividualCourseCSV,
+  exportMultipleCoursesCSV
 };

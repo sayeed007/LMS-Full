@@ -13,7 +13,9 @@ const {
   exportMyReportCSV,
   exportLearnerReportCSV,
   exportArticlesReportCSV,
-  exportMultipleLearnersCSV
+  exportMultipleLearnersCSV,
+  exportIndividualCourseCSV,
+  exportMultipleCoursesCSV
 } = require('../controllers/reportController');
 
 const router = express.Router();
@@ -277,6 +279,16 @@ router.post(
   '/learners/export/csv',
   restrictTo('instructor', 'org_admin', 'super_admin'),
   exportMultipleLearnersCSV
+);
+router.get(
+  '/course/:id/export/csv',
+  restrictTo('instructor', 'org_admin', 'super_admin'),
+  exportIndividualCourseCSV
+);
+router.post(
+  '/courses/export/csv',
+  restrictTo('instructor', 'org_admin', 'super_admin'),
+  exportMultipleCoursesCSV
 );
 
 module.exports = router;

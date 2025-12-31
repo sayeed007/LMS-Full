@@ -7,7 +7,7 @@ import { AdvancedFilters } from '@/components/reports/AdvancedFilters';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useGetMultipleCoursesReportMutation } from '@/store/api/reportApi';
+import { useGetMultipleCoursesReportMutation, useExportMultipleCoursesCSVMutation } from '@/store/api/reportApi';
 import { useGetCategoriesQuery } from '@/store/api/categoryApi';
 import { toast } from 'sonner';
 
@@ -35,6 +35,9 @@ export default function MultipleCourseReport() {
 
     // Fetch multiple courses report
     const [fetchReport, { data, isLoading, error }] = useGetMultipleCoursesReportMutation();
+
+    // CSV export
+    const [exportCSV, { isLoading: isExporting }] = useExportMultipleCoursesCSVMutation();
 
     // Fetch categories for filter
     const { data: categoriesData } = useGetCategoriesQuery({ isActive: true, limit: 100 });
@@ -74,6 +77,32 @@ export default function MultipleCourseReport() {
     const reportData = data?.data;
     const stats = reportData?.stats;
     const courses = reportData?.courses || [];
+
+    // Handle CSV export
+    const handleExportCSV = async () => {
+        try {
+            const result = await exportCSV({
+                search: debouncedSearch || undefined,
+                startDate: dateRange.start,
+                endDate: dateRange.end,
+                category: selectedCategory || undefined,
+                isPublished: selectedPublished !== null ? selectedPublished : undefined
+            }).unwrap();
+
+            const url = window.URL.createObjectURL(result);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `multiple-courses-report-${Date.now()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Report exported successfully');
+        } catch (err) {
+            console.error('Export error:', err);
+            toast.error('Failed to export report');
+        }
+    };
 
     // Handle error
     useEffect(() => {
@@ -144,6 +173,24 @@ export default function MultipleCourseReport() {
                         onDateRangeChange={handleDateRangeChange}
                         label="Filter by Created Date"
                     />
+                    <Button
+                        onClick={handleExportCSV}
+                        disabled={isExporting}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        {isExporting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Exporting...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </>
+                        )}
+                    </Button>
                 </div>
             </div>
 
