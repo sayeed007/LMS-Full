@@ -81,6 +81,20 @@ const enrollmentSchema = new mongoose.Schema({
     enum: ['active', 'completed', 'dropped', 'suspended'],
     default: 'active'
   },
+  completedAt: {
+    type: Date
+  },
+  // Reason for dropping or suspension
+  dropReason: {
+    type: String,
+    maxlength: [500, 'Drop reason cannot exceed 500 characters']
+  },
+  suspensionReason: {
+    type: String,
+    maxlength: [500, 'Suspension reason cannot exceed 500 characters']
+  },
+  droppedAt: Date,
+  suspendedAt: Date,
   // Progress tracking
   progress: {
     completedLessons: [{
