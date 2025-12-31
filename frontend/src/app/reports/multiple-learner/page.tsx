@@ -3,6 +3,7 @@
 import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
 import { Pagination } from '@/components/reports/Pagination';
+import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Download, Loader2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,10 @@ export default function MultipleLearnerReport() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [dateRange, setDateRange] = useState<{ start: string | null; end: string | null }>({
+        start: null,
+        end: null
+    });
 
     // Debounce search
     useEffect(() => {
@@ -34,14 +39,21 @@ export default function MultipleLearnerReport() {
     const [fetchReport, { data, isLoading, error }] = useGetMultipleLearnersReportMutation();
     const [exportCSV, { isLoading: isExporting }] = useExportMultipleLearnersCSVMutation();
 
-    // Fetch data on mount and when search/page changes
+    // Fetch data on mount and when search/page/date range changes
     useEffect(() => {
         fetchReport({
             search: debouncedSearch || undefined,
             page: currentPage,
-            limit: pageSize
+            limit: pageSize,
+            startDate: dateRange.start,
+            endDate: dateRange.end
         });
-    }, [debouncedSearch, currentPage, pageSize, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, dateRange, fetchReport]);
+
+    const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
+        setDateRange({ start: startDate, end: endDate });
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
 
     const reportData = data?.data;
     const summaryStats = reportData?.summaryStats;
@@ -130,6 +142,10 @@ export default function MultipleLearnerReport() {
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Multiple Learner Report</h1>
                 <div className="flex items-center gap-4">
+                    <DateRangeFilter
+                        onDateRangeChange={handleDateRangeChange}
+                        label="Filter by Join Date"
+                    />
                     <Button
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
                         onClick={handleExportCSV}

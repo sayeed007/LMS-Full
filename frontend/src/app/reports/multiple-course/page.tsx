@@ -2,6 +2,7 @@
 import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
 import { Pagination } from '@/components/reports/Pagination';
+import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -13,6 +14,10 @@ export default function MultipleCourseReport() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [dateRange, setDateRange] = useState<{ start: string | null; end: string | null }>({
+        start: null,
+        end: null
+    });
 
     // Debounce search
     useEffect(() => {
@@ -27,14 +32,21 @@ export default function MultipleCourseReport() {
     // Fetch multiple courses report
     const [fetchReport, { data, isLoading, error }] = useGetMultipleCoursesReportMutation();
 
-    // Fetch data on mount and when search/page changes
+    // Fetch data on mount and when search/page/date range changes
     useEffect(() => {
         fetchReport({
             search: debouncedSearch || undefined,
             page: currentPage,
-            limit: pageSize
+            limit: pageSize,
+            startDate: dateRange.start,
+            endDate: dateRange.end
         });
-    }, [debouncedSearch, currentPage, pageSize, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, dateRange, fetchReport]);
+
+    const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
+        setDateRange({ start: startDate, end: endDate });
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
 
     const reportData = data?.data;
     const stats = reportData?.stats;
@@ -95,7 +107,12 @@ export default function MultipleCourseReport() {
                     )}
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">Multiple Course Report</h1>
-                <div className="w-[140px]"></div>
+                <div className="flex items-center gap-4">
+                    <DateRangeFilter
+                        onDateRangeChange={handleDateRangeChange}
+                        label="Filter by Created Date"
+                    />
+                </div>
             </div>
 
             {/* Stats Cards */}

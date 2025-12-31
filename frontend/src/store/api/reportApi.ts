@@ -162,6 +162,8 @@ export interface MultipleLearnersRequest {
   courseId?: string;
   limit?: number;
   page?: number;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface ArticlesReportParams {
@@ -169,6 +171,8 @@ export interface ArticlesReportParams {
   isPublished?: boolean | string;
   limit?: number;
   page?: number;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface LearnerListItem {
@@ -260,6 +264,8 @@ export interface MultipleCoursesRequest {
   isPublished?: boolean;
   limit?: number;
   page?: number;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 // RTK Query API

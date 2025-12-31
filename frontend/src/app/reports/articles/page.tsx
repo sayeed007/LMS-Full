@@ -2,6 +2,7 @@
 import { GoBackRoute } from '@/components/reports/GoBackRoute'
 import { StatsCard } from '@/components/reports/StatsCard'
 import { Pagination } from '@/components/reports/Pagination'
+import { DateRangeFilter } from '@/components/reports/DateRangeFilter'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2, Search } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -14,6 +15,10 @@ export default function ArticlesReportPage() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const [dateRange, setDateRange] = useState<{ start: string | null; end: string | null }>({
+        start: null,
+        end: null
+    });
 
     // Debounce search
     useEffect(() => {
@@ -30,7 +35,14 @@ export default function ArticlesReportPage() {
         search: debouncedSearch || undefined,
         page: currentPage,
         limit: pageSize,
+        startDate: dateRange.start,
+        endDate: dateRange.end
     });
+
+    const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
+        setDateRange({ start: startDate, end: endDate });
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
 
     const [exportCSV, { isLoading: isExporting }] = useLazyExportArticlesReportCSVQuery();
 
@@ -145,7 +157,7 @@ export default function ArticlesReportPage() {
                 />
             </div>
 
-            {/* Search */}
+            {/* Search & Filters */}
             <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -157,6 +169,10 @@ export default function ArticlesReportPage() {
                         className="pl-10"
                     />
                 </div>
+                <DateRangeFilter
+                    onDateRangeChange={handleDateRangeChange}
+                    label="Filter by Created Date"
+                />
                 {isLoading && (
                     <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                 )}

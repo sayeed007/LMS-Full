@@ -305,7 +305,7 @@ const getIndividualCourseReport = catchAsync(async (req, res, next) => {
  * @access  Private (Admin, Instructor)
  */
 const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
-  const { search, status, courseId, limit = 10, page = 1 } = req.body;
+  const { search, status, courseId, limit = 10, page = 1, startDate, endDate } = req.body;
 
   // Build query
   let userQuery = { role: 'student' };
@@ -314,6 +314,19 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
       { name: { $regex: search, $options: 'i' } },
       { email: { $regex: search, $options: 'i' } }
     ];
+  }
+
+  // Date range filter for user creation
+  if (startDate || endDate) {
+    userQuery.createdAt = {};
+    if (startDate) {
+      userQuery.createdAt.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      userQuery.createdAt.$lte = endDateTime;
+    }
   }
 
   // For instructors, only show learners enrolled in their courses
@@ -395,7 +408,7 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
  * @access  Private (Instructor, Admin)
  */
 const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
-  const { search, category, isPublished, limit = 10, page = 1 } = req.body;
+  const { search, category, isPublished, limit = 10, page = 1, startDate, endDate } = req.body;
 
   // Build query
   let query = {};
@@ -415,6 +428,19 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
 
   if (isPublished !== undefined) {
     query.isPublished = isPublished;
+  }
+
+  // Date range filter for course creation
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) {
+      query.createdAt.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = endDateTime;
+    }
   }
 
   // Get total count for pagination
@@ -488,7 +514,7 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
  * @access  Private (Admin, Author)
  */
 const getArticlesReport = catchAsync(async (req, res, next) => {
-  const { search, isPublished, limit = 10, page = 1 } = req.query;
+  const { search, isPublished, limit = 10, page = 1, startDate, endDate } = req.query;
 
   // Build query
   let query = {};
@@ -504,6 +530,19 @@ const getArticlesReport = catchAsync(async (req, res, next) => {
 
   if (isPublished !== undefined) {
     query.isPublished = isPublished === 'true';
+  }
+
+  // Date range filter for article creation
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) {
+      query.createdAt.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = endDateTime;
+    }
   }
 
   // Get total count for pagination
