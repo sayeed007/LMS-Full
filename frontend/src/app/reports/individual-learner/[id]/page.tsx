@@ -3,6 +3,7 @@
 import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
 import { StatusBadge } from '@/components/reports/StatusBadge';
+import { ProgressBar } from '@/components/reports/ProgressBar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronRight, Download, Loader2 } from 'lucide-react';
@@ -241,8 +242,13 @@ export default function IndividualLearnerReport() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {course.timeSpent}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {course.completion || course.completionPercentage || 0}%
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <ProgressBar
+                                                value={course.completion || course.completionPercentage || 0}
+                                                showLabel={true}
+                                                height="md"
+                                                className="min-w-[150px]"
+                                            />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={course.status} />

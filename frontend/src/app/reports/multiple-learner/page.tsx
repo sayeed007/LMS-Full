@@ -5,6 +5,7 @@ import { StatsCard } from '@/components/reports/StatsCard';
 import { Pagination } from '@/components/reports/Pagination';
 import { DateRangeFilter } from '@/components/reports/DateRangeFilter';
 import { AdvancedFilters } from '@/components/reports/AdvancedFilters';
+import { ProgressBar } from '@/components/reports/ProgressBar';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Download, Loader2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -273,7 +274,14 @@ export default function MultipleLearnerReport() {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{learner.yetToStart}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{learner.inProgress}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{learner.completed}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{learner.completionPercentage}%</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <ProgressBar
+                                            value={learner.completionPercentage}
+                                            showLabel={true}
+                                            height="md"
+                                            className="min-w-[150px]"
+                                        />
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <ChevronRight className="h-5 w-5 text-gray-400" />
                                     </td>
