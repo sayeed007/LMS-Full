@@ -1,6 +1,7 @@
 "use client";
 import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
+import { Pagination } from '@/components/reports/Pagination';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -10,11 +11,14 @@ import { toast } from 'sonner';
 export default function MultipleCourseReport() {
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery);
+            setCurrentPage(1); // Reset to first page on search
         }, 500);
 
         return () => clearTimeout(timer);
@@ -23,12 +27,14 @@ export default function MultipleCourseReport() {
     // Fetch multiple courses report
     const [fetchReport, { data, isLoading, error }] = useGetMultipleCoursesReportMutation();
 
-    // Fetch data on mount and when search changes
+    // Fetch data on mount and when search/page changes
     useEffect(() => {
         fetchReport({
-            search: debouncedSearch || undefined
+            search: debouncedSearch || undefined,
+            page: currentPage,
+            limit: pageSize
         });
-    }, [debouncedSearch, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, fetchReport]);
 
     const reportData = data?.data;
     const stats = reportData?.stats;
@@ -148,7 +154,9 @@ export default function MultipleCourseReport() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {courses.map((course, index) => (
                                 <tr key={course._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {(currentPage - 1) * pageSize + index + 1}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-blue-600">{course.name}</div>
                                         {course.description && (
@@ -165,6 +173,21 @@ export default function MultipleCourseReport() {
                     </table>
                 )}
             </div>
+
+            {/* Pagination */}
+            {reportData?.pagination && courses.length > 0 && (
+                <Pagination
+                    currentPage={reportData.pagination.currentPage}
+                    totalPages={reportData.pagination.totalPages}
+                    totalItems={reportData.pagination.totalItems}
+                    itemsPerPage={reportData.pagination.itemsPerPage}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(1);
+                    }}
+                />
+            )}
         </div>
     );
 }

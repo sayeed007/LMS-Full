@@ -1,5 +1,15 @@
 import { baseApi, BaseApiResponse } from './baseApi';
 
+// Pagination interface
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 // Report interfaces
 export interface ReportStats {
   courseEnrolled: number;
@@ -111,6 +121,7 @@ export interface MultipleLearnerStats {
 export interface MultipleLearnersReportResponse {
   summaryStats: MultipleLearnerStats;
   learners: MultipleLearnerItem[];
+  pagination?: PaginationMeta;
 }
 
 export interface ArticleReportItem {
@@ -142,6 +153,7 @@ export interface ArticleReportStats {
 export interface ArticlesReportResponse {
   stats: ArticleReportStats;
   articles: ArticleReportItem[];
+  pagination?: PaginationMeta;
 }
 
 export interface MultipleLearnersRequest {
@@ -239,6 +251,7 @@ export interface MultipleCoursesReportResponse {
     totalEnrollments: number;
   };
   courses: CourseReportItem[];
+  pagination?: PaginationMeta;
 }
 
 export interface MultipleCoursesRequest {

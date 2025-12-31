@@ -2,6 +2,7 @@
 "use client";
 import { GoBackRoute } from '@/components/reports/GoBackRoute';
 import { StatsCard } from '@/components/reports/StatsCard';
+import { Pagination } from '@/components/reports/Pagination';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Download, Loader2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -16,11 +17,14 @@ export default function MultipleLearnerReport() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery);
+            setCurrentPage(1); // Reset to first page on search
         }, 500);
 
         return () => clearTimeout(timer);
@@ -30,12 +34,14 @@ export default function MultipleLearnerReport() {
     const [fetchReport, { data, isLoading, error }] = useGetMultipleLearnersReportMutation();
     const [exportCSV, { isLoading: isExporting }] = useExportMultipleLearnersCSVMutation();
 
-    // Fetch data on mount and when search changes
+    // Fetch data on mount and when search/page changes
     useEffect(() => {
         fetchReport({
-            search: debouncedSearch || undefined
+            search: debouncedSearch || undefined,
+            page: currentPage,
+            limit: pageSize
         });
-    }, [debouncedSearch, fetchReport]);
+    }, [debouncedSearch, currentPage, pageSize, fetchReport]);
 
     const reportData = data?.data;
     const summaryStats = reportData?.summaryStats;
@@ -217,7 +223,9 @@ export default function MultipleLearnerReport() {
                                     onClick={() => handleLearnerClick(learner._id)}
                                     className="hover:bg-gray-50 cursor-pointer transition-colors"
                                 >
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {(currentPage - 1) * pageSize + index + 1}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center space-x-3">
                                             <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
@@ -246,6 +254,21 @@ export default function MultipleLearnerReport() {
                     </table>
                 )}
             </div>
+
+            {/* Pagination */}
+            {reportData?.pagination && learners.length > 0 && (
+                <Pagination
+                    currentPage={reportData.pagination.currentPage}
+                    totalPages={reportData.pagination.totalPages}
+                    totalItems={reportData.pagination.totalItems}
+                    itemsPerPage={reportData.pagination.itemsPerPage}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(1);
+                    }}
+                />
+            )}
         </div>
     );
 }

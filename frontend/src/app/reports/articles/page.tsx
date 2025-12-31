@@ -1,6 +1,7 @@
 "use client"
 import { GoBackRoute } from '@/components/reports/GoBackRoute'
 import { StatsCard } from '@/components/reports/StatsCard'
+import { Pagination } from '@/components/reports/Pagination'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2, Search } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -11,11 +12,14 @@ import { toast } from 'sonner'
 export default function ArticlesReportPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchTerm);
+            setCurrentPage(1); // Reset to first page on search
         }, 500);
 
         return () => clearTimeout(timer);
@@ -24,6 +28,8 @@ export default function ArticlesReportPage() {
     // Fetch articles report
     const { data, isLoading, error, refetch } = useGetArticlesReportQuery({
         search: debouncedSearch || undefined,
+        page: currentPage,
+        limit: pageSize,
     });
 
     const [exportCSV, { isLoading: isExporting }] = useLazyExportArticlesReportCSVQuery();
@@ -201,7 +207,7 @@ export default function ArticlesReportPage() {
                                 {articles.map((article, index) => (
                                     <tr key={article._id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {index + 1}
+                                            {(currentPage - 1) * pageSize + index + 1}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-900">
                                             <div className="max-w-md truncate">{article.name}</div>
@@ -228,6 +234,21 @@ export default function ArticlesReportPage() {
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {reportData?.pagination && articles.length > 0 && (
+                <Pagination
+                    currentPage={reportData.pagination.currentPage}
+                    totalPages={reportData.pagination.totalPages}
+                    totalItems={reportData.pagination.totalItems}
+                    itemsPerPage={reportData.pagination.itemsPerPage}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        setCurrentPage(1);
+                    }}
+                />
+            )}
         </div>
     )
 }

@@ -305,10 +305,10 @@ const getIndividualCourseReport = catchAsync(async (req, res, next) => {
  * @access  Private (Admin, Instructor)
  */
 const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
-  const { search, status, courseId, limit = 100, page = 1 } = req.body;
+  const { search, status, courseId, limit = 10, page = 1 } = req.body;
 
   // Build query
-  let userQuery = {};
+  let userQuery = { role: 'student' };
   if (search) {
     userQuery.$or = [
       { name: { $regex: search, $options: 'i' } },
@@ -324,9 +324,14 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
     userQuery._id = { $in: enrolledUserIds };
   }
 
-  // Get learners
+  // Get total count for pagination
+  const totalCount = await User.countDocuments(userQuery);
+  const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+  // Get learners with pagination
   const learners = await User.find(userQuery)
     .select('name email avatar createdAt')
+    .sort({ name: 1 })
     .limit(parseInt(limit))
     .skip((parseInt(page) - 1) * parseInt(limit));
 
@@ -353,20 +358,33 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
     };
   }));
 
-  // Summary stats
+  // Calculate summary stats from ALL learners (not just current page)
+  const allLearners = await User.find(userQuery).select('_id');
+  const allEnrollments = await Enrollment.find({
+    user: { $in: allLearners.map(l => l._id) }
+  });
+
   const summaryStats = {
-    totalLearners: learnersWithStats.length,
-    totalCourseEnrollments: learnersWithStats.reduce((sum, l) => sum + l.coursesEnrolled, 0),
-    totalYetToStart: learnersWithStats.reduce((sum, l) => sum + l.yetToStart, 0),
-    totalInProgress: learnersWithStats.reduce((sum, l) => sum + l.inProgress, 0),
-    totalCompleted: learnersWithStats.reduce((sum, l) => sum + l.completed, 0)
+    totalLearners: totalCount,
+    totalCourseEnrollments: allEnrollments.length,
+    totalYetToStart: allEnrollments.filter(e => e.progress.completionPercentage === 0).length,
+    totalInProgress: allEnrollments.filter(e => e.status === 'active' && e.progress.completionPercentage > 0 && e.progress.completionPercentage < 100).length,
+    totalCompleted: allEnrollments.filter(e => e.status === 'completed' || e.progress.completionPercentage === 100).length
   };
 
   res.status(200).json({
     status: 'success',
     data: {
       summaryStats,
-      learners: learnersWithStats
+      learners: learnersWithStats,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: totalCount,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
     }
   });
 });
@@ -377,7 +395,7 @@ const getMultipleLeanersReport = catchAsync(async (req, res, next) => {
  * @access  Private (Instructor, Admin)
  */
 const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
-  const { search, category, isPublished, limit = 100, page = 1 } = req.body;
+  const { search, category, isPublished, limit = 10, page = 1 } = req.body;
 
   // Build query
   let query = {};
@@ -399,10 +417,15 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
     query.isPublished = isPublished;
   }
 
-  // Get courses
+  // Get total count for pagination
+  const totalCount = await Course.countDocuments(query);
+  const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+  // Get courses with pagination
   const courses = await Course.find(query)
     .select('title description thumbnail instructor isPublished createdAt')
     .populate('instructor', 'name email')
+    .sort({ createdAt: -1 })
     .limit(parseInt(limit))
     .skip((parseInt(page) - 1) * parseInt(limit));
 
@@ -429,19 +452,32 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
     };
   }));
 
-  // Summary stats
+  // Calculate summary stats from ALL courses (not just current page)
+  const allCourses = await Course.find(query).select('_id isPublished');
+  const allEnrollments = await Enrollment.find({
+    course: { $in: allCourses.map(c => c._id) }
+  });
+
   const summaryStats = {
-    totalCourses: coursesWithStats.length,
-    published: coursesWithStats.filter(c => c.isPublished).length,
-    unpublished: coursesWithStats.filter(c => !c.isPublished).length,
-    totalEnrollments: coursesWithStats.reduce((sum, c) => sum + c.totalLearners, 0)
+    totalCourses: totalCount,
+    published: allCourses.filter(c => c.isPublished).length,
+    unpublished: allCourses.filter(c => !c.isPublished).length,
+    totalEnrollments: allEnrollments.length
   };
 
   res.status(200).json({
     status: 'success',
     data: {
       stats: summaryStats,
-      courses: coursesWithStats
+      courses: coursesWithStats,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: totalCount,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
     }
   });
 });
@@ -452,7 +488,7 @@ const getMultipleCoursesReport = catchAsync(async (req, res, next) => {
  * @access  Private (Admin, Author)
  */
 const getArticlesReport = catchAsync(async (req, res, next) => {
-  const { search, isPublished, limit = 100, page = 1 } = req.query;
+  const { search, isPublished, limit = 10, page = 1 } = req.query;
 
   // Build query
   let query = {};
@@ -470,13 +506,17 @@ const getArticlesReport = catchAsync(async (req, res, next) => {
     query.isPublished = isPublished === 'true';
   }
 
-  // Get articles
+  // Get total count for pagination
+  const totalCount = await Article.countDocuments(query);
+  const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+  // Get articles with pagination
   const articles = await Article.find(query)
     .select('title slug author isPublished createdAt')
     .populate('author', 'name email')
+    .sort({ createdAt: -1 })
     .limit(parseInt(limit))
-    .skip((parseInt(page) - 1) * parseInt(limit))
-    .sort({ createdAt: -1 });
+    .skip((parseInt(page) - 1) * parseInt(limit));
 
   // Get analytics for each article
   const articlesWithAnalytics = await Promise.all(articles.map(async (article) => {
@@ -497,20 +537,32 @@ const getArticlesReport = catchAsync(async (req, res, next) => {
     };
   }));
 
-  // Summary stats
+  // Calculate summary stats from ALL articles (not just current page)
+  const allArticles = await Article.find(query).select('_id isPublished');
+  const allArticleIds = allArticles.map(a => a._id);
+  const allAnalytics = await ArticleAnalytics.find({ article: { $in: allArticleIds } });
+
   const summaryStats = {
-    total: articlesWithAnalytics.length,
-    published: articlesWithAnalytics.filter(a => a.isPublished).length,
-    unpublished: articlesWithAnalytics.filter(a => !a.isPublished).length,
-    totalViews: articlesWithAnalytics.reduce((sum, a) => sum + a.totalViewer, 0),
-    totalComments: articlesWithAnalytics.reduce((sum, a) => sum + a.comments, 0)
+    total: totalCount,
+    published: allArticles.filter(a => a.isPublished).length,
+    unpublished: allArticles.filter(a => !a.isPublished).length,
+    totalViews: allAnalytics.reduce((sum, a) => sum + (a.totalViews || 0), 0),
+    totalComments: allAnalytics.reduce((sum, a) => sum + (a.totalComments || 0), 0)
   };
 
   res.status(200).json({
     status: 'success',
     data: {
       stats: summaryStats,
-      articles: articlesWithAnalytics
+      articles: articlesWithAnalytics,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: totalCount,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
     }
   });
 });
