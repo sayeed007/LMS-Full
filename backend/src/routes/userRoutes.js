@@ -9,6 +9,7 @@ const {
   activateUser,
   deactivateUser,
   getUserStats,
+  searchUsers,
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -223,6 +224,9 @@ router.use(protect);
 
 // User statistics (must come before /:id route)
 router.get('/stats', restrictTo('org_admin', 'super_admin'), getUserStats);
+
+// Search users (must come before /:id route)
+router.get('/search', searchUsers);
 
 // Get all users with filters
 router.get('/', restrictTo('org_admin', 'super_admin'), getAllUsers);

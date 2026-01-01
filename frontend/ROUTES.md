@@ -6,8 +6,8 @@ Use the checkboxes to mark routes as tested.
 
 - [✅] `/` (`src/app/page.tsx`)
 - [ ] `/admin/courses/pending` (`src/app/admin/courses/pending/page.tsx`)
-- [ ] `/admin/organizations` (`src/app/admin/organizations/page.tsx`)
-- [ ] `/admin/organizations/[orgId]` (`src/app/admin/organizations/[orgId]/page.tsx`)
+- [✅] `/admin/organizations` (`src/app/admin/organizations/page.tsx`)
+- [✅] `/admin/organizations/[orgId]` (`src/app/admin/organizations/[orgId]/page.tsx`)
 - [ ] `/admin/settings` (`src/app/admin/settings/page.tsx`)
 - [✅] `/admin/users` (`src/app/admin/users/page.tsx`)
 - [✅] `/admin/users/[userId]` (`src/app/admin/users/[userId]/page.tsx`)

@@ -263,6 +263,53 @@ const deactivateUser = catchAsync(async (req, res, next) => {
 });
 
 /**
+ * @desc    Search users
+ * @route   GET /api/v1/users/search
+ * @access  Private
+ */
+const searchUsers = catchAsync(async (req, res, next) => {
+  const { q, role, limit = 20, includeInactive = false } = req.query;
+
+  if (!q || q.trim().length === 0) {
+    return res.status(200).json({
+      status: 'success',
+      results: 0,
+      data: [],
+    });
+  }
+
+  // Build query
+  const query = {
+    $or: [
+      { name: { $regex: q.trim(), $options: 'i' } },
+      { email: { $regex: q.trim(), $options: 'i' } }
+    ]
+  };
+
+  // Only filter by isActive if not explicitly including inactive users
+  if (includeInactive !== 'true') {
+    query.isActive = true;
+  }
+
+  // Add role filter if provided
+  if (role) {
+    query.role = role;
+  }
+
+  const users = await User.find(query)
+    .select('-password -__v')
+    .limit(parseInt(limit))
+    .sort('name')
+    .populate('organization', 'name slug');
+
+  res.status(200).json({
+    status: 'success',
+    results: users.length,
+    data: users,
+  });
+});
+
+/**
  * @desc    Get user statistics
  * @route   GET /api/v1/users/stats
  * @access  Private (Admin only)
@@ -353,4 +400,5 @@ module.exports = {
   activateUser,
   deactivateUser,
   getUserStats,
+  searchUsers,
 };

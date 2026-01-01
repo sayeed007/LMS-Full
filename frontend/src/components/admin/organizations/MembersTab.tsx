@@ -1,3 +1,4 @@
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 import { getErrorMessage } from '@/lib/utils';
 import {
   useAddOrganizationMemberMutation,
@@ -8,21 +9,20 @@ import { Plus, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { AddMemberModal } from './AddMemberModal';
-import { EnhancedSelect } from '@/components/ui/SearchableSelect';
+import { useModal } from '@/lib/modal-context';
 
 interface MembersTabProps {
   orgId: string;
 }
 
-export function MembersTab({ orgId }: MembersTabProps) {
-  const [roleFilter, setRoleFilter] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-
-  const { data: membersData, isLoading } = useGetOrganizationMembersQuery({
-    id: orgId,
-    params: { page: 1, limit: 20, role: roleFilter || undefined }
-  });
-
+// Wrapper component to keep modal reactive
+function AddMemberModalWrapper({
+  orgId,
+  onClose
+}: {
+  orgId: string;
+  onClose: () => void;
+}) {
   const [searchUsers, { data: searchResults }] = useLazySearchUsersQuery();
   const [addMember, { isLoading: isAdding }] = useAddOrganizationMemberMutation();
 
@@ -34,11 +34,38 @@ export function MembersTab({ orgId }: MembersTabProps) {
     try {
       await addMember({ id: orgId, data: { userId, role } }).unwrap();
       toast.success('Member added successfully');
-      setShowAddModal(false);
+      onClose();
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to add member'));
       throw error;
     }
+  };
+
+  return (
+    <AddMemberModal
+      onClose={onClose}
+      onAdd={handleAddMember}
+      onSearch={handleSearchUsers}
+      searchResults={searchResults?.data}
+      isAdding={isAdding}
+    />
+  );
+}
+
+export function MembersTab({ orgId }: MembersTabProps) {
+  const [roleFilter, setRoleFilter] = useState('');
+  const { openModal, closeModal } = useModal();
+
+  const { data: membersData, isLoading } = useGetOrganizationMembersQuery({
+    id: orgId,
+    params: { page: 1, limit: 20, role: roleFilter || undefined }
+  });
+
+  const handleOpenAddMemberModal = () => {
+    openModal(
+      <AddMemberModalWrapper orgId={orgId} onClose={() => closeModal()} />,
+      { size: 'md' }
+    );
   };
 
   return (
@@ -61,7 +88,7 @@ export function MembersTab({ orgId }: MembersTabProps) {
         </div>
 
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={handleOpenAddMemberModal}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           <Plus className="w-5 h-5" />
@@ -100,16 +127,6 @@ export function MembersTab({ orgId }: MembersTabProps) {
             </div>
           ))}
         </div>
-      )}
-
-      {showAddModal && (
-        <AddMemberModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAddMember}
-          onSearch={handleSearchUsers}
-          searchResults={searchResults?.data}
-          isAdding={isAdding}
-        />
       )}
     </div>
   );

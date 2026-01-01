@@ -6,7 +6,7 @@ import {
   useGetOrganizationsQuery,
   OrganizationPopulated
 } from '@/store/api/organizationApi';
-import { BookOpen, Building2, Edit, ExternalLink, Filter, Plus, Search, Trash2, Users } from 'lucide-react';
+import { BookOpen, Building2, Edit, ExternalLink, Plus, Search, Trash2, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -24,16 +24,13 @@ export default function OrganizationsPage() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('');
-  const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
-  const [showFilters, setShowFilters] = useState(false);
 
   // API hooks
   const { data, isLoading, error } = useGetOrganizationsQuery({
     page,
     limit,
     search: search || undefined,
-    type: typeFilter || undefined,
-    isActive: isActiveFilter
+    type: typeFilter || undefined
   });
 
   const [deleteOrganization] = useDeleteOrganizationMutation();
@@ -87,11 +84,6 @@ export default function OrganizationsPage() {
     setPage(1);
   };
 
-  const handleActiveFilterChange = (value: string | undefined) => {
-    setIsActiveFilter(value === undefined ? undefined : value === 'true');
-    setPage(1);
-  };
-
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       educational_institution: 'Educational Institution',
@@ -128,9 +120,9 @@ export default function OrganizationsPage() {
 
         {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
-            <div className="flex-1 relative">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -141,56 +133,24 @@ export default function OrganizationsPage() {
               />
             </div>
 
-            {/* Filter Toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-            >
-              <Filter className="w-5 h-5" />
-              Filters
-              {(typeFilter || isActiveFilter !== undefined) && (
-                <span className="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">Active</span>
-              )}
-            </button>
-          </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                <EnhancedSelect
-                  value={typeFilter || undefined}
-                  onValueChange={handleTypeFilterChange}
-                  placeholder="All Types"
-                  clearable={true}
-                  options={[
-                    { value: 'educational_institution', label: 'Educational Institution' },
-                    { value: 'corporate', label: 'Corporate' },
-                    { value: 'government', label: 'Government' },
-                    { value: 'non_profit', label: 'Non-Profit' },
-                    { value: 'other', label: 'Other' }
-                  ]}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <EnhancedSelect
-                  value={isActiveFilter === undefined ? undefined : isActiveFilter.toString()}
-                  onValueChange={handleActiveFilterChange}
-                  placeholder="All Statuses"
-                  clearable={true}
-                  options={[
-                    { value: 'true', label: 'Active' },
-                    { value: 'false', label: 'Inactive' }
-                  ]}
-                  className="w-full"
-                />
-              </div>
+            {/* Type Filter */}
+            <div>
+              <EnhancedSelect
+                value={typeFilter || undefined}
+                onValueChange={handleTypeFilterChange}
+                placeholder="All Types"
+                clearable={true}
+                options={[
+                  { value: 'educational_institution', label: 'Educational Institution' },
+                  { value: 'corporate', label: 'Corporate' },
+                  { value: 'government', label: 'Government' },
+                  { value: 'non_profit', label: 'Non-Profit' },
+                  { value: 'other', label: 'Other' }
+                ]}
+                className="w-full"
+              />
             </div>
-          )}
+          </div>
         </div>
 
         {/* Organizations Table */}
@@ -249,7 +209,9 @@ export default function OrganizationsPage() {
                               </div>
                             )}
                             <div>
-                              <div className="font-medium text-gray-900">{org.name}</div>
+                              <Link href={`/admin/organizations/${org._id}`} className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition">
+                                {org.name}
+                              </Link>
                               {org.website && (
                                 <Link
                                   href={org.website}
