@@ -52,7 +52,6 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
 
     const questionBanks = questionBanksData?.data?.questionBanks || [];
     const pagination = questionBanksData?.pagination;
-    const totalResults = pagination?.totalResults || 0;
 
     const LoadingSkeleton = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
@@ -74,7 +73,7 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
     return (
         <div className="py-6">
             {/* Header */}
-            {activeTab === "my" && (
+            {/* {activeTab === "my" && (
                 <div className="mb-6 flex justify-between items-center">
                     <PrimaryActionButton onClick={handleCreateNewQuestion}>
                         Create Now
@@ -86,7 +85,7 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                         </p>
                     )}
                 </div>
-            )}
+            )} */}
 
             {/* Loading State */}
             {isLoading && <LoadingSkeleton />}
@@ -113,7 +112,7 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                         {searchQuery
                             ? `No question banks found matching "${searchQuery}"`
                             : activeTab === "my"
-                                ? "You haven't created any question banks yet"
+                                ? "You haven't created any question yet"
                                 : "No question banks available"
                         }
                     </div>

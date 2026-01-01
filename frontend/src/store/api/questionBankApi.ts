@@ -1,5 +1,5 @@
 import { QuestionBank as BackendQuestionBank } from '../../types/backend-models';
-import { baseApi } from './baseApi';
+import { baseApi, PaginationInfo } from './baseApi';
 
 // API-specific types for populated question banks
 export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'createdBy' | 'course'> {
@@ -81,6 +81,7 @@ export interface QuestionBankResponse {
   data: {
     questionBanks: QuestionBank[];
   };
+  pagination?: PaginationInfo;
 }
 
 export interface SingleQuestionBankResponse {

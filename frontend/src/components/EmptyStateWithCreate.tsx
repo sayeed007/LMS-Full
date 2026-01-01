@@ -1,6 +1,6 @@
 // components/EmptyState.tsx
 import Image from "next/image";
-import EmmptyContent from "@/gif/empty-box.gif";
+import EmptyContent from "@/gif/empty-box.gif";
 import { Button } from "./ui/button";
 
 interface EmptyStateWithCreateProps {
@@ -20,7 +20,7 @@ export function EmptyStateWithCreate({
     <div className="flex flex-col items-center justify-center text-center py-20">
       <div className="relative w-[160px] h-[140px] mb-6">
         <Image
-          src={EmmptyContent}
+          src={EmptyContent}
           alt="Empty"
           width={160}
           height={140}
