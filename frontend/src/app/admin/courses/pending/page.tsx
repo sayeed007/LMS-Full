@@ -9,11 +9,12 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
+import { Pagination } from '@/components/ui';
 
 export default function PendingCoursesPage() {
   const confirm = useConfirm();
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<CoursePopulated | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -197,28 +198,18 @@ export default function PendingCoursesPage() {
             </div>
 
             {/* Pagination */}
-            {pagination && pagination.pages > 1 && (
-              <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Showing page {pagination.page} of {pagination.pages} ({pagination.total} total courses)
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={page === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setPage((prev) => Math.min(prev + 1, pagination.pages))}
-                    disabled={page === pagination.pages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+            {pagination && pagination.totalPages > 0 && (
+              <Pagination
+                currentPage={page}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalResults}
+                itemsPerPage={limit}
+                onPageChange={(newPage) => setPage(newPage)}
+                onPageSizeChange={(newSize) => {
+                  setLimit(newSize);
+                  setPage(1);
+                }}
+              />
             )}
           </>
         )}

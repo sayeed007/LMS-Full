@@ -6,6 +6,7 @@ import { useState, useMemo } from 'react';
 import SearchSuggestions from './SearchSuggestions';
 import { useGetCategoriesQuery } from '@/store/api/categoryApi';
 import { COURSE_LEVELS, SORT_OPTIONS, RATING_OPTIONS } from '@/constants/course';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 export interface CourseFiltersType {
   search: string;
@@ -125,17 +126,17 @@ export default function CourseFiltersModal({
             <TrendingUp className="w-4 h-4 inline mr-1" />
             Sort By
           </label>
-          <select
+          <EnhancedSelect
             value={filters.sort}
-            onChange={(e) => handleFilterChange('sort', e.target.value)}
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => value && handleFilterChange('sort', value)}
+            placeholder="Select sort option"
+            clearable={false}
+            options={SORT_OPTIONS.map(option => ({
+              value: option.value,
+              label: option.label
+            }))}
+            className="w-full"
+          />
         </div>
 
         {/* Category and Difficulty Level - Side by Side */}
@@ -146,19 +147,16 @@ export default function CourseFiltersModal({
               <BookOpen className="w-4 h-4 inline mr-1" />
               Category
             </label>
-            <select
-              value={filters.category}
-              onChange={(e) => handleFilterChange('category', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 text-sm"
+            <EnhancedSelect
+              value={filters.category || undefined}
+              onValueChange={(value) => handleFilterChange('category', value || '')}
+              placeholder="All Categories"
+              clearable={true}
               disabled={categoriesLoading}
-            >
-              <option value="">All Categories</option>
-              {categoryOptions.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
+              options={categoryOptions}
+              className="w-full"
+              size="sm"
+            />
           </div>
 
           {/* Level Filter */}
@@ -166,18 +164,18 @@ export default function CourseFiltersModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Difficulty Level
             </label>
-            <select
-              value={filters.level}
-              onChange={(e) => handleFilterChange('level', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 text-sm"
-            >
-              <option value="">All Levels</option>
-              {COURSE_LEVELS.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
+            <EnhancedSelect
+              value={filters.level || undefined}
+              onValueChange={(value) => handleFilterChange('level', value || '')}
+              placeholder="All Levels"
+              clearable={true}
+              options={COURSE_LEVELS.map(level => ({
+                value: level.value,
+                label: level.label
+              }))}
+              className="w-full"
+              size="sm"
+            />
           </div>
         </div>
 

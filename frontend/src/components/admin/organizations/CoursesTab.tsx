@@ -3,6 +3,7 @@ import { useGetOrganizationCoursesQuery } from '@/store/api/organizationApi';
 import { BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 interface CoursesTabProps {
   orgId: string;
@@ -26,16 +27,19 @@ export function CoursesTab({ orgId }: CoursesTabProps) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Statuses</option>
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-          <option value="archived">Archived</option>
-        </select>
+        <EnhancedSelect
+          value={statusFilter || undefined}
+          onValueChange={(value) => setStatusFilter(value || '')}
+          placeholder="All Statuses"
+          clearable={true}
+          options={[
+            { value: 'draft', label: 'Draft' },
+            { value: 'published', label: 'Published' },
+            { value: 'archived', label: 'Archived' }
+          ]}
+          className="w-48"
+          size="sm"
+        />
       </div>
 
       {isLoading ? (

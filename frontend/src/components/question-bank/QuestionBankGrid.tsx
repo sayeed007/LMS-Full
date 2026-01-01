@@ -7,6 +7,7 @@ import { QuestionBankCard } from "./QuestionBankCard";
 import { useGetQuestionBanksQuery } from "@/store/api/questionBankApi";
 import { useState } from "react";
 import { showErrorToast } from "@/lib/toast-utils";
+import { Pagination } from "../ui";
 
 // Define the props interface
 interface QuestionBankGridProps {
@@ -23,7 +24,7 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
 }) => {
     const router = useRouter()
     const [currentPage, setCurrentPage] = useState(1)
-    const [pageSize] = useState(12) // Question banks per page
+    const [pageSize, setPageSize] = useState(12) // Question banks per page
 
     // Build query parameters
     const queryParams = {
@@ -50,7 +51,8 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
     }
 
     const questionBanks = questionBanksData?.data?.questionBanks || [];
-    const totalResults = questionBanksData?.results || 0;
+    const pagination = questionBanksData?.pagination;
+    const totalResults = pagination?.totalResults || 0;
 
     const LoadingSkeleton = () => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
@@ -139,27 +141,19 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                     </div>
 
                     {/* Pagination */}
-                    {totalResults > pageSize && (
-                        <div className="flex justify-center items-center gap-4 mt-8">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                Previous
-                            </button>
-
-                            <span className="text-sm text-gray-600">
-                                Page {currentPage} of {Math.ceil(totalResults / pageSize)}
-                            </span>
-
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalResults / pageSize), prev + 1))}
-                                disabled={currentPage >= Math.ceil(totalResults / pageSize)}
-                                className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                Next
-                            </button>
+                    {pagination && pagination.totalPages > 0 && (
+                        <div className="mt-8">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={pagination.totalPages}
+                                totalItems={pagination.totalResults}
+                                itemsPerPage={pageSize}
+                                onPageChange={(newPage) => setCurrentPage(newPage)}
+                                onPageSizeChange={(newSize) => {
+                                    setPageSize(newSize);
+                                    setCurrentPage(1);
+                                }}
+                            />
                         </div>
                     )}
                 </>

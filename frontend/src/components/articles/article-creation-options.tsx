@@ -35,6 +35,7 @@ import { ArticleAdvancedSettingModal } from "./ArticleAdvancedSettingModal"
 import { ArticleTagsModal } from "./ArticleTagsModal"
 import { FileImporter } from "./FileImporter"
 import { TemplateSelector } from "./TemplateSelector"
+import { EnhancedSelect } from "@/components/ui/SearchableSelect"
 
 interface ArticleCreationOptionsProps {
     existingArticle?: Article;
@@ -638,35 +639,41 @@ export function ArticleCreationOptions({ existingArticle }: ArticleCreationOptio
 
                                         <div className="flex items-center gap-2 text-sm">
                                             <span className="text-gray-600">Category:</span>
-                                            <select
+                                            <EnhancedSelect
                                                 value={articleCategory}
-                                                onChange={(e) => setArticleCategory(e.target.value)}
-                                                className="font-semibold text-blue-600 bg-transparent border-b border-blue-600 hover:bg-blue-50 focus:bg-blue-50 outline-none cursor-pointer px-1 py-0.5"
-                                            >
-                                                <option value="General">General</option>
-                                                <option value="Technology">Technology</option>
-                                                <option value="Education">Education</option>
-                                                <option value="Business">Business</option>
-                                                <option value="Science">Science</option>
-                                                <option value="Health">Health</option>
-                                                <option value="Entertainment">Entertainment</option>
-                                                <option value="Sports">Sports</option>
-                                                <option value="News">News</option>
-                                                <option value="Other">Other</option>
-                                            </select>
+                                                onValueChange={(value) => value && setArticleCategory(value)}
+                                                placeholder="Select category"
+                                                clearable={false}
+                                                options={[
+                                                    { value: 'General', label: 'General' },
+                                                    { value: 'Technology', label: 'Technology' },
+                                                    { value: 'Education', label: 'Education' },
+                                                    { value: 'Business', label: 'Business' },
+                                                    { value: 'Science', label: 'Science' },
+                                                    { value: 'Health', label: 'Health' },
+                                                    { value: 'Entertainment', label: 'Entertainment' },
+                                                    { value: 'Sports', label: 'Sports' },
+                                                    { value: 'News', label: 'News' },
+                                                    { value: 'Other', label: 'Other' }
+                                                ]}
+                                                size="sm"
+                                                className="w-40"
+                                            />
                                         </div>
 
                                         <div className="flex items-center gap-2 text-sm">
                                             <span className="text-gray-600">Visibility:</span>
-                                            <select
+                                            <EnhancedSelect
                                                 value={articleVisibility}
-                                                onChange={(e) => setArticleVisibility(e.target.value as 'public' | 'private' | 'organization')}
-                                                className="font-semibold text-blue-600 bg-transparent border-b border-blue-600 hover:bg-blue-50 focus:bg-blue-50 outline-none cursor-pointer px-1 py-0.5"
-                                            >
-                                                <option value="public">Public</option>
-                                                {/* <option value="private">Private</option> */}
-                                                {/* <option value="organization">Organization</option> */}
-                                            </select>
+                                                onValueChange={(value) => value && setArticleVisibility(value as 'public' | 'private' | 'organization')}
+                                                placeholder="Select visibility"
+                                                clearable={false}
+                                                options={[
+                                                    { value: 'public', label: 'Public' }
+                                                ]}
+                                                size="sm"
+                                                className="w-32"
+                                            />
                                         </div>
 
                                         {/* Tags button */}

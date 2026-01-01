@@ -19,6 +19,7 @@ import { RefreshCw, Save, Send } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 const tabs = [
   { key: 'general', label: 'General' },
@@ -314,27 +315,33 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                  <select
+                  <EnhancedSelect
                     value={currentData.language || 'en'}
-                    onChange={(e) => updateField('general', 'language', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="en">English</option>
-                    <option value="bn">Bengali</option>
-                  </select>
+                    onValueChange={(value) => value && updateField('general', 'language', value)}
+                    placeholder="Select language"
+                    clearable={false}
+                    options={[
+                      { value: 'en', label: 'English' },
+                      { value: 'bn', label: 'Bengali' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
-                  <select
+                  <EnhancedSelect
                     value={currentData.currency || 'BDT'}
-                    onChange={(e) => updateField('general', 'currency', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="BDT">BDT (৳)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                  </select>
+                    onValueChange={(value) => value && updateField('general', 'currency', value)}
+                    placeholder="Select currency"
+                    clearable={false}
+                    options={[
+                      { value: 'BDT', label: 'BDT (৳)' },
+                      { value: 'USD', label: 'USD ($)' },
+                      { value: 'EUR', label: 'EUR (€)' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
               </div>
 
@@ -366,16 +373,19 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email Service</label>
-                  <select
+                  <EnhancedSelect
                     value={currentData.service || 'gmail'}
-                    onChange={(e) => updateField('email', 'service', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="gmail">Gmail</option>
-                    <option value="smtp">SMTP</option>
-                    <option value="sendgrid">SendGrid</option>
-                    <option value="ses">AWS SES</option>
-                  </select>
+                    onValueChange={(value) => value && updateField('email', 'service', value)}
+                    placeholder="Select email service"
+                    clearable={false}
+                    options={[
+                      { value: 'gmail', label: 'Gmail' },
+                      { value: 'smtp', label: 'SMTP' },
+                      { value: 'sendgrid', label: 'SendGrid' },
+                      { value: 'ses', label: 'AWS SES' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 <div>
@@ -503,27 +513,33 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Payment Gateway</label>
-                  <select
+                  <EnhancedSelect
                     value={currentData.gateway || 'sslcommerz'}
-                    onChange={(e) => updateField('payment', 'gateway', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="sslcommerz">SSLCommerz</option>
-                    <option value="stripe">Stripe</option>
-                    <option value="paypal">PayPal</option>
-                  </select>
+                    onValueChange={(value) => value && updateField('payment', 'gateway', value)}
+                    placeholder="Select payment gateway"
+                    clearable={false}
+                    options={[
+                      { value: 'sslcommerz', label: 'SSLCommerz' },
+                      { value: 'stripe', label: 'Stripe' },
+                      { value: 'paypal', label: 'PayPal' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
-                  <select
+                  <EnhancedSelect
                     value={currentData.mode || 'sandbox'}
-                    onChange={(e) => updateField('payment', 'mode', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="sandbox">Sandbox (Testing)</option>
-                    <option value="live">Live (Production)</option>
-                  </select>
+                    onValueChange={(value) => value && updateField('payment', 'mode', value)}
+                    placeholder="Select mode"
+                    clearable={false}
+                    options={[
+                      { value: 'sandbox', label: 'Sandbox (Testing)' },
+                      { value: 'live', label: 'Live (Production)' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 {currentData.gateway === 'sslcommerz' && (

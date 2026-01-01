@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/lib/toast-utils';
 import Image from 'next/image';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Container } from '@/components/ui';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -251,18 +252,19 @@ export default function UserDetailPage() {
             <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
               Role
             </label>
-            <select
-              id="role"
+            <EnhancedSelect
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'student' | 'instructor' | 'org_admin' | 'super_admin' })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            >
-              <option value="student">Student</option>
-              <option value="instructor">Instructor</option>
-              <option value="org_admin">Org Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
+              onValueChange={(value) => value && setFormData({ ...formData, role: value as 'student' | 'instructor' | 'org_admin' | 'super_admin' })}
+              placeholder="Select role"
+              clearable={false}
+              options={[
+                { value: 'student', label: 'Student' },
+                { value: 'instructor', label: 'Instructor' },
+                { value: 'org_admin', label: 'Org Admin' },
+                { value: 'super_admin', label: 'Super Admin' }
+              ]}
+              className="w-full"
+            />
           </div>
 
           {/* Bio */}

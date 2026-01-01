@@ -8,6 +8,7 @@ import { Plus, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { AddMemberModal } from './AddMemberModal';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 interface MembersTabProps {
   orgId: string;
@@ -44,16 +45,19 @@ export function MembersTab({ orgId }: MembersTabProps) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-4 items-center">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Roles</option>
-            <option value="student">Students</option>
-            <option value="instructor">Instructors</option>
-            <option value="org_admin">Org Admins</option>
-          </select>
+          <EnhancedSelect
+            value={roleFilter || undefined}
+            onValueChange={(value) => setRoleFilter(value || '')}
+            placeholder="All Roles"
+            clearable={true}
+            options={[
+              { value: 'student', label: 'Students' },
+              { value: 'instructor', label: 'Instructors' },
+              { value: 'org_admin', label: 'Org Admins' }
+            ]}
+            className="w-48"
+            size="sm"
+          />
         </div>
 
         <button

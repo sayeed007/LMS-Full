@@ -8,10 +8,11 @@ import { getErrorMessage } from '@/lib/toast-utils';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Pagination } from '@/components/ui';
 
 export default function MyCertificatesPage() {
   const [page, setPage] = useState(1);
-  const limit = 12;
+  const [limit, setLimit] = useState(12);
 
   const { data, isLoading, error } = useGetMyCertificatesQuery({ page, limit });
   const [downloadCertificate, { isLoading: isDownloading }] = useDownloadCertificateMutation();
@@ -165,25 +166,19 @@ export default function MyCertificatesPage() {
             </div>
 
             {/* Pagination */}
-            {data.pagination && data.pagination.pages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <span className="text-gray-600">
-                  Page {page} of {data.pagination.pages}
-                </span>
-                <button
-                  onClick={() => setPage(p => Math.min(data.pagination!.pages, p + 1))}
-                  disabled={page === data.pagination.pages}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
+            {data.pagination && data.pagination.totalPages > 0 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={page}
+                  totalPages={data.pagination.totalPages}
+                  totalItems={data.pagination.totalResults}
+                  itemsPerPage={limit}
+                  onPageChange={(newPage) => setPage(newPage)}
+                  onPageSizeChange={(newSize) => {
+                    setLimit(newSize);
+                    setPage(1);
+                  }}
+                />
               </div>
             )}
           </>

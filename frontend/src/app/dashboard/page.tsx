@@ -14,6 +14,7 @@ import {
 } from "@/store/api/dashboardApi";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { toast } from 'sonner';
+import { EnhancedSelect } from "@/components/ui/SearchableSelect";
 
 export default function DashboardPage() {
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -295,18 +296,18 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Course Completion Rate</h2>
                 {categories.length > 0 && (
-                  <select
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  <EnhancedSelect
+                    value={selectedCategory || undefined}
+                    onValueChange={(value) => setSelectedCategory(value || '')}
+                    placeholder="All Categories"
+                    clearable={true}
+                    options={categories.map(cat => ({
+                      value: cat,
+                      label: cat
+                    }))}
+                    className="w-64"
+                    size="sm"
+                  />
                 )}
               </div>
               {/* Bar Chart with Recharts */}

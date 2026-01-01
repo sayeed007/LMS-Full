@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { EnhancedSelect } from './SearchableSelect';
 
 interface PaginationProps {
   currentPage: number;
@@ -36,17 +37,17 @@ export function Pagination({
       {showPageSizeSelector && onPageSizeChange ? (
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-700">Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
+          <EnhancedSelect
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => value && onPageSizeChange(Number(value))}
+            options={pageSizeOptions.map(size => ({
+              value: size.toString(),
+              label: size.toString()
+            }))}
+            clearable={false}
+            size="sm"
+            className="w-20"
+          />
           <span className="text-sm text-gray-700">entries</span>
         </div>
       ) : (

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ContentAssignment } from '@/types/backend-models';
 import { useState } from 'react';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 interface AssignmentContentEditorProps {
     data: { assignment?: ContentAssignment };
@@ -107,20 +108,25 @@ export default function AssignmentContentEditor({ data, onChange }: AssignmentCo
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Submission Type
                         </label>
-                        <select
+                        <EnhancedSelect
                             value={submissionType}
-                            onChange={(e) => {
-                                const value = e.target.value as ContentAssignment['submissionType'];
-                                setSubmissionType(value);
-                                updateAssignment({ submissionType: value });
+                            onValueChange={(value) => {
+                                if (value) {
+                                    const val = value as ContentAssignment['submissionType'];
+                                    setSubmissionType(val);
+                                    updateAssignment({ submissionType: val });
+                                }
                             }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="file">File Upload</option>
-                            <option value="text">Text Entry</option>
-                            <option value="url">URL Submission</option>
-                            <option value="mixed">Mixed (Multiple Types)</option>
-                        </select>
+                            placeholder="Select submission type"
+                            clearable={false}
+                            options={[
+                                { value: 'file', label: 'File Upload' },
+                                { value: 'text', label: 'Text Entry' },
+                                { value: 'url', label: 'URL Submission' },
+                                { value: 'mixed', label: 'Mixed (Multiple Types)' }
+                            ]}
+                            className="w-full"
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

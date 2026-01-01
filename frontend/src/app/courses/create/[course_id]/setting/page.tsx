@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import React, { useMemo, useState } from "react";
+import { EnhancedSelect } from "@/components/ui/SearchableSelect";
 
 type ExpireBaseType = "from_enrollment" | "from_publish" | "never";
 
@@ -233,21 +234,19 @@ export default function CourseSettings() {
           <div className="px-4 pb-4 pt-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Expire</label>
-                <div className="relative">
-                  <select
-                    className="w-full h-10 rounded-md border border-gray-200 px-3 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    value={expireBase}
-                    onChange={(e) => setExpireBase(e.target.value as ExpireBaseType)}
-                  >
-                    <option value="from_enrollment">
-                      From Enrollment Days
-                    </option>
-                    <option value="from_publish">From Publish Date</option>
-                    <option value="never">Never expires</option>
-                  </select>
-                  <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                </div>
+                <label className="block text-sm font-medium mb-2">Expire</label>
+                <EnhancedSelect
+                  value={expireBase}
+                  onValueChange={(value) => value && setExpireBase(value as ExpireBaseType)}
+                  placeholder="Select expiration type"
+                  clearable={false}
+                  options={[
+                    { value: 'from_enrollment', label: 'From Enrollment Days' },
+                    { value: 'from_publish', label: 'From Publish Date' },
+                    { value: 'never', label: 'Never expires' }
+                  ]}
+                  className="w-full"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">

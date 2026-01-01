@@ -2,28 +2,29 @@
 
 import { getErrorMessage } from '@/lib/utils';
 import {
-  CreateOrganizationRequest,
-  useCreateOrganizationMutation,
   useDeleteOrganizationMutation,
-  useGetOrganizationsQuery
+  useGetOrganizationsQuery,
+  OrganizationPopulated
 } from '@/store/api/organizationApi';
 import { BookOpen, Building2, Edit, ExternalLink, Filter, Plus, Search, Trash2, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
+import { Container, Pagination } from '@/components/ui';
+import { useModal } from '@/lib/modal-context';
+import OrganizationFormModal from '@/components/admin/OrganizationFormModal';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 export default function OrganizationsPage() {
-  const router = useRouter();
   const confirm = useConfirm();
+  const { openModal, closeModal } = useModal();
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   // API hooks
@@ -36,17 +37,24 @@ export default function OrganizationsPage() {
   });
 
   const [deleteOrganization] = useDeleteOrganizationMutation();
-  const [createOrganization, { isLoading: isCreating }] = useCreateOrganizationMutation();
 
-  // Create organization form state
-  const [formData, setFormData] = useState<CreateOrganizationRequest>({
-    name: '',
-    email: '',
-    type: 'educational_institution',
-    description: '',
-    website: '',
-    logo: ''
-  });
+  const handleOpenCreateModal = () => {
+    openModal(
+      <OrganizationFormModal onClose={() => closeModal()} mode="create" />,
+      { size: '2xl' }
+    );
+  };
+
+  const handleOpenEditModal = (organization: OrganizationPopulated) => {
+    openModal(
+      <OrganizationFormModal
+        onClose={() => closeModal()}
+        mode="edit"
+        organization={organization}
+      />,
+      { size: '2xl' }
+    );
+  };
 
   const handleDelete = async (id: string, name: string) => {
     const confirmed = await confirm({
@@ -69,44 +77,18 @@ export default function OrganizationsPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name || !formData.email || !formData.type) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    try {
-      await createOrganization(formData).unwrap();
-      toast.success('Organization created successfully');
-      setShowCreateModal(false);
-      setFormData({
-        name: '',
-        email: '',
-        type: 'educational_institution',
-        description: '',
-        website: '',
-        logo: ''
-      });
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to create organization'));
-    }
-  };
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setPage(1); // Reset to first page on search
   };
 
-  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTypeFilter(e.target.value);
+  const handleTypeFilterChange = (value: string | undefined) => {
+    setTypeFilter(value || '');
     setPage(1);
   };
 
-  const handleActiveFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setIsActiveFilter(value === '' ? undefined : value === 'true');
+  const handleActiveFilterChange = (value: string | undefined) => {
+    setIsActiveFilter(value === undefined ? undefined : value === 'true');
     setPage(1);
   };
 
@@ -122,8 +104,8 @@ export default function OrganizationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <>
+      <Container size="xl" className="bg-gray-50 py-4">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -135,7 +117,7 @@ export default function OrganizationsPage() {
               <p className="text-gray-600 mt-1">Manage organizations and their settings</p>
             </div>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={handleOpenCreateModal}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               <Plus className="w-5 h-5" />
@@ -176,32 +158,36 @@ export default function OrganizationsPage() {
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select
-                  value={typeFilter}
-                  onChange={handleTypeFilterChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Types</option>
-                  <option value="educational_institution">Educational Institution</option>
-                  <option value="corporate">Corporate</option>
-                  <option value="government">Government</option>
-                  <option value="non_profit">Non-Profit</option>
-                  <option value="other">Other</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <EnhancedSelect
+                  value={typeFilter || undefined}
+                  onValueChange={handleTypeFilterChange}
+                  placeholder="All Types"
+                  clearable={true}
+                  options={[
+                    { value: 'educational_institution', label: 'Educational Institution' },
+                    { value: 'corporate', label: 'Corporate' },
+                    { value: 'government', label: 'Government' },
+                    { value: 'non_profit', label: 'Non-Profit' },
+                    { value: 'other', label: 'Other' }
+                  ]}
+                  className="w-full"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  value={isActiveFilter === undefined ? '' : isActiveFilter.toString()}
-                  onChange={handleActiveFilterChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <EnhancedSelect
+                  value={isActiveFilter === undefined ? undefined : isActiveFilter.toString()}
+                  onValueChange={handleActiveFilterChange}
+                  placeholder="All Statuses"
+                  clearable={true}
+                  options={[
+                    { value: 'true', label: 'Active' },
+                    { value: 'false', label: 'Inactive' }
+                  ]}
+                  className="w-full"
+                />
               </div>
             </div>
           )}
@@ -250,7 +236,13 @@ export default function OrganizationsPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {org.logo ? (
-                              <Image src={org.logo} alt={org.name} className="w-10 h-10 rounded-full object-cover" />
+                              <Image
+                                src={org.logo}
+                                alt={org.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                                width={40}
+                                height={40}
+                              />
                             ) : (
                               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                                 <Building2 className="w-5 h-5 text-blue-600" />
@@ -308,7 +300,7 @@ export default function OrganizationsPage() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => router.push(`/admin/organizations/${org._id}`)}
+                              onClick={() => handleOpenEditModal(org)}
                               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                               title="Edit"
                             >
@@ -330,142 +322,23 @@ export default function OrganizationsPage() {
               </div>
 
               {/* Pagination */}
-              {data.pagination && data.pagination.pages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, data.pagination.total)} of {data.pagination.total} organizations
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-3 py-1 text-sm text-gray-600">
-                      Page {page} of {data.pagination.pages}
-                    </span>
-                    <button
-                      onClick={() => setPage(p => Math.min(data.pagination!.pages, p + 1))}
-                      disabled={page === data.pagination.pages}
-                      className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
+              {data.pagination && data.pagination.totalPages > 0 && (
+                <Pagination
+                  currentPage={page}
+                  totalPages={data.pagination.totalPages}
+                  totalItems={data.pagination.totalResults}
+                  itemsPerPage={limit}
+                  onPageChange={(newPage) => setPage(newPage)}
+                  onPageSizeChange={(newSize) => {
+                    setLimit(newSize);
+                    setPage(1);
+                  }}
+                />
               )}
             </>
           )}
         </div>
-      </div>
-
-      {/* Create Organization Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Create New Organization</h2>
-            </div>
-
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as CreateOrganizationRequest['type'] })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="educational_institution">Educational Institution</option>
-                    <option value="corporate">Corporate</option>
-                    <option value="government">Government</option>
-                    <option value="non_profit">Non-Profit</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                  <input
-                    type="url"
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
-                <input
-                  type="url"
-                  value={formData.logo}
-                  onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {isCreating ? 'Creating...' : 'Create Organization'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      </Container>
+    </>
   );
 }

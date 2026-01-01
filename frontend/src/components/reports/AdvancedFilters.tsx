@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Filter, X } from 'lucide-react';
 import { useState } from 'react';
+import { EnhancedSelect } from '@/components/ui/SearchableSelect';
 
 interface FilterOption {
   value: string;
@@ -137,18 +138,15 @@ export function AdvancedFilters({
                     <label className="block text-xs font-medium text-gray-700 mb-2">
                       Category
                     </label>
-                    <select
-                      value={selectedCategory || 'all'}
-                      onChange={(e) => handleCategoryChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
+                    <EnhancedSelect
+                      value={selectedCategory || undefined}
+                      onValueChange={(value) => handleCategoryChange(value || 'all')}
+                      placeholder="All Categories"
+                      clearable={true}
+                      options={categories}
+                      className="w-full"
+                      size="sm"
+                    />
                   </div>
                 )}
 
@@ -158,17 +156,15 @@ export function AdvancedFilters({
                     <label className="block text-xs font-medium text-gray-700 mb-2">
                       Status
                     </label>
-                    <select
-                      value={selectedStatus || 'all'}
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {STATUS_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                    <EnhancedSelect
+                      value={selectedStatus || undefined}
+                      onValueChange={(value) => handleStatusChange(value || 'all')}
+                      placeholder="All Statuses"
+                      clearable={true}
+                      options={STATUS_OPTIONS.filter(opt => opt.value !== 'all')}
+                      className="w-full"
+                      size="sm"
+                    />
                   </div>
                 )}
 
@@ -178,23 +174,21 @@ export function AdvancedFilters({
                     <label className="block text-xs font-medium text-gray-700 mb-2">
                       Publication Status
                     </label>
-                    <select
+                    <EnhancedSelect
                       value={
                         selectedPublished === null
-                          ? 'all'
+                          ? undefined
                           : selectedPublished
                           ? 'published'
                           : 'unpublished'
                       }
-                      onChange={(e) => handlePublishedChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      {PUBLISHED_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      onValueChange={(value) => handlePublishedChange(value || 'all')}
+                      placeholder="All"
+                      clearable={true}
+                      options={PUBLISHED_OPTIONS.filter(opt => opt.value !== 'all')}
+                      className="w-full"
+                      size="sm"
+                    />
                   </div>
                 )}
               </div>
