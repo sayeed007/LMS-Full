@@ -4,7 +4,6 @@ import { getErrorMessage } from '@/lib/toast-utils';
 import {
   useActivateUserMutation,
   useDeactivateUserMutation,
-  useDeleteUserMutation,
   useGetUsersQuery,
   useGetUserStatsQuery,
   type UserPopulated
@@ -14,22 +13,39 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
+import { Container, Button, SearchableSelect, Pagination } from '@/components/ui';
+import type { SearchableSelectOption } from '@/components/ui';
 
 export default function AdminUsersPage() {
   const router = useRouter();
   const confirm = useConfirm();
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+
+  // Select options
+  const roleOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'All Roles' },
+    { value: 'student', label: 'Student' },
+    { value: 'instructor', label: 'Instructor' },
+    { value: 'org_admin', label: 'Org Admin' },
+    { value: 'super_admin', label: 'Super Admin' },
+  ];
+
+  const statusOptions: SearchableSelectOption[] = [
+    { value: 'all', label: 'All Status' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+  ];
 
   // Queries
   const { data, isLoading, error } = useGetUsersQuery({
     page,
     limit,
     search: search || undefined,
-    role: roleFilter || undefined,
+    role: roleFilter,
     isActive: statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
   });
 
@@ -38,7 +54,6 @@ export default function AdminUsersPage() {
   // Mutations
   const [activateUser] = useActivateUserMutation();
   const [deactivateUser] = useDeactivateUserMutation();
-  const [deleteUser] = useDeleteUserMutation();
 
   // Handlers
   const handleActivate = async (id: string, name: string) => {
@@ -79,25 +94,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const confirmed = await confirm({
-      title: 'Delete User',
-      message: `Are you sure you want to delete ${name}? This will deactivate their account.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      variant: 'danger'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await deleteUser(id).unwrap();
-      toast.success('User deleted successfully');
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to delete user'));
-    }
-  };
-
   const handleView = (id: string) => {
     router.push(`/admin/users/${id}`);
   };
@@ -130,12 +126,12 @@ export default function AdminUsersPage() {
   const stats = statsData?.data;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Container size='xl'>
       {/* Header */}
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
         <p className="text-gray-600">Manage all users, roles, and permissions</p>
-      </div>
+      </div> */}
 
       {/* Statistics Cards */}
       {stats && (
@@ -195,18 +191,16 @@ export default function AdminUsersPage() {
             <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
               Role
             </label>
-            <select
-              id="role"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Roles</option>
-              <option value="student">Student</option>
-              <option value="instructor">Instructor</option>
-              <option value="org_admin">Org Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
+            <SearchableSelect
+              options={roleOptions}
+              value={roleFilter || 'all'}
+              onValueChange={(value) => setRoleFilter(value === 'all' ? undefined : value)}
+              placeholder="All Roles"
+              searchPlaceholder="Search roles..."
+              className="w-full"
+              clearable
+              searchable
+            />
           </div>
 
           {/* Status Filter */}
@@ -214,30 +208,31 @@ export default function AdminUsersPage() {
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
               Status
             </label>
-            <select
-              id="status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <SearchableSelect
+              options={statusOptions}
+              value={statusFilter || 'all'}
+              onValueChange={(value) => setStatusFilter(value === 'all' ? undefined : value)}
+              placeholder="All Status"
+              searchPlaceholder="Search status..."
+              className="w-full"
+              clearable
+              searchable={false}
+            />
           </div>
 
           {/* Clear Filters */}
           <div className="flex items-end">
-            <button
+            <Button
               onClick={() => {
                 setSearch('');
-                setRoleFilter('');
-                setStatusFilter('');
+                setRoleFilter(undefined);
+                setStatusFilter(undefined);
               }}
-              className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+              variant="outline"
+              className="w-full"
             >
               Clear Filters
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -248,6 +243,9 @@ export default function AdminUsersPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  SN
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   User
                 </th>
@@ -271,13 +269,16 @@ export default function AdminUsersPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                     No users found
                   </td>
                 </tr>
               ) : (
-                users.map((user: UserPopulated) => (
+                users.map((user: UserPopulated, index: number) => (
                   <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {(page - 1) * limit + index + 1}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -330,33 +331,33 @@ export default function AdminUsersPage() {
                       {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <button
+                      <Button
                         onClick={() => handleView(user._id)}
+                        variant="link"
+                        size="sm"
                         className="text-blue-600 hover:text-blue-900"
                       >
                         View
-                      </button>
+                      </Button>
                       {user.isActive ? (
-                        <button
+                        <Button
                           onClick={() => handleDeactivate(user._id, user.name)}
+                          variant="link"
+                          size="sm"
                           className="text-orange-600 hover:text-orange-900"
                         >
                           Deactivate
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
                           onClick={() => handleActivate(user._id, user.name)}
+                          variant="link"
+                          size="sm"
                           className="text-green-600 hover:text-green-900"
                         >
-                          Activate
-                        </button>
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Activate
+                        </Button>
                       )}
-                      <button
-                        onClick={() => handleDelete(user._id, user.name)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
                     </td>
                   </tr>
                 ))
@@ -366,44 +367,20 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Pagination */}
-        {pagination && pagination.pages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div className="flex-1 flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
-                  <span className="font-medium">
-                    {Math.min(page * limit, pagination.total)}
-                  </span>{' '}
-                  of <span className="font-medium">{pagination.total}</span> results
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page <= 1}
-                  className={`px-4 py-2 border rounded-lg ${page > 1
-                    ? 'bg-white text-gray-700 hover:bg-gray-50'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= pagination.pages}
-                  className={`px-4 py-2 border rounded-lg ${page < pagination.pages
-                    ? 'bg-white text-gray-700 hover:bg-gray-50'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
+        {pagination && pagination.totalPages > 0 && (
+          <Pagination
+            currentPage={page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalResults}
+            itemsPerPage={limit}
+            onPageChange={(newPage) => setPage(newPage)}
+            onPageSizeChange={(newSize) => {
+              setLimit(newSize);
+              setPage(1); // Reset to first page when changing page size
+            }}
+          />
         )}
       </div>
-    </div>
+    </Container>
   );
 }

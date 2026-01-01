@@ -18,14 +18,22 @@ export const useConfirm = () => {
   const confirm = useCallback(
     (options: ConfirmOptions): Promise<boolean> => {
       return new Promise((resolve) => {
+        let isResolved = false
+
         const handleConfirm = () => {
-          closeModal(modalId)
-          resolve(true)
+          if (!isResolved) {
+            isResolved = true
+            resolve(true)
+            closeModal(modalId)
+          }
         }
 
         const handleCancel = () => {
-          closeModal(modalId)
-          resolve(false)
+          if (!isResolved) {
+            isResolved = true
+            resolve(false)
+            closeModal(modalId)
+          }
         }
 
         const modalId = openModal(
@@ -41,8 +49,14 @@ export const useConfirm = () => {
           {
             size: 'sm',
             closable: true,
-            persistent: false,
-            onClose: () => resolve(false), // Treat close button/escape as cancel
+            persistent: true, // Prevent backdrop/escape from closing
+            showCloseButton: false, // Hide the X button
+            onClose: () => {
+              if (!isResolved) {
+                isResolved = true
+                resolve(false)
+              }
+            }, // Treat close button/escape as cancel
           }
         )
       })

@@ -312,11 +312,29 @@ const getUserStats = catchAsync(async (req, res, next) => {
     }
   ]);
 
+  // Transform usersByRole array to object format
+  const usersByRoleArray = stats[0].usersByRole || [];
+  const usersByRole = {
+    students: 0,
+    instructors: 0,
+    admins: 0
+  };
+
+  usersByRoleArray.forEach(item => {
+    if (item.role === 'student') {
+      usersByRole.students = item.count;
+    } else if (item.role === 'instructor') {
+      usersByRole.instructors = item.count;
+    } else if (item.role === 'org_admin' || item.role === 'super_admin') {
+      usersByRole.admins += item.count;
+    }
+  });
+
   const result = {
     totalUsers: stats[0].totalUsers[0]?.count || 0,
     activeUsers: stats[0].activeUsers[0]?.count || 0,
     inactiveUsers: stats[0].inactiveUsers[0]?.count || 0,
-    usersByRole: stats[0].usersByRole,
+    usersByRole,
     recentUsers: stats[0].recentUsers
   };
 

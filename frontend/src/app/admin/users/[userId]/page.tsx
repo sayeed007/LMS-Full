@@ -1,23 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useActivateUserMutation,
   useDeactivateUserMutation,
-  useDeleteUserMutation,
 } from '@/store/api/userApi';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/toast-utils';
 import Image from 'next/image';
 import { useConfirm } from '@/hooks/useConfirm';
+import { Container } from '@/components/ui';
 
 export default function UserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const userId = params.userId as string;
   const confirm = useConfirm();
 
@@ -43,7 +42,6 @@ export default function UserDetailPage() {
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
   const [activateUser] = useActivateUserMutation();
   const [deactivateUser] = useDeactivateUserMutation();
-  const [deleteUser] = useDeleteUserMutation();
 
   const user = data?.data?.user;
 
@@ -115,26 +113,6 @@ export default function UserDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmed = await confirm({
-      title: 'Delete User',
-      message: `Are you sure you want to delete ${user?.name}? This action will deactivate their account.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
-      variant: 'danger'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await deleteUser(userId).unwrap();
-      toast.success('User deleted successfully');
-      router.push('/admin/users');
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to delete user'));
-    }
-  };
-
   // Loading state
   if (isLoading) {
     return (
@@ -181,7 +159,7 @@ export default function UserDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <Container size='xl' className="py-4">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -431,16 +409,10 @@ export default function UserDetailPage() {
                   Activate User
                 </button>
               )}
-              <button
-                onClick={handleDelete}
-                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                Delete User
-              </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </Container>
   );
 }

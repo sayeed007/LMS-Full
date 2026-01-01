@@ -148,17 +148,20 @@ export const baseApi = createApi({
   endpoints: () => ({}),
 });
 
+export type PaginationInfo = {
+  currentPage: number;
+  totalPages: number;
+  totalResults: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};
+
 export type BaseApiResponse<T> = {
   status: string;
   message?: string;
   data?: T;
   results?: number;
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+  pagination?: PaginationInfo;
 };
 
 export type ApiError = {

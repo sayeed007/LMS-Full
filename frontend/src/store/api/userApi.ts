@@ -72,10 +72,16 @@ export interface UserStatsResponse {
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<BaseApiResponse<UserPopulated[]>, UserListParams | void>({
-      query: (params) => ({
-        url: '/users',
-        params: params || {},
-      }),
+      query: (params) => {
+        // Filter out undefined values to avoid sending them as query params
+        const cleanParams = params ? Object.fromEntries(
+          Object.entries(params).filter(([_, value]) => value !== undefined)
+        ) : {};
+        return {
+          url: '/users',
+          params: cleanParams,
+        };
+      },
       providesTags: ['User'],
     }),
 
@@ -144,7 +150,7 @@ export const userApi = baseApi.injectEndpoints({
         url: `/users/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
+      invalidatesTags: ['User'],
     }),
 
     getUserStats: builder.query<BaseApiResponse<UserStatsResponse>, void>({

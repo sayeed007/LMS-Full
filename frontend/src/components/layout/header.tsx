@@ -20,7 +20,7 @@ const navigationItems = [
     { name: 'Question Bank', href: '/question-bank', requiresAuth: true },
     { name: 'Articles', href: '/articles', requiresAuth: false },
     { name: 'Reports', href: '/reports', requiresAuth: true },
-    { name: 'Admin', href: '/admin/users', requiresAuth: true, adminOnly: true },
+    { name: 'Admin', href: '/admin', requiresAuth: true, adminOnly: true },
 ];
 
 const Header = () => {

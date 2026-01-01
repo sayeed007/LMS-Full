@@ -71,13 +71,21 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       {/* Actions */}
       <div className="flex gap-3 justify-end">
         <button
-          onClick={onCancel}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          }}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
         >
           {cancelText}
         </button>
         <button
-          onClick={onConfirm}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onConfirm();
+          }}
           className={`px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${styles.confirmButton}`}
         >
           {confirmText}
