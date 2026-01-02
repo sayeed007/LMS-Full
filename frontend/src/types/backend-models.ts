@@ -491,8 +491,7 @@ export interface Question extends BaseDocument {
   attachments: QuestionAttachment[];
   // References
   questionBank: string; // QuestionBank ObjectId
-  course: string; // Course ObjectId
-  section?: string; // Section ObjectId
+  bankSection?: string; // Internal section within the QuestionBank
   createdBy: string; // User ObjectId
   organization?: string; // Organization ObjectId
   // Status

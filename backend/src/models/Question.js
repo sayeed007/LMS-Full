@@ -89,14 +89,10 @@ const questionSchema = new mongoose.Schema({
     ref: 'QuestionBank',
     required: [true, 'Question must belong to a question bank']
   },
-  course: {
+  // Internal section within the question bank (for organization)
+  bankSection: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course',
-    required: [true, 'Question must belong to a course']
-  },
-  section: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Section'
+    // References QuestionBank.sections._id (embedded document ID)
   },
   // Creator info
   createdBy: {
@@ -135,8 +131,8 @@ const questionSchema = new mongoose.Schema({
 
 // Indexes for better performance
 questionSchema.index({ questionBank: 1 });
-questionSchema.index({ course: 1 });
-questionSchema.index({ section: 1 });
+questionSchema.index({ bankSection: 1 });
+questionSchema.index({ questionBank: 1, bankSection: 1 }); // Compound index for queries by bank and section
 questionSchema.index({ createdBy: 1 });
 questionSchema.index({ type: 1 });
 questionSchema.index({ difficulty: 1 });
@@ -204,10 +200,19 @@ questionSchema.statics.findByTags = function(tags) {
   return this.find({ tags: { $in: tags }, isActive: true });
 };
 
-questionSchema.statics.findByCourse = function(courseId) {
-  return this.find({ course: courseId, isActive: true })
+questionSchema.statics.findByCourse = async function(courseId) {
+  // Find question banks for this course
+  const QuestionBank = mongoose.model('QuestionBank');
+  const questionBanks = await QuestionBank.find({ course: courseId }).select('_id');
+  const bankIds = questionBanks.map(bank => bank._id);
+
+  // Find questions in these banks
+  return this.find({
+    questionBank: { $in: bankIds },
+    isActive: true
+  })
     .populate('createdBy', 'name email')
-    .populate('questionBank', 'name')
+    .populate('questionBank', 'name course')
     .sort({ createdAt: -1 });
 };
 

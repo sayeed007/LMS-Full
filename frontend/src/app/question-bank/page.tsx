@@ -1,10 +1,11 @@
 "use client"
 
 import QuestionBankGrid from "@/components/question-bank/QuestionBankGrid";
+import { QuestionBankDialog } from "@/components/question-bank/QuestionBankDialog";
 import { PageLayout, TabNav, SearchInput } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const tabs = [
     { key: "my", label: "My Questions" },
@@ -13,23 +14,19 @@ const tabs = [
 
 export default function QuestionBankPage() {
     const router = useRouter();
-
     const [activeTab, setActiveTab] = useState<"my" | "all">("my");
     const [searchQuery, setSearchQuery] = useState("");
-
-    const handleCreateNewQuestion = () => {
-        router.push(`/question-bank/courses/${1}/sections/${1}/questions`);
-    };
+    const [showCreateDialog, setShowCreateDialog] = useState(false);
 
     return (
         <PageLayout
             title="Question Bank"
             headerActions={
                 <Button
-                    onClick={handleCreateNewQuestion}
+                    onClick={() => setShowCreateDialog(true)}
                     className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
                 >
-                    Create Now
+                    Create Question Bank
                 </Button>
             }
         >
@@ -41,7 +38,7 @@ export default function QuestionBankPage() {
                         onTabChange={(tab) => setActiveTab(tab as "my" | "all")}
                     />
                     <SearchInput
-                        placeholder="Search questions..."
+                        placeholder="Search question banks..."
                         value={searchQuery}
                         onChange={setSearchQuery}
                     />
@@ -50,9 +47,20 @@ export default function QuestionBankPage() {
                 <QuestionBankGrid
                     activeTab={activeTab}
                     searchQuery={searchQuery}
-                    handleCreateNewQuestion={handleCreateNewQuestion}
                 />
             </div>
+
+            {/* Create Question Bank Dialog */}
+            <QuestionBankDialog
+                isOpen={showCreateDialog}
+                onClose={() => setShowCreateDialog(false)}
+                onSuccess={(questionBankId) => {
+                    setShowCreateDialog(false)
+                    // Navigate to the newly created question bank
+                    router.push(`/question-bank/${questionBankId}`)
+                }}
+                mode="create"
+            />
         </PageLayout>
     )
 }

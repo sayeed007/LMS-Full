@@ -94,7 +94,7 @@ const questionBankSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    required: [true, 'Question bank must belong to a course']
+    required: false // Optional for shared question banks
   },
   sections: {
     type: [sectionSchema],
@@ -119,7 +119,7 @@ const questionBankSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['draft', 'active', 'archived'],
-    default: 'draft'
+    default: 'active'  // Auto-publish new question banks
   },
   visibility: {
     type: String,

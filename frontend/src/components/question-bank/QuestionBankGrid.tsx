@@ -4,7 +4,8 @@
 import { useRouter } from "next/navigation";
 import PrimaryActionButton from "../ui/PrimaryButton";
 import { QuestionBankCard } from "./QuestionBankCard";
-import { useGetQuestionBanksQuery } from "@/store/api/questionBankApi";
+import { QuestionBankDialog } from "./QuestionBankDialog";
+import { useGetQuestionBanksQuery, QuestionBank } from "@/store/api/questionBankApi";
 import { useState } from "react";
 import { showErrorToast } from "@/lib/toast-utils";
 import { Pagination } from "../ui";
@@ -13,18 +14,19 @@ import { Pagination } from "../ui";
 interface QuestionBankGridProps {
     activeTab: "my" | "all";
     searchQuery: string;
-    handleCreateNewQuestion: () => void;
 }
 
 // Define the component with typed props
 const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
     activeTab,
-    searchQuery,
-    handleCreateNewQuestion
+    searchQuery
 }) => {
     const router = useRouter()
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize, setPageSize] = useState(12) // Question banks per page
+    const [showCreateDialog, setShowCreateDialog] = useState(false)
+    const [showEditDialog, setShowEditDialog] = useState(false)
+    const [selectedQuestionBank, setSelectedQuestionBank] = useState<QuestionBank | null>(null)
 
     // Build query parameters
     const queryParams = {
@@ -32,7 +34,8 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
         page: currentPage,
         limit: pageSize,
         search: searchQuery || undefined,
-        status: 'active' as const
+        // Don't filter by status - we want to see draft and active banks
+        // (archived banks are filtered on backend by default)
     };
 
     const {
@@ -112,12 +115,12 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                         {searchQuery
                             ? `No question banks found matching "${searchQuery}"`
                             : activeTab === "my"
-                                ? "You haven't created any question yet"
+                                ? "You haven't created any question bank yet"
                                 : "No question banks available"
                         }
                     </div>
                     {activeTab === "my" && (
-                        <PrimaryActionButton onClick={handleCreateNewQuestion}>
+                        <PrimaryActionButton onClick={() => setShowCreateDialog(true)}>
                             Create Your First Question Bank
                         </PrimaryActionButton>
                     )}
@@ -134,6 +137,10 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                                 questionBank={questionBank}
                                 onClick={() => {
                                     router.push(`/question-bank/${questionBank._id}`)
+                                }}
+                                onEdit={() => {
+                                    setSelectedQuestionBank(questionBank)
+                                    setShowEditDialog(true)
                                 }}
                             />
                         ))}
@@ -156,6 +163,36 @@ const QuestionBankGrid: React.FC<QuestionBankGridProps> = ({
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Create Question Bank Dialog */}
+            <QuestionBankDialog
+                isOpen={showCreateDialog}
+                onClose={() => setShowCreateDialog(false)}
+                onSuccess={(questionBankId) => {
+                    setShowCreateDialog(false)
+                    // Navigate to the newly created question bank
+                    router.push(`/question-bank/${questionBankId}`)
+                }}
+                mode="create"
+            />
+
+            {/* Edit Question Bank Dialog */}
+            {selectedQuestionBank && (
+                <QuestionBankDialog
+                    isOpen={showEditDialog}
+                    onClose={() => {
+                        setShowEditDialog(false)
+                        setSelectedQuestionBank(null)
+                    }}
+                    onSuccess={() => {
+                        setShowEditDialog(false)
+                        setSelectedQuestionBank(null)
+                        // Data will auto-refresh via RTK Query cache invalidation
+                    }}
+                    questionBank={selectedQuestionBank}
+                    mode="edit"
+                />
             )}
         </div>
     )

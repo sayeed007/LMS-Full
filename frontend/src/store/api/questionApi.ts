@@ -2,18 +2,14 @@ import { baseApi } from './baseApi';
 import { Question, QuestionChoice, QuestionAttachment } from '../../types/backend-models';
 
 // API-specific interfaces for populated questions
-export interface QuestionPopulated extends Omit<Question, 'questionBank' | 'course' | 'section' | 'createdBy'> {
+export interface QuestionPopulated extends Omit<Question, 'questionBank' | 'createdBy'> {
   questionBank: {
     _id: string;
     name: string;
-  };
-  course: {
-    _id: string;
-    title: string;
-  };
-  section?: {
-    _id: string;
-    name: string;
+    course?: {
+      _id: string;
+      title: string;
+    };
   };
   createdBy: {
     _id: string;
@@ -35,7 +31,7 @@ export interface CreateQuestionRequest {
   tags?: string[];
   attachments?: QuestionAttachment[];
   questionBank: string;
-  section?: string;
+  bankSection?: string; // Internal section within the question bank
   isPublic?: boolean;
 }
 

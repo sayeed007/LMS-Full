@@ -25,7 +25,7 @@ export interface QuestionBankPopulated extends Omit<BackendQuestionBank, 'create
   thumbnail?: string;
   color?: string;
   tags?: string[];
-  status?: 'draft' | 'published' | 'archived';
+  status?: 'draft' | 'active' | 'archived';
 }
 
 // Keep for backward compatibility
@@ -59,7 +59,7 @@ export interface QuestionBankSettings {
 export interface CreateQuestionBankRequest {
   name: string;
   description?: string;
-  course: string;
+  course?: string; // Optional - for shared question banks
 }
 
 export interface UpdateQuestionBankRequest {

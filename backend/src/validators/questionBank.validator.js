@@ -42,8 +42,9 @@ const createQuestionBankSchema = object({
     .trim()
     .max(500, 'Description cannot exceed 500 characters'),
   course: string()
-    .required('Course ID is required')
-    .matches(/^[0-9a-fA-F]{24}$/, 'Invalid course ID format'),
+    .matches(/^[0-9a-fA-F]{24}$/, 'Invalid course ID format')
+    .nullable()
+    .optional(), // ✅ Course is optional - allows independent question banks
   visibility: string()
     .oneOf(['public', 'private', 'organization'], 'Invalid visibility option')
     .default('private'),

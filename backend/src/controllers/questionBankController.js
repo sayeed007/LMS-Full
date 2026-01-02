@@ -14,38 +14,86 @@ exports.getAllQuestionBanks = catchAsync(async (req, res, next) => {
     filter.course = req.query.courseId;
   }
 
-  // Filter by user's own question banks if requested
-  if (req.query.my === 'true') {
-    filter.createdBy = req.user.id;
-  }
-
   // Filter by status
   if (req.query.status) {
     filter.status = req.query.status;
+  }
+  // Don't filter by status by default - show all statuses including archived
+
+  // Filter by user's own question banks if requested
+  if (req.query.my === 'true') {
+    // When user requests "my" question banks, only show their own
+    filter.createdBy = req.user.id;
   } else {
-    // Default to non-archived
-    filter.status = { $ne: 'archived' };
+    // When viewing "all" question banks, apply visibility filters
+    if (!['org_admin', 'super_admin'].includes(req.user.role)) {
+      filter.$or = [
+        { visibility: 'public' },
+        { createdBy: req.user.id },
+        { visibility: 'organization', organization: req.user.organization }
+      ];
+    }
   }
 
-  // Filter by visibility based on user role
-  if (!['org_admin', 'super_admin'].includes(req.user.role)) {
-    filter.$or = [
-      { visibility: 'public' },
-      { createdBy: req.user.id },
-      { visibility: 'organization', organization: req.user.organization }
-    ];
-  }
+  // Debug logging
+  console.log('🔍 Question Banks Query Debug:');
+  console.log('Query params:', req.query);
+  console.log('User ID:', req.user.id);
+  console.log('User role:', req.user.role);
+  console.log('Filter:', JSON.stringify(filter, null, 2));
 
-  const features = new APIFeatures(QuestionBank.find(filter), req.query)
+  // Create a copy of query params excluding already-handled filters
+  const apiQuery = { ...req.query };
+  delete apiQuery.my; // Already handled in filter
+  delete apiQuery.courseId; // Already handled in filter
+  delete apiQuery.status; // Already handled in filter
+
+  const features = new APIFeatures(QuestionBank.find(filter), apiQuery)
     .filter()
-    .sort()
     .limitFields()
     .paginate();
+
+  // Custom sorting: active first, then draft, then archived, then by createdAt desc
+  const sortObj = {};
+
+  // Priority order: active (1), draft (2), archived (3)
+  const statusOrder = {
+    'active': 1,
+    'draft': 2,
+    'archived': 3
+  };
 
   const questionBanks = await features.query
     .populate('createdBy', 'name email avatar')
     .populate('course', 'title description')
-    .populate('questionsCount');
+    .populate('questionsCount')
+    .sort('-createdAt') // Default sort by newest first
+    .lean();
+
+  // Sort by status priority (active first) then by creation date
+  questionBanks.sort((a, b) => {
+    const statusDiff = (statusOrder[a.status] || 4) - (statusOrder[b.status] || 4);
+    if (statusDiff !== 0) return statusDiff;
+    // If same status, sort by newest first
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  console.log('Results found:', questionBanks.length);
+  if (questionBanks.length > 0) {
+    console.log('First result createdBy:', questionBanks[0].createdBy?._id);
+  }
+
+  // Check ALL question banks in the database (without filter)
+  const allBanks = await QuestionBank.find({ status: { $ne: 'archived' } })
+    .select('name createdBy status')
+    .lean();
+  console.log('📊 Total non-archived banks in DB:', allBanks.length);
+  if (allBanks.length > 0) {
+    console.log('All banks:');
+    allBanks.forEach(b => {
+      console.log(`  - "${b.name}" | createdBy: ${b.createdBy} | status: ${b.status} | matches: ${b.createdBy.toString() === req.user.id}`);
+    });
+  }
 
   res.status(200).json({
     status: 'success',
@@ -90,10 +138,12 @@ exports.getQuestionBank = catchAsync(async (req, res, next) => {
 
 // Create new question bank
 exports.createQuestionBank = catchAsync(async (req, res, next) => {
-  // Check if course exists
-  const course = await Course.findById(req.body.course);
-  if (!course) {
-    return next(new AppError('Course not found', 404));
+  // Check if course exists (only if course is provided)
+  if (req.body.course) {
+    const course = await Course.findById(req.body.course);
+    if (!course) {
+      return next(new AppError('Course not found', 404));
+    }
   }
 
   // Add creator and organization info
@@ -107,7 +157,9 @@ exports.createQuestionBank = catchAsync(async (req, res, next) => {
 
   // Populate the response
   await questionBank.populate('createdBy', 'name email avatar');
-  await questionBank.populate('course', 'title description');
+  if (questionBank.course) {
+    await questionBank.populate('course', 'title description');
+  }
 
   res.status(201).json({
     status: 'success',

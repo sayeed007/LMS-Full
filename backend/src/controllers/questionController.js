@@ -76,9 +76,14 @@ exports.getAllQuestions = catchAsync(async (req, res, next) => {
 
   const questions = await features.query
     .populate('createdBy', 'name email avatar')
-    .populate('questionBank', 'name')
-    .populate('course', 'title')
-    .populate('section', 'name');
+    .populate({
+      path: 'questionBank',
+      select: 'name course',
+      populate: {
+        path: 'course',
+        select: 'title'
+      }
+    });
 
   res.status(200).json({
     status: 'success',
@@ -93,9 +98,14 @@ exports.getAllQuestions = catchAsync(async (req, res, next) => {
 exports.getQuestion = catchAsync(async (req, res, next) => {
   const question = await Question.findById(req.params.id)
     .populate('createdBy', 'name email avatar')
-    .populate('questionBank', 'name')
-    .populate('course', 'title')
-    .populate('section', 'name');
+    .populate({
+      path: 'questionBank',
+      select: 'name course',
+      populate: {
+        path: 'course',
+        select: 'title'
+      }
+    });
 
   if (!question) {
     return next(new AppError('No question found with that ID', 404));
@@ -135,8 +145,7 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
   const questionData = {
     ...req.body,
     createdBy: req.user.id,
-    organization: req.user.organization,
-    course: questionBank.course
+    organization: req.user.organization
   };
 
   const question = await Question.create(questionData);
@@ -167,8 +176,14 @@ exports.createQuestion = catchAsync(async (req, res, next) => {
 
   // Populate the response
   await question.populate('createdBy', 'name email avatar');
-  await question.populate('questionBank', 'name');
-  await question.populate('course', 'title');
+  await question.populate({
+    path: 'questionBank',
+    select: 'name course',
+    populate: {
+      path: 'course',
+      select: 'title'
+    }
+  });
 
   res.status(201).json({
     status: 'success',
@@ -206,8 +221,14 @@ exports.updateQuestion = catchAsync(async (req, res, next) => {
       runValidators: true
     }
   ).populate('createdBy', 'name email avatar')
-   .populate('questionBank', 'name')
-   .populate('course', 'title');
+   .populate({
+     path: 'questionBank',
+     select: 'name course',
+     populate: {
+       path: 'course',
+       select: 'title'
+     }
+   });
 
   // Create version snapshot after update
   const versionData = {
@@ -296,7 +317,6 @@ exports.bulkCreateQuestions = catchAsync(async (req, res, next) => {
   const questionsData = questions.map(q => ({
     ...q,
     questionBank: questionBankId,
-    course: questionBank.course,
     createdBy: req.user.id,
     organization: req.user.organization
   }));
@@ -359,7 +379,6 @@ exports.duplicateQuestion = catchAsync(async (req, res, next) => {
     }
 
     newQuestionData.questionBank = req.body.questionBankId;
-    newQuestionData.course = targetQuestionBank.course;
   }
 
   const newQuestion = await Question.create(newQuestionData);
@@ -371,8 +390,14 @@ exports.duplicateQuestion = catchAsync(async (req, res, next) => {
   }
 
   await newQuestion.populate('createdBy', 'name email avatar');
-  await newQuestion.populate('questionBank', 'name');
-  await newQuestion.populate('course', 'title');
+  await newQuestion.populate({
+    path: 'questionBank',
+    select: 'name course',
+    populate: {
+      path: 'course',
+      select: 'title'
+    }
+  });
 
   res.status(201).json({
     status: 'success',
@@ -449,8 +474,14 @@ exports.searchQuestions = catchAsync(async (req, res, next) => {
 
   const questions = await Question.find(filter)
     .populate('createdBy', 'name email avatar')
-    .populate('questionBank', 'name')
-    .populate('course', 'title')
+    .populate({
+      path: 'questionBank',
+      select: 'name course',
+      populate: {
+        path: 'course',
+        select: 'title'
+      }
+    })
     .sort({ score: { $meta: 'textScore' } })
     .limit(50); // Limit search results
 

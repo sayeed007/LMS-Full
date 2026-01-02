@@ -71,7 +71,7 @@ export function QuestionsPageClient({ questionBankId, sectionId }: QuestionsPage
             type: type as 'single-choice' | 'multiple-choice' | 'descriptive' | 'true-false' | 'fill-blank',
             text: '',
             questionBank: questionBankId as unknown as { _id: string; name: string },
-            section: sectionId as unknown as { _id: string; name: string },
+            bankSection: sectionId, // Optional internal section within the question bank
             difficulty: 'medium',
             points: 1,
             timeLimit: 0,

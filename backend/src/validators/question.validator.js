@@ -65,8 +65,8 @@ const createQuestionSchema = object({
   questionBank: string()
     .required('Question bank ID is required')
     .matches(/^[0-9a-fA-F]{24}$/, 'Invalid question bank ID format'),
-  section: string()
-    .matches(/^[0-9a-fA-F]{24}$/, 'Invalid section ID format'),
+  bankSection: string()
+    .matches(/^[0-9a-fA-F]{24}$/, 'Invalid bank section ID format'),
   isPublic: boolean()
     .default(false)
 }).test('validate-choices', 'Invalid choice configuration', function(value) {
