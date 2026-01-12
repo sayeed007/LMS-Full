@@ -48,6 +48,7 @@ export interface QuestionBankSettings {
   randomizeChoices: boolean;
   defaultPointsPerQuestion: number;
   passingScore: number;
+  passingScoreRequired: boolean;
   defaultTimeLimit: number;
   allowRetakes: boolean;
   maxAttempts: number;

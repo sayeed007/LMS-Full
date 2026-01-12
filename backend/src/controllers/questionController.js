@@ -324,6 +324,29 @@ exports.bulkCreateQuestions = catchAsync(async (req, res, next) => {
 
   const createdQuestions = await Question.insertMany(questionsData);
 
+  // Create initial versions for each question
+  for (const question of createdQuestions) {
+    const versionData = {
+      text: question.text,
+      type: question.type,
+      choices: question.choices,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation,
+      difficulty: question.difficulty,
+      points: question.points,
+      timeLimit: question.timeLimit,
+      tags: question.tags,
+      attachments: question.attachments
+    };
+
+    await QuestionVersion.createVersion(
+      question._id,
+      versionData,
+      req.user.id,
+      'Initial version'
+    );
+  }
+
   // Update question bank stats
   await questionBank.updateStats();
 
