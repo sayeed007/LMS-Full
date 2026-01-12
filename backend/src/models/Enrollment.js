@@ -301,20 +301,27 @@ enrollmentSchema.methods.updateProgress = function(lessonId, timeSpent = 0) {
 };
 
 enrollmentSchema.methods.calculateProgress = async function() {
-  const Course = mongoose.model('Course');
-  const course = await Course.findById(this.course).populate('chapters.lessons');
-
-  if (!course) return 0;
-
-  let totalLessons = 0;
-  course.chapters.forEach(chapter => {
-    totalLessons += chapter.lessons.length;
+  const Lesson = mongoose.model('Lesson');
+  
+  // Count total published lessons in the course
+  const totalLessons = await Lesson.countDocuments({ 
+    course: this.course,
+    isPublished: true // Only count published lessons
   });
 
-  if (totalLessons === 0) return 0;
+  if (totalLessons === 0) {
+    this.progress.completionPercentage = 0;
+    return 0;
+  }
 
+  // Count unique completed lessons
   const completedCount = this.progress.completedLessons.length;
+  
+  // Calculate percentage
   this.progress.completionPercentage = Math.round((completedCount / totalLessons) * 100);
+  
+  // Ensure it doesn't exceed 100
+  if (this.progress.completionPercentage > 100) this.progress.completionPercentage = 100;
 
   return this.progress.completionPercentage;
 };

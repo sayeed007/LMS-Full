@@ -64,7 +64,6 @@ const getLessons = catchAsync(async (req, res, next) => {
     .paginate();
 
   const lessons = await features.query
-    .populate('createdBy', 'name email')
     .sort({ order: 1 });
 
   const total = await Lesson.countDocuments(filter);
@@ -108,8 +107,7 @@ const getLessonById = catchAsync(async (req, res, next) => {
     _id: lessonId,
     course: courseId,
     isDeleted: false
-  })
-    .populate('createdBy', 'name email avatar');
+  });
 
   if (!lesson) {
     return next(new AppError('Lesson not found', 404));
@@ -189,9 +187,7 @@ const createLesson = catchAsync(async (req, res, next) => {
 
   const lesson = await Lesson.create(lessonData);
 
-  await lesson.populate([
-    { path: 'createdBy', select: 'name email' }
-  ]);
+  // Lesson doesn't have createdBy field
 
   res.status(201).json({
     status: 'success',
@@ -227,9 +223,7 @@ const updateLesson = catchAsync(async (req, res, next) => {
     lessonId,
     { ...req.body, lastModified: new Date() },
     { new: true, runValidators: true }
-  ).populate([
-    { path: 'createdBy', select: 'name email' }
-  ]);
+  );
 
   res.status(200).json({
     status: 'success',

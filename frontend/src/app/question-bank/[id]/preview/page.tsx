@@ -79,22 +79,13 @@ export default function QuestionBankPreviewPage() {
   };
 
   // Initialize global quiz timer based on settings
-  // Initialize global quiz timer based on settings
   useEffect(() => {
-    // Check if time limit is set (hours or minutes > 0)
-    const hasTimeLimit =
-      (questionBank?.settings?.quizTimeHours || 0) > 0 ||
-      (questionBank?.settings?.quizTimeMinutes || 0) > 0;
+    // Check if time limit is set (defaultTimeLimit in minutes)
+    const timeLimit = questionBank?.settings?.defaultTimeLimit ?? 0;
 
-    if (hasTimeLimit) {
-      const minutes =
-        (questionBank!.settings!.quizTimeHours || 0) * 60 +
-        (questionBank!.settings!.quizTimeMinutes || 0);
-
-      if (minutes > 0) {
-        setTimeLimitMinutes(minutes);
-        setTimeLeft(minutes * 60);
-      }
+    if (timeLimit > 0) {
+      setTimeLimitMinutes(timeLimit);
+      setTimeLeft(timeLimit * 60);
     }
   }, [questionBank]);
 
@@ -504,10 +495,10 @@ export default function QuestionBankPreviewPage() {
                     <Flag className="w-4 h-4" /> Attempts
                   </span>
                   <span className="font-semibold text-gray-900">
-                    {questionBank?.settings?.quizAttemptTime === "unlimited" ||
-                    !questionBank?.settings?.quizAttemptTime
+                    {!questionBank?.settings?.maxAttempts ||
+                    questionBank?.settings?.maxAttempts === 0
                       ? "Unlimited"
-                      : `${questionBank.settings.quizAttemptTime}`}
+                      : `${questionBank?.settings?.maxAttempts}`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

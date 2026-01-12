@@ -3,9 +3,13 @@ import { CoursePopulated } from "@/store/api/courseApi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-
-
-export function CourseCard({ course, isOwner = false }: { course: CoursePopulated; isOwner?: boolean }) {
+export function CourseCard({
+  course,
+  isOwner = false,
+}: {
+  course: CoursePopulated;
+  isOwner?: boolean;
+}) {
   const router = useRouter();
 
   const onClick = () => {
@@ -18,10 +22,10 @@ export function CourseCard({ course, isOwner = false }: { course: CoursePopulate
       }
     } catch (error) {
       console.error(error);
-      showErrorToast('Navigation Error', 'Failed to navigate to page');
+      showErrorToast("Navigation Error", "Failed to navigate to page");
     }
   };
-
+  console.log(course);
   return (
     <div
       className="bg-white rounded-2xl border-off-white-2 shadow-1 border p-2 cursor-pointer flex flex-col justify-between hover:shadow-md transition-shadow "
@@ -29,13 +33,13 @@ export function CourseCard({ course, isOwner = false }: { course: CoursePopulate
     >
       <div className="relative aspect-video overflow-hidden rounded-t-xl">
         <Image
-          src={course.thumbnail || '/Thumbnail.png'}
+          src={course?.thumbnail || "/default-course-thumbnail.png"}
           alt={course.title}
           className="object-cover"
           fill
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = '/Thumbnail.png';
+            target.src = "/default-course-thumbnail.png";
           }}
         />
       </div>

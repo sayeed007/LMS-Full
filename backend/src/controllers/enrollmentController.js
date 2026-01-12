@@ -617,6 +617,55 @@ const getEnrollmentStats = catchAsync(async (req, res, next) => {
   });
 });
 
+// Update progress by course ID (for compatibility with course routes)
+const updateCourseProgress = catchAsync(async (req, res, next) => {
+  const { courseId, lessonId, completed, timeSpent = 0 } = req.body;
+
+  const enrollment = await Enrollment.findOne({
+    user: req.user.id,
+    course: courseId,
+    isActive: true
+  });
+
+  if (!enrollment) {
+    return next(new AppError('You are not enrolled in this course', 404));
+  }
+
+  if (completed) {
+    await enrollment.updateProgress(lessonId, timeSpent);
+    await enrollment.calculateProgress();
+  } else {
+    // Update time spent even if not completed
+    let existingProgress = enrollment.lessonProgress.find(
+      lp => lp.lesson.toString() === lessonId.toString()
+    );
+
+    if (existingProgress) {
+      existingProgress.timeSpent += timeSpent;
+      existingProgress.lastAccessedAt = new Date();
+    } else {
+      enrollment.lessonProgress.push({
+        lesson: lessonId,
+        completed: false,
+        timeSpent,
+        lastAccessedAt: new Date()
+      });
+    }
+
+    enrollment.progress.timeSpent += timeSpent;
+    enrollment.progress.currentLesson = lessonId;
+    enrollment.progress.lastAccessed = new Date();
+    await enrollment.save();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      enrollment
+    }
+  });
+});
+
 // Get progress for a course
 const getProgress = catchAsync(async (req, res, next) => {
   const { courseId } = req.params;
@@ -692,5 +741,6 @@ module.exports = {
   downloadCertificate,
   getEnrollmentStats,
   getProgress,
-  getDetailedProgress
+  getDetailedProgress,
+  updateCourseProgress
 };

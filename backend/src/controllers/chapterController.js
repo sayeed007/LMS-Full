@@ -54,11 +54,7 @@ const getChapters = catchAsync(async (req, res, next) => {
     .populate({
       path: 'lessons',
       match: { isDeleted: false },
-      options: { sort: { order: 1 } },
-      populate: {
-        path: 'createdBy',
-        select: 'name email'
-      }
+      options: { sort: { order: 1 } }
     })
     .sort({ order: 1 });
 
@@ -93,11 +89,7 @@ const getChapterById = catchAsync(async (req, res, next) => {
     .populate({
       path: 'lessons',
       match: { isDeleted: false },
-      options: { sort: { order: 1 } },
-      populate: {
-        path: 'createdBy',
-        select: 'name email'
-      }
+      options: { sort: { order: 1 } }
     });
 
   if (!chapter) {

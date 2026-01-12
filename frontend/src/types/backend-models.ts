@@ -300,34 +300,37 @@ export interface LessonContent extends BaseDocument {
 export interface CourseLesson extends BaseDocument {
   title: string;
   description?: string;
+  type?: 'text' | 'video' | 'quiz' | 'assignment' | 'live' | 'document' | 'block';
   course: string; // Course ObjectId
-  chapter?: string; // Chapter ObjectId for future use
+  chapter?: string; // Chapter ObjectId - NEW: for chapter-based structure
+  module?: string; // Module ObjectId - for backward compatibility
   order: number;
-  estimatedDuration: number; // in minutes - estimated total time for all content in lesson
+  estimatedDuration?: number; // in minutes - estimated total time for all content in lesson
+  duration?: number; // Alias for estimatedDuration
   // Resources and attachments (keeping for backward compatibility)
-  resources: CourseResource[];
+  resources?: CourseResource[];
   // Access control
-  isPreview: boolean;
-  isPublished: boolean;
-  isPremium: boolean;
+  isPreview?: boolean;
+  isPublished?: boolean;
+  isPremium?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string;
   // Settings
-  settings: CourseLessonSettings;
+  settings?: CourseLessonSettings;
   // Creator info
-  createdBy: string; // User ObjectId
+  createdBy?: string; // User ObjectId
   // Analytics and engagement
-  views: number;
-  completions: number;
-  averageTimeSpent: number; // in seconds
-  likes: number;
+  views?: number;
+  completions?: number;
+  averageTimeSpent?: number; // in seconds
+  likes?: number;
   // Metadata
-  tags: string[];
-  language: string;
+  tags?: string[];
+  language?: string;
   thumbnail?: string;
   // Status tracking
-  isActive: boolean;
-  isDeleted: boolean;
-  deletedAt?: string;
-  lastModified: string;
+  isActive?: boolean;
+  lastModified?: string;
   // Virtual fields
   completionRate?: number;
   resourceCount?: number;
@@ -335,14 +338,26 @@ export interface CourseLesson extends BaseDocument {
   formattedDuration?: string;
   // Content relationship (virtual population)
   content?: LessonContent[];
+  // Assignment and quiz references
+  assignment?: string;
+  assignmentDetails?: CourseAssignmentDetails;
+  quiz?: string;
 }
 
 export interface CourseChapter extends BaseDocument {
   title: string;
   description?: string;
+  course: string; // Course ObjectId
   order: number;
-  lessons: CourseLesson[];
-  isPublished: boolean;
+  lessons?: CourseLesson[]; // Virtual field populated from Lesson.chapter
+  isPublished?: boolean;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  createdBy?: string; // User ObjectId
+  lastModified?: string;
+  // Virtual field
+  lessonCount?: number;
 }
 
 export interface CourseEnrollment {

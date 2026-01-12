@@ -3,6 +3,52 @@ const courseController = require('../controllers/courseController');
 const { protect, restrictTo, optionalAuth } = require('../middleware/auth');
 const { getAssignmentsByCourse } = require('../controllers/assignmentController');
 
+// Import enrollment controller functions
+const {
+  getCourseEnrollments,
+  getProgress,
+  enrollInCourse,
+  getMyEnrollments,
+  updateCourseProgress
+} = require('../controllers/enrollmentController');
+
+// Import lesson controller functions
+const {
+  getLessons,
+  getLessonById,
+  createLesson,
+  updateLesson,
+  deleteLesson,
+  reorderLessons,
+  completeLesson,
+  getLessonStats,
+  addResource,
+  removeResource
+} = require('../controllers/lessonController');
+
+// Import chapter controller functions
+const {
+  getChapters,
+  getChapterById,
+  createChapter,
+  updateChapter,
+  deleteChapter,
+  reorderChapters
+} = require('../controllers/chapterController');
+
+// Import content controller functions
+const {
+  getContentByLesson,
+  getContentById,
+  createContent,
+  updateContent,
+  deleteContent,
+  reorderContent,
+  moveContent,
+  getContentByType,
+  bulkUpdateContent
+} = require('../controllers/contentController');
+
 const router = express.Router();
 
 /**
@@ -215,7 +261,7 @@ router.get('/my-courses', protect, courseController.getMyCourses);
  *                   items:
  *                     $ref: '#/components/schemas/Course'
  */
-router.get('/enrolled', protect, courseController.getEnrolledCourses);
+router.get('/enrolled', protect, getMyEnrollments);
 
 /**
  * @swagger
@@ -503,7 +549,7 @@ router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), courseCon
  *       404:
  *         description: Course not found
  */
-router.post('/enroll', courseController.enrollCourse);
+router.post('/enroll', enrollInCourse);
 
 /**
  * @swagger
@@ -533,7 +579,7 @@ router.post('/enroll', courseController.enrollCourse);
  *       404:
  *         description: Course not found
  */
-router.patch('/progress', courseController.updateProgress);
+router.patch('/progress', updateCourseProgress);
 
 /**
  * @swagger
@@ -626,7 +672,10 @@ router.get('/:id/stats', restrictTo('instructor', 'org_admin', 'super_admin'), c
  *       404:
  *         description: Course not found
  */
-router.get('/:id/progress', courseController.getCourseProgress);
+router.get('/:id/progress', (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getProgress(req, res, next);
+});
 
 router
   .route('/:id')
@@ -695,49 +744,6 @@ router
    *         description: Course not found
    */
   .delete(restrictTo('instructor', 'org_admin', 'super_admin'), courseController.deleteCourse);
-
-// Import enrollment controller functions
-const {
-  getCourseEnrollments,
-  getProgress
-} = require('../controllers/enrollmentController');
-
-// Import lesson controller functions
-const {
-  getLessons,
-  getLessonById,
-  createLesson,
-  updateLesson,
-  deleteLesson,
-  reorderLessons,
-  completeLesson,
-  getLessonStats,
-  addResource,
-  removeResource
-} = require('../controllers/lessonController');
-
-// Import chapter controller functions
-const {
-  getChapters,
-  getChapterById,
-  createChapter,
-  updateChapter,
-  deleteChapter,
-  reorderChapters
-} = require('../controllers/chapterController');
-
-// Import content controller functions
-const {
-  getContentByLesson,
-  getContentById,
-  createContent,
-  updateContent,
-  deleteContent,
-  reorderContent,
-  moveContent,
-  getContentByType,
-  bulkUpdateContent
-} = require('../controllers/contentController');
 
 /**
  * @swagger

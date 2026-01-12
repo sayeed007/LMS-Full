@@ -64,6 +64,7 @@
     "pdfkit": "^0.17.2",
     "rate-limit-mongo": "^2.3.2",
     "redis": "^5.10.0",
+    "slugify": "^1.6.6",
     "socket.io": "^4.8.1",
     "sslcommerz-lts": "^1.2.0",
     "swagger-jsdoc": "^6.2.8",

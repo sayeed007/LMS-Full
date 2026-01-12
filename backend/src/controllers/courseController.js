@@ -106,8 +106,7 @@ const getAllCourses = catchAsync(async (req, res, next) => {
 const getCourse = catchAsync(async (req, res, next) => {
   // First get the course to check ownership
   const course = await Course.findById(req.params.id)
-    .populate('instructor', 'name avatar bio')
-    .populate('createdBy', 'name email');
+    .populate('instructor', 'name avatar bio');
 
   if (!course) {
     return next(new AppError('No course found with that ID', 404));
@@ -120,8 +119,7 @@ const getCourse = catchAsync(async (req, res, next) => {
 
   // Check if user can access this course
   const isOwner = req.user && (
-    course.instructor._id.toString() === req.user.id ||
-    course.createdBy._id.toString() === req.user.id ||
+    (course.instructor && course.instructor._id.toString() === req.user.id) ||
     ['org_admin', 'super_admin'].includes(req.user.role)
   );
 
@@ -142,7 +140,6 @@ const createCourse = catchAsync(async (req, res, next) => {
   const courseData = {
     ...req.body,
     instructor: req.user.id,
-    createdBy: req.user.id,
   };
 
   const newCourse = await Course.create(courseData);
@@ -440,7 +437,6 @@ const getEnrolledCourses = catchAsync(async (req, res, next) => {
   const courses = await Course.find(filter)
     .populate('instructor', 'name email avatar')
     .populate('coInstructors', 'name email avatar')
-    .populate('createdBy', 'name email')
     .sort(sortObj)
     .skip(skip)
     .limit(parseInt(limit))
@@ -487,7 +483,6 @@ const getPendingCourses = catchAsync(async (req, res, next) => {
 
   const courses = await Course.find(query)
     .populate('instructor', 'name email avatar')
-    .populate('createdBy', 'name email')
     .sort('-createdAt')
     .skip(skip)
     .limit(limit);

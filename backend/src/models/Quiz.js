@@ -180,9 +180,9 @@ const quizSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'QuestionBank'
   },
-  section: {
+  chapter: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Section'
+    ref: 'Chapter'
   },
   // Questions (can be from question bank or custom)
   questions: [{
@@ -260,7 +260,7 @@ const quizSchema = new mongoose.Schema({
 // Indexes
 quizSchema.index({ course: 1 });
 quizSchema.index({ questionBank: 1 });
-quizSchema.index({ section: 1 });
+quizSchema.index({ chapter: 1 });
 quizSchema.index({ createdBy: 1 });
 quizSchema.index({ status: 1 });
 quizSchema.index({ isActive: 1 });
