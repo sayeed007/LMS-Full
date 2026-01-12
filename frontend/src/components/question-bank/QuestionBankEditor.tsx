@@ -29,6 +29,7 @@ interface QuestionBankEditorProps {
   onUpdateQuestion: (question: QuestionPopulated) => void;
   onDeleteQuestion: (id: string) => void;
   isLoading?: boolean;
+  modifiedQuestionsMap?: Map<string, QuestionPopulated>;
 }
 
 export default function QuestionBankEditor({
@@ -36,6 +37,7 @@ export default function QuestionBankEditor({
   onAddQuestion,
   onUpdateQuestion,
   onDeleteQuestion,
+  modifiedQuestionsMap = new Map(),
 }: QuestionBankEditorProps) {
   // Track which questions are expanded (default: all collapsed)
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(
@@ -45,22 +47,45 @@ export default function QuestionBankEditor({
   // State for QuestionTypesDialog
   const [showTypeDialog, setShowTypeDialog] = useState(false);
 
+  // Track which questions have unsaved local modifications
+  const [modifiedQuestions, setModifiedQuestions] = useState<Set<string>>(
+    new Set()
+  );
+
   // Local state for editing questions (to avoid auto-save)
   const [localQuestions, setLocalQuestions] =
     useState<QuestionPopulated[]>(questions);
 
   // Sync with parent when questions prop changes (e.g., after save or refetch)
-  // Only sync when the array length changes or question IDs change (new questions added/deleted)
+  // Smart merge: preserve local edits while adding new questions from backend
   useEffect(() => {
     const questionIds = questions.map((q) => q._id).join(",");
     const localIds = localQuestions.map((q) => q._id).join(",");
 
     // Only sync if the questions list structure changed (add/delete/reorder from backend)
     if (questionIds !== localIds) {
-      // Use backend order as-is (no sorting)
-      setLocalQuestions(questions);
+      // Smart merge: use modified versions from parent's Map, otherwise use backend data
+      const merged = questions.map((backendQuestion) => {
+        // Check if this question has unsaved modifications in the parent's Map
+        const modifiedVersion = modifiedQuestionsMap.get(backendQuestion._id);
+        if (modifiedVersion) {
+          // Use the modified version from parent
+          return modifiedVersion;
+        }
+        // Otherwise use the backend version
+        return backendQuestion;
+      });
+
+      setLocalQuestions(merged);
+
+      // Update our local tracking to match parent's modified questions
+      const newModifiedSet = new Set<string>();
+      modifiedQuestionsMap.forEach((_, questionId) => {
+        newModifiedSet.add(questionId);
+      });
+      setModifiedQuestions(newModifiedSet);
     }
-  }, [questions, localQuestions]);
+  }, [questions, localQuestions, modifiedQuestionsMap]);
 
   // Auto-expand newly added questions
   useEffect(() => {
@@ -99,13 +124,24 @@ export default function QuestionBankEditor({
     questionId: string,
     updates: Partial<Question>
   ) => {
+    // Mark this question as modified
+    setModifiedQuestions((prev) => new Set(prev).add(questionId));
+
     setLocalQuestions((prev) => {
       return prev.map((q) => {
         if (q._id === questionId) {
           const updatedQuestion = { ...q, ...updates } as QuestionPopulated;
           // Propagate to parent immediately with the updated question
           // Using setTimeout to ensure state update completes first
-          setTimeout(() => onUpdateQuestion(updatedQuestion), 0);
+          setTimeout(() => {
+            onUpdateQuestion(updatedQuestion);
+            // Clear modified flag after successful save
+            setModifiedQuestions((prevModified) => {
+              const newSet = new Set(prevModified);
+              newSet.delete(questionId);
+              return newSet;
+            });
+          }, 0);
           return updatedQuestion;
         }
         return q;

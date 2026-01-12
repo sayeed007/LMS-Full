@@ -100,9 +100,14 @@ export function QuestionsPageClient({
       bankSection: sectionId, // Optional internal section within the question bank
       difficulty: "medium",
       points: 1,
-      timeLimit: 0,
+      timeLimit: 60,
       tags: [],
       isPublic: false,
+      // Calculate order: max(existing orders) + 1
+      order:
+        questions.length > 0
+          ? Math.max(...questions.map((q) => q.order || 0)) + 1
+          : 1,
     };
 
     // Add default choices for choice-based questions
@@ -355,6 +360,7 @@ export function QuestionsPageClient({
             onAddQuestion={handleAddQuestion}
             onUpdateQuestion={handleUpdateQuestion}
             onDeleteQuestion={handleDeleteQuestion}
+            modifiedQuestionsMap={modifiedQuestions}
           />
         </div>
 

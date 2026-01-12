@@ -212,6 +212,7 @@ exports.updateQuestion = catchAsync(async (req, res, next) => {
   delete req.body.organization;
   delete req.body.questionBank;
   delete req.body.course;
+  delete req.body.__v; // Ensure version key is not updated manually
 
   const updatedQuestion = await Question.findByIdAndUpdate(
     req.params.id,
@@ -351,10 +352,13 @@ exports.duplicateQuestion = catchAsync(async (req, res, next) => {
     return next(new AppError('You do not have permission to duplicate this question', 403));
   }
 
-  // Create new question
+  const originalObj = originalQuestion.toObject();
+
+  // Create new question data cleaning internal fields
   const newQuestionData = {
-    ...originalQuestion.toObject(),
+    ...originalObj,
     _id: undefined,
+    id: undefined,
     text: `${originalQuestion.text} (Copy)`,
     createdBy: req.user.id,
     organization: req.user.organization,
@@ -362,10 +366,30 @@ exports.duplicateQuestion = catchAsync(async (req, res, next) => {
     averageScore: 0,
     lastUsed: undefined,
     createdAt: undefined,
-    updatedAt: undefined
+    updatedAt: undefined,
+    __v: undefined
   };
+  
+  // Clean subdocument IDs to ensure new ones are generated
+  if (newQuestionData.choices) {
+    newQuestionData.choices = newQuestionData.choices.map(c => {
+      const choice = { ...c };
+      delete choice._id;
+      delete choice.id;
+      return choice;
+    });
+  }
+  
+  if (newQuestionData.attachments) {
+    newQuestionData.attachments = newQuestionData.attachments.map(a => {
+      const att = { ...a };
+      delete att._id;
+      delete att.id;
+      return att;
+    });
+  }
 
-  // If duplicating to a different question bank
+  // Handle target question bank and section
   if (req.body.questionBankId) {
     const targetQuestionBank = await QuestionBank.findById(req.body.questionBankId);
     if (!targetQuestionBank) {
@@ -379,6 +403,15 @@ exports.duplicateQuestion = catchAsync(async (req, res, next) => {
     }
 
     newQuestionData.questionBank = req.body.questionBankId;
+  }
+  
+  // Handle section assignment (update or clear)
+  if (req.body.sectionId) {
+    newQuestionData.bankSection = req.body.sectionId;
+  } else if (req.body.questionBankId && req.body.questionBankId !== originalObj.questionBank.toString()) {
+    // If moving to a different bank and no section specified, clear the section
+    // to avoid pointing to a section in the old bank
+    newQuestionData.bankSection = undefined;
   }
 
   const newQuestion = await Question.create(newQuestionData);
@@ -429,12 +462,12 @@ exports.getQuestionsByQuestionBank = catchAsync(async (req, res, next) => {
 
   // Filter by section if provided
   if (req.query.sectionId) {
-    filter.section = req.query.sectionId;
+    filter.bankSection = req.query.sectionId;
   }
 
   const questions = await Question.find(filter)
     .populate('createdBy', 'name email avatar')
-    .sort({ createdAt: -1 });
+    .sort({ order: 1, createdAt: 1 }); // Sort by order first, then createdAt as fallback
 
   res.status(200).json({
     status: 'success',

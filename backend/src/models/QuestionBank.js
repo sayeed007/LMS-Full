@@ -278,34 +278,43 @@ questionBankSchema.methods.updateStats = async function() {
     isActive: true
   });
 
-  this.totalQuestions = questions.length;
+  // Calculate stats logic
+  const updates = {
+    totalQuestions: questions.length
+  };
 
   if (questions.length > 0) {
     // Calculate average difficulty
     const difficultyWeights = { easy: 1, medium: 2, hard: 3 };
     const avgDifficultyWeight = questions.reduce((sum, q) =>
-      sum + difficultyWeights[q.difficulty], 0
+      sum + difficultyWeights[q.difficulty || 'medium'], 0 // Fallback for safety
     ) / questions.length;
 
     if (avgDifficultyWeight <= 1.5) {
-      this.averageDifficulty = 'easy';
+      updates.averageDifficulty = 'easy';
     } else if (avgDifficultyWeight <= 2.5) {
-      this.averageDifficulty = 'medium';
+      updates.averageDifficulty = 'medium';
     } else {
-      this.averageDifficulty = 'hard';
+      updates.averageDifficulty = 'hard';
     }
 
     // Calculate estimated duration
-    this.estimatedDuration = questions.reduce((sum, q) =>
+    updates.estimatedDuration = questions.reduce((sum, q) =>
       sum + (q.timeLimit || 120), 0 // Default 2 minutes per question
     ) / 60; // Convert to minutes
 
     // Calculate average score
     const totalScore = questions.reduce((sum, q) => sum + (q.averageScore || 0), 0);
-    this.averageScore = totalScore / questions.length;
+    updates.averageScore = totalScore / questions.length;
+  } else {
+    // Reset stats if no questions
+    updates.averageDifficulty = 'medium';
+    updates.estimatedDuration = 0;
+    updates.averageScore = 0;
   }
 
-  return this.save();
+  // Use findByIdAndUpdate to avoid VersionError (optimistic locking)
+  return this.constructor.findByIdAndUpdate(this._id, updates, { new: true });
 };
 
 // Static methods
