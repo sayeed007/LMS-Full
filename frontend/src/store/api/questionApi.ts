@@ -47,6 +47,7 @@ export interface UpdateQuestionRequest {
   tags?: string[];
   attachments?: QuestionAttachment[];
   isPublic?: boolean;
+  order?: number; // For custom sequencing
 }
 
 export interface QuestionFilters {
@@ -157,11 +158,11 @@ export const questionApi = baseApi.injectEndpoints({
     }),
 
     // Duplicate question
-    duplicateQuestion: builder.mutation<SingleQuestionResponse, { id: string; questionBankId?: string }>({
-      query: ({ id, questionBankId }) => ({
+    duplicateQuestion: builder.mutation<SingleQuestionResponse, { id: string; questionBankId?: string; sectionId?: string }>({
+      query: ({ id, questionBankId, sectionId }) => ({
         url: `/questions/${id}/duplicate`,
         method: 'POST',
-        body: { questionBankId },
+        body: { questionBankId, sectionId },
       }),
       invalidatesTags: ['Questions'],
     }),

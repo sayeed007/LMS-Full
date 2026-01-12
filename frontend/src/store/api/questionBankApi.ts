@@ -65,6 +65,7 @@ export interface CreateQuestionBankRequest {
 export interface UpdateQuestionBankRequest {
   name?: string;
   description?: string;
+  sections?: Section[]; // Allow updating sections
 }
 
 export interface QuestionBankFilters {

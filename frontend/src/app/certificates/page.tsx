@@ -1,29 +1,42 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useGetMyCertificatesQuery, useDownloadCertificateMutation, downloadCertificateBlob, type Certificate } from '@/store/api/certificateApi';
-import { Award, Download, Eye, Calendar, TrendingUp, FileCheck } from 'lucide-react';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/lib/toast-utils';
-import { format } from 'date-fns';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Pagination } from '@/components/ui';
+import { useState } from "react";
+import {
+  useGetMyCertificatesQuery,
+  useDownloadCertificateMutation,
+  downloadCertificateBlob,
+  type Certificate,
+} from "@/store/api/certificateApi";
+import {
+  Award,
+  Download,
+  Eye,
+  Calendar,
+  TrendingUp,
+  FileCheck,
+} from "lucide-react";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/toast-utils";
+import { format } from "date-fns";
+import Link from "next/link";
+import Image from "next/image";
+import { Pagination } from "@/components/ui";
 
 export default function MyCertificatesPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
 
   const { data, isLoading, error } = useGetMyCertificatesQuery({ page, limit });
-  const [downloadCertificate, { isLoading: isDownloading }] = useDownloadCertificateMutation();
+  const [downloadCertificate, { isLoading: isDownloading }] =
+    useDownloadCertificateMutation();
 
   const handleDownload = async (certificateId: string) => {
     try {
       const blob = await downloadCertificate(certificateId).unwrap();
       downloadCertificateBlob(blob, `Certificate-${certificateId}.pdf`);
-      toast.success('Certificate downloaded successfully');
+      toast.success("Certificate downloaded successfully");
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, 'Failed to download certificate'));
+      toast.error(getErrorMessage(error, "Failed to download certificate"));
     }
   };
 
@@ -34,7 +47,9 @@ export default function MyCertificatesPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Award className="w-10 h-10 text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-900">My Certificates</h1>
+            <h1 className="text-4xl font-bold text-gray-900">
+              My Certificates
+            </h1>
           </div>
           <p className="text-gray-600 text-lg">
             View and download your course completion certificates
@@ -46,8 +61,12 @@ export default function MyCertificatesPage() {
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 mb-8 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm opacity-90 mb-1">Total Certificates Earned</div>
-                <div className="text-4xl font-bold">{data.pagination.total}</div>
+                <div className="text-sm opacity-90 mb-1">
+                  Total Certificates Earned
+                </div>
+                <div className="text-4xl font-bold">
+                  {data.pagination.totalResults}
+                </div>
               </div>
               <FileCheck className="w-16 h-16 opacity-30" />
             </div>
@@ -73,9 +92,12 @@ export default function MyCertificatesPage() {
         {!isLoading && !error && (!data?.data || data.data.length === 0) && (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <Award className="w-20 h-20 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Certificates Yet</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No Certificates Yet
+            </h3>
             <p className="text-gray-600 mb-6">
-              Complete courses to earn certificates that showcase your achievements.
+              Complete courses to earn certificates that showcase your
+              achievements.
             </p>
             <Link
               href="/courses"
@@ -97,7 +119,8 @@ export default function MyCertificatesPage() {
                 >
                   {/* Course Thumbnail */}
                   <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
-                    {typeof certificate.course === 'object' && certificate.course?.thumbnail ? (
+                    {typeof certificate.course === "object" &&
+                    certificate.course?.thumbnail ? (
                       <Image
                         src={certificate.course.thumbnail}
                         alt={certificate.courseName}
@@ -123,27 +146,36 @@ export default function MyCertificatesPage() {
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          Completed: {format(new Date(certificate.completionDate), 'MMM dd, yyyy')}
+                          Completed:{" "}
+                          {format(
+                            new Date(certificate.completionDate),
+                            "MMM dd, yyyy"
+                          )}
                         </span>
                       </div>
 
-                      {certificate.finalScore !== null && certificate.finalScore !== undefined && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>Score: {certificate.finalScore}%</span>
-                        </div>
-                      )}
+                      {certificate.finalScore !== null &&
+                        certificate.finalScore !== undefined && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <TrendingUp className="w-4 h-4" />
+                            <span>Score: {certificate.finalScore}%</span>
+                          </div>
+                        )}
 
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <FileCheck className="w-4 h-4" />
-                        <span className="font-mono text-xs">{certificate.certificateId}</span>
+                        <span className="font-mono text-xs">
+                          {certificate.certificateId}
+                        </span>
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleDownload(certificate.certificateId)}
+                        onClick={() =>
+                          handleDownload(certificate.certificateId)
+                        }
                         disabled={isDownloading}
                         className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >

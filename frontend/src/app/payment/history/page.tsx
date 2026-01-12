@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useGetPaymentHistoryQuery } from '@/store/api/paymentApi';
-import { Calendar, CreditCard, Eye } from 'lucide-react';
-import moment from 'moment';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState } from 'react';
-import { Pagination } from '@/components/ui';
+import { useGetPaymentHistoryQuery } from "@/store/api/paymentApi";
+import { Calendar, CreditCard, Eye } from "lucide-react";
+import moment from "moment";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { Pagination } from "@/components/ui";
 
 export default function PaymentHistoryPage() {
   const [page, setPage] = useState(1);
@@ -26,7 +26,9 @@ export default function PaymentHistoryPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error loading payment history</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Error loading payment history
+          </h2>
           <p className="text-gray-600">Please try again later</p>
         </div>
       </div>
@@ -41,13 +43,17 @@ export default function PaymentHistoryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Payment History</h1>
-          <p className="text-gray-600 mt-2">View all your course purchase transactions</p>
+          <p className="text-gray-600 mt-2">
+            View all your course purchase transactions
+          </p>
         </div>
 
         {payments.length === 0 ? (
           <div className="bg-white shadow rounded-lg p-12 text-center">
             <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No payment history</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No payment history
+            </h3>
             <p className="text-gray-600 mb-6">
               {"You haven't made any course purchases yet"}
             </p>
@@ -90,7 +96,10 @@ export default function PaymentHistoryPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {payments.map((payment) => (
-                      <tr key={payment.enrollmentId} className="hover:bg-gray-50">
+                      <tr
+                        key={payment.enrollmentId}
+                        className="hover:bg-gray-50"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
@@ -116,7 +125,9 @@ export default function PaymentHistoryPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{payment.payment.transactionId}</div>
+                          <div className="text-sm text-gray-900">
+                            {payment.payment.transactionId}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-semibold text-gray-900">
@@ -125,13 +136,15 @@ export default function PaymentHistoryPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 capitalize">
-                            {payment.payment.paymentMethod || 'Card'}
+                            {payment.payment.paymentMethod || "Card"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {moment(payment.payment.paidAt).format('MMM DD, YYYY')}
+                            {moment(payment.payment.paidAt).format(
+                              "MMM DD, YYYY"
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -164,12 +177,12 @@ export default function PaymentHistoryPage() {
             </div>
 
             {/* Pagination */}
-            {pagination && pagination.totalPages > 0 && (
+            {pagination && pagination.pages > 0 && (
               <div className="mt-6">
                 <Pagination
                   currentPage={page}
-                  totalPages={pagination.totalPages}
-                  totalItems={pagination.totalResults}
+                  totalPages={pagination.pages}
+                  totalItems={pagination.total}
                   itemsPerPage={limit}
                   onPageChange={(newPage) => setPage(newPage)}
                   onPageSizeChange={(newSize) => {

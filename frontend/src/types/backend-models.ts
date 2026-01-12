@@ -545,6 +545,13 @@ export interface QuestionBank extends BaseDocument {
   createdBy: string; // User ObjectId
   isActive: boolean;
   isPublic: boolean;
+  settings?: {
+    passingScoreRequired?: boolean;
+    passingScore?: number;
+    quizAttemptTime?: string;
+    quizTimeHours?: number;
+    quizTimeMinutes?: number;
+  };
 }
 
 export interface Quiz extends BaseDocument {
