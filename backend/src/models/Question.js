@@ -94,6 +94,11 @@ const questionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     // References QuestionBank.sections._id (embedded document ID)
   },
+  // Order/position within the question bank (for custom sequencing)
+  order: {
+    type: Number,
+    default: 0,
+  },
   // Creator info
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

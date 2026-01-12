@@ -73,15 +73,24 @@ export default function QuestionBankPreviewPage() {
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
   const isFirstQuestion = currentQuestionIndex === 0;
 
+  const getSectionName = (sectionId?: string) => {
+    if (!sectionId || !questionBank?.sections) return null;
+    return questionBank.sections.find((s) => s._id === sectionId)?.name;
+  };
+
+  // Initialize global quiz timer based on settings
   // Initialize global quiz timer based on settings
   useEffect(() => {
-    if (
-      questionBank?.settings?.quizAttemptTime &&
-      questionBank.settings.quizAttemptTime !== "unlimited"
-    ) {
+    // Check if time limit is set (hours or minutes > 0)
+    const hasTimeLimit =
+      (questionBank?.settings?.quizTimeHours || 0) > 0 ||
+      (questionBank?.settings?.quizTimeMinutes || 0) > 0;
+
+    if (hasTimeLimit) {
       const minutes =
-        (questionBank.settings.quizTimeHours || 0) * 60 +
-        (questionBank.settings.quizTimeMinutes || 0);
+        (questionBank!.settings!.quizTimeHours || 0) * 60 +
+        (questionBank!.settings!.quizTimeMinutes || 0);
+
       if (minutes > 0) {
         setTimeLimitMinutes(minutes);
         setTimeLeft(minutes * 60);
@@ -243,9 +252,9 @@ export default function QuestionBankPreviewPage() {
 
       const percentage =
         maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-      const passingScore = questionBank?.settings?.passingScore || 0;
-
-      const isPassed = percentage >= (passingScore > 0 ? 50 : 50); // Default 50%
+      // Use passing score from settings (default to 50%)
+      const passingScore = questionBank?.settings?.passingScore || 50;
+      const isPassed = percentage >= passingScore;
 
       setQuizResults({
         score,
@@ -492,10 +501,23 @@ export default function QuestionBankPreviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500 flex items-center gap-2">
+                    <Flag className="w-4 h-4" /> Attempts
+                  </span>
+                  <span className="font-semibold text-gray-900">
+                    {questionBank?.settings?.quizAttemptTime === "unlimited" ||
+                    !questionBank?.settings?.quizAttemptTime
+                      ? "Unlimited"
+                      : `${questionBank.settings.quizAttemptTime}`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 flex items-center gap-2">
                     <Trophy className="w-4 h-4" /> Passing Score
                   </span>
                   <span className="font-semibold text-gray-900">
-                    {questionBank?.settings?.passingScore || "-"}{" "}
+                    {questionBank?.settings?.passingScore
+                      ? `${questionBank.settings.passingScore}%`
+                      : "-"}{" "}
                     {questionBank?.settings?.passingScoreRequired
                       ? "(Required)"
                       : ""}
@@ -543,6 +565,12 @@ export default function QuestionBankPreviewPage() {
               <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
+                    {currentQuestion.bankSection &&
+                      getSectionName(currentQuestion.bankSection) && (
+                        <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+                          {getSectionName(currentQuestion.bankSection)}
+                        </div>
+                      )}
                     <CardTitle className="text-xl font-bold flex items-center gap-3">
                       Question {currentQuestionIndex + 1}
                       {currentQuestion.points && (

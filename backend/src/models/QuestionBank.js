@@ -47,6 +47,10 @@ const settingsSchema = new mongoose.Schema({
     min: [0, 'Passing score cannot be negative'],
     max: [100, 'Passing score cannot exceed 100']
   },
+  passingScoreRequired: {
+    type: Boolean,
+    default: true
+  },
   // Time limits
   defaultTimeLimit: {
     type: Number, // in minutes
@@ -61,7 +65,7 @@ const settingsSchema = new mongoose.Schema({
   maxAttempts: {
     type: Number,
     default: 3,
-    min: [1, 'Must allow at least one attempt']
+    min: [0, 'Cannot be negative'] // 0 means unlimited
   },
   // Display options
   showCorrectAnswers: {

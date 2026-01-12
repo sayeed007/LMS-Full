@@ -32,6 +32,7 @@ export interface CreateQuestionRequest {
   attachments?: QuestionAttachment[];
   questionBank: string;
   bankSection?: string; // Internal section within the question bank
+  order?: number;
   isPublic?: boolean;
 }
 

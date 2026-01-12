@@ -3,13 +3,9 @@
 
 import { PickQuestionDialog } from "@/components/question-bank/PickQuestionDialog";
 import QuestionBankEditor from "@/components/question-bank/QuestionBankEditor";
-import {
-  SettingsPopup,
-  type SettingsData,
-} from "@/components/question-bank/QuestionBankSettingsPopup";
+
 import { GoBackRoute } from "@/components/reports/GoBackRoute";
 import { Input } from "@/components/ui/input";
-import PrimaryActionButton from "@/components/ui/PrimaryButton";
 import PrimaryOutlineButton from "@/components/ui/PrimaryOutlineButton";
 import { useConfirm } from "@/hooks/useConfirm";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
@@ -24,9 +20,9 @@ import {
 } from "@/store/api/questionApi";
 import {
   useGetQuestionBankQuery,
-  useUpdateQuestionBankMutation,
   useUpdateSectionMutation,
 } from "@/store/api/questionBankApi";
+import { Eye } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -44,7 +40,7 @@ export function QuestionsPageClient({
   const router = useRouter();
   const confirm = useConfirm();
   const [sectionName, setSectionName] = useState("");
-  const [showSettingsPopup, setShowSettingsPopup] = useState(false);
+  // Settings moved to QuestionBankDetailClient
   // showAddQuestionPopup removed as it is now handled in QuestionBankEditor
   const [showPickQuestionPopup, setShowPickQuestionPopup] = useState(false);
 
@@ -65,7 +61,6 @@ export function QuestionsPageClient({
   } = useGetQuestionsByQuestionBankQuery({ questionBankId, sectionId });
 
   // Mutations
-  const [updateQuestionBank] = useUpdateQuestionBankMutation();
   const [createQuestion] = useCreateQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
@@ -256,34 +251,6 @@ export function QuestionsPageClient({
     }
   };
 
-  const handleSaveSettings = async (settings: SettingsData) => {
-    try {
-      await updateQuestionBank({
-        id: questionBankId,
-        data: {
-          settings: settings as unknown as Record<string, unknown>,
-        } as unknown as Record<string, unknown>,
-      }).unwrap();
-      showSuccessToast("Settings saved successfully");
-      setShowSettingsPopup(false);
-    } catch (error) {
-      console.error("Error saving settings:", error);
-      showErrorToast("Failed to save settings", "Please try again");
-    }
-  };
-
-  const handleSettingsClick = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setShowSettingsPopup((prev) => !prev);
-  };
-
-  const handleCloseSettings = () => {
-    setShowSettingsPopup(false);
-  };
-
   if (isLoadingBank || isLoadingQuestions) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -322,32 +289,10 @@ export function QuestionsPageClient({
 
         {/* RIGHT - Buttons */}
         <div className="flex items-center justify-end gap-2 flex-1">
-          <div className="relative">
-            <div
-              onClick={(e) => handleSettingsClick(e)}
-              className="cursor-pointer bg-transparent border-2 border-[#0ea5e9] text-[#0ea5e9] rounded-lg p-2 hover:bg-[#0ea5e9] hover:text-white transition-all duration-200 flex items-center justify-center w-10 h-10"
-            >
-              <Image
-                src={"/icons/Settings.png"}
-                alt={"Settings"}
-                width={20}
-                height={20}
-              />
-            </div>
-
-            {/* Settings popup */}
-            <SettingsPopup
-              isOpen={showSettingsPopup}
-              onClose={handleCloseSettings}
-              onSave={handleSaveSettings}
-            />
-          </div>
-
-          <PrimaryOutlineButton onClick={handlePreview}>
+          <PrimaryOutlineButton variant="primary" onClick={handlePreview}>
+            <Eye className="w-4 h-4 mr-2" />
             Preview
           </PrimaryOutlineButton>
-
-          <PrimaryActionButton onClick={handleSave}>Save</PrimaryActionButton>
         </div>
       </div>
 

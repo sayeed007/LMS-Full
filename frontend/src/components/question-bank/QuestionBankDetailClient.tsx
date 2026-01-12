@@ -2,8 +2,11 @@
 "use client";
 
 import { showErrorToast } from "@/lib/toast-utils";
-import { useGetQuestionBankQuery } from "@/store/api/questionBankApi";
-import { ArrowLeft, BookOpen, Plus, Settings } from "lucide-react";
+import {
+  useGetQuestionBankQuery,
+  useUpdateQuestionBankMutation,
+} from "@/store/api/questionBankApi";
+import { ArrowLeft, BookOpen, Eye, Plus, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PageLayout } from "../ui";
@@ -13,6 +16,7 @@ import { Card, CardContent } from "../ui/card";
 import PrimaryActionButton from "../ui/PrimaryButton";
 import PrimaryOutlineButton from "../ui/PrimaryOutlineButton";
 import { QuestionBankDialog } from "./QuestionBankDialog";
+import { SettingsPopup, type SettingsData } from "./QuestionBankSettingsPopup";
 import { SectionDialog } from "./SectionDialog";
 
 interface QuestionBankDetailClientProps {
@@ -28,6 +32,9 @@ export function QuestionBankDetailClient({
   const [editingSection, setEditingSection] = useState<
     (typeof sections)[0] | null
   >(null);
+  const [showSettingsPopup, setShowSettingsPopup] = useState(false);
+
+  const [updateQuestionBank] = useUpdateQuestionBankMutation();
 
   const {
     data: questionBankData,
@@ -89,6 +96,40 @@ export function QuestionBankDetailClient({
     );
   };
 
+  const handleSaveSettings = async (settings: SettingsData) => {
+    try {
+      // Map frontend settings to backend schema
+      const backendSettings = {
+        ...questionBank?.settings, // Preserve existing settings like randomizeQuestions
+        passingScoreRequired: settings.passingScoreRequired,
+        passingScore: settings.passingScore,
+        maxAttempts:
+          settings.quizAttemptTime === "unlimited"
+            ? 0
+            : Number(settings.quizAttemptTime),
+        defaultTimeLimit:
+          settings.quizTimeHours * 60 + settings.quizTimeMinutes,
+      };
+
+      await updateQuestionBank({
+        id: questionBankId,
+        data: {
+          settings: backendSettings as unknown as Record<string, unknown>,
+        } as unknown as Record<string, unknown>,
+      }).unwrap();
+
+      // Refetch is automatic due to tag invalidation or cache update
+      setShowSettingsPopup(false);
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      showErrorToast("Failed to save settings", "Please try again");
+    }
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettingsPopup(false);
+  };
+
   return (
     <PageLayout
       title={questionBank.name}
@@ -100,6 +141,22 @@ export function QuestionBankDetailClient({
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
+          </PrimaryOutlineButton>
+          <PrimaryOutlineButton
+            variant="primary"
+            onClick={() => setShowSettingsPopup(true)}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </PrimaryOutlineButton>
+          <PrimaryOutlineButton
+            variant="primary"
+            onClick={() =>
+              router.push(`/question-bank/${questionBankId}/preview`)
+            }
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
           </PrimaryOutlineButton>
           <PrimaryOutlineButton
             variant="info"
@@ -282,7 +339,32 @@ export function QuestionBankDetailClient({
         }}
         questionBankId={questionBankId}
         section={editingSection || undefined}
-        mode={editingSection ? "edit" : "create"}
+      />
+
+      {/* Settings Popup */}
+      <SettingsPopup
+        isOpen={showSettingsPopup}
+        onClose={handleCloseSettings}
+        onSave={handleSaveSettings}
+        initialSettings={
+          questionBank?.settings
+            ? {
+                passingScoreRequired:
+                  questionBank.settings.passingScoreRequired ?? true,
+                passingScore: questionBank.settings.passingScore ?? 0,
+                quizAttemptTime:
+                  questionBank.settings.maxAttempts === 0 ||
+                  !questionBank.settings.maxAttempts
+                    ? "unlimited"
+                    : String(questionBank.settings.maxAttempts),
+                quizTimeHours: Math.floor(
+                  (questionBank.settings.defaultTimeLimit || 0) / 60
+                ),
+                quizTimeMinutes:
+                  (questionBank.settings.defaultTimeLimit || 0) % 60,
+              }
+            : undefined
+        }
       />
     </PageLayout>
   );

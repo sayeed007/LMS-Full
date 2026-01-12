@@ -492,6 +492,7 @@ export interface Question extends BaseDocument {
   // References
   questionBank: string; // QuestionBank ObjectId
   bankSection?: string; // Internal section within the QuestionBank
+  order?: number; // Custom sequencing
   createdBy: string; // User ObjectId
   organization?: string; // Organization ObjectId
   // Status
@@ -548,9 +549,15 @@ export interface QuestionBank extends BaseDocument {
   settings?: {
     passingScoreRequired?: boolean;
     passingScore?: number;
-    quizAttemptTime?: string;
-    quizTimeHours?: number;
-    quizTimeMinutes?: number;
+    defaultTimeLimit?: number; // minutes
+    maxAttempts?: number; // 0 for unlimited
+    randomizeQuestions?: boolean;
+    randomizeChoices?: boolean;
+    defaultPointsPerQuestion?: number;
+    allowRetakes?: boolean;
+    showCorrectAnswers?: boolean;
+    showExplanations?: boolean;
+    showScoreImmediately?: boolean;
   };
 }
 
