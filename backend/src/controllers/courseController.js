@@ -139,7 +139,7 @@ const getCourse = catchAsync(async (req, res, next) => {
 const createCourse = catchAsync(async (req, res, next) => {
   const courseData = {
     ...req.body,
-    instructor: req.user.id,
+    instructor: req.user._id,
   };
 
   const newCourse = await Course.create(courseData);
@@ -264,10 +264,11 @@ const getMyCourses = catchAsync(async (req, res, next) => {
   
   if (req.user.role === 'instructor' || req.user.role === 'org_admin' || req.user.role === 'super_admin') {
     // Get courses created by this instructor
-    query = Course.find({ instructor: req.user.id, isDeleted: false });
+    // Use $ne: true to include documents where isDeleted is false, undefined, or doesn't exist
+    query = Course.find({ instructor: req.user._id, isDeleted: { $ne: true } });
   } else {
     // Get enrolled courses for students
-    query = Course.find({ 'enrollments.student': req.user.id, isDeleted: false });
+    query = Course.find({ 'enrollments.student': req.user._id, isDeleted: { $ne: true } });
   }
 
   const courses = await query.populate('instructor', 'name avatar');

@@ -1,0 +1,723 @@
+{
+  "course": {
+    "title": "Mastering GitHub: From Basics to Advanced Workflows",
+    "shortDescription": "Complete guide to GitHub - version control, collaboration, CI/CD, and best practices for modern software development.",
+    "description": "Master GitHub from the ground up! This comprehensive course covers everything from basic Git commands to advanced GitHub workflows, team collaboration, and automation.\n\n**What You'll Learn:**\n• Git fundamentals and version control concepts\n• GitHub repository management and collaboration\n• Branching strategies and pull request workflows\n• GitHub Actions for CI/CD automation\n• Best practices for open source contribution\n\n**Perfect For:**\n• Developers new to version control\n• Teams wanting to improve collaboration\n• Anyone looking to contribute to open source\n• DevOps engineers learning automation",
+    "category": "Development",
+    "subcategory": "Version Control",
+    "level": "Beginner",
+    "thumbnail": "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=800",
+    "previewVideo": "https://www.youtube.com/embed/RGOj5yH7evk",
+    "images": [
+      "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=800",
+      "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=800"
+    ],
+    "price": 49.99,
+    "originalPrice": 79.99,
+    "discountPrice": 39.99,
+    "currency": "USD",
+    "estimatedDuration": 6,
+    "tags": ["github", "git", "version-control", "collaboration", "ci-cd"],
+    "prerequisites": ["Basic command line knowledge", "Text editor familiarity"],
+    "learningOutcomes": [
+      "Master Git version control fundamentals",
+      "Collaborate effectively using GitHub",
+      "Implement CI/CD with GitHub Actions",
+      "Follow industry best practices",
+      "Contribute to open source projects"
+    ],
+    "isPublished": true,
+    "isApproved": true
+  },
+  "chapters": [
+    {
+      "title": "Getting Started with Git & GitHub",
+      "description": "Introduction to version control, Git basics, and GitHub account setup",
+      "order": 1,
+      "lessons": [
+        {
+          "title": "What is Version Control?",
+          "description": "Understanding version control systems and why they matter",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 10,
+          "content": [
+            {
+              "type": "text",
+              "title": "Introduction to Version Control",
+              "order": 1,
+              "data": {
+                "text": "Version control is a system that records changes to files over time so that you can recall specific versions later. It's essential for:\n\n• Tracking code changes\n• Collaborating with team members\n• Reverting to previous versions\n• Understanding project history\n• Managing multiple versions simultaneously"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Installing Git",
+          "description": "Step-by-step guide to installing Git on different operating systems",
+          "type": "block",
+          "order": 2,
+          "estimatedDuration": 15,
+          "content": [
+            {
+              "type": "block",
+              "title": "Installation Guide",
+              "order": 1,
+              "data": {
+                "items": [
+                  {
+                    "type": "text",
+                    "order": 1,
+                    "data": {
+                      "text": "## Installing Git\n\nChoose your operating system:"
+                    }
+                  },
+                  {
+                    "type": "image",
+                    "order": 2,
+                    "data": {
+                      "url": "https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=600",
+                      "alt": "Git installation",
+                      "title": "Git Logo"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "order": 3,
+                    "data": {
+                      "text": "**Windows:**\n1. Download from git-scm.com\n2. Run the installer\n3. Use default settings\n\n**macOS:**\n```bash\nbrew install git\n```\n\n**Linux:**\n```bash\nsudo apt-get install git\n```"
+                    }
+                  },
+                  {
+                    "type": "video",
+                    "order": 4,
+                    "data": {
+                      "url": "https://www.youtube.com/embed/8JJ101D3knE",
+                      "title": "Git Installation Tutorial",
+                      "duration": 300
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Creating Your GitHub Account",
+          "description": "Setting up your GitHub profile and configuring Git",
+          "type": "video",
+          "order": 3,
+          "estimatedDuration": 12,
+          "content": [
+            {
+              "type": "video",
+              "title": "GitHub Account Setup",
+              "order": 1,
+              "data": {
+                "url": "https://www.youtube.com/embed/QUtk-Uuq9nE",
+                "title": "Create GitHub Account",
+                "duration": 720
+              }
+            }
+          ]
+        },
+        {
+          "title": "Git Configuration Basics",
+          "description": "Configuring your Git identity and preferences",
+          "type": "document",
+          "order": 4,
+          "estimatedDuration": 8,
+          "content": [
+            {
+              "type": "document",
+              "title": "Git Configuration Guide",
+              "order": 1,
+              "data": {
+                "url": "https://example.com/git-config-guide.pdf",
+                "filename": "git-configuration-guide.pdf",
+                "size": 524288,
+                "mimeType": "application/pdf"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Git Fundamentals",
+      "description": "Core Git commands and workflows",
+      "order": 2,
+      "lessons": [
+        {
+          "title": "Understanding Git Repositories",
+          "description": "What is a repository and how to create one",
+          "type": "block",
+          "order": 1,
+          "estimatedDuration": 15,
+          "content": [
+            {
+              "type": "block",
+              "title": "Repository Basics",
+              "order": 1,
+              "data": {
+                "items": [
+                  {
+                    "type": "text",
+                    "order": 1,
+                    "data": {
+                      "text": "# Git Repository\n\nA Git repository is a storage space where your project lives. It can be local or remote."
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "order": 2,
+                    "data": {
+                      "text": "## Creating a Repository\n\n```bash\n# Initialize a new repository\ngit init\n\n# Clone an existing repository\ngit clone https://github.com/user/repo.git\n```"
+                    }
+                  },
+                  {
+                    "type": "image",
+                    "order": 3,
+                    "data": {
+                      "url": "https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=600",
+                      "alt": "Git workflow diagram",
+                      "title": "Git Workflow"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Basic Git Commands",
+          "description": "Essential commands: add, commit, status, log",
+          "type": "text",
+          "order": 2,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "text",
+              "title": "Essential Git Commands",
+              "order": 1,
+              "data": {
+                "text": "## Core Git Commands\n\n**Check Status:**\n```bash\ngit status\n```\n\n**Stage Changes:**\n```bash\ngit add filename.txt\ngit add .  # Add all changes\n```\n\n**Commit Changes:**\n```bash\ngit commit -m \"Your commit message\"\n```\n\n**View History:**\n```bash\ngit log\ngit log --oneline\n```"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Git Commands Quiz",
+          "description": "Test your knowledge of basic Git commands",
+          "type": "quiz",
+          "order": 3,
+          "estimatedDuration": 10,
+          "content": [
+            {
+              "type": "quiz",
+              "title": "Git Basics Quiz",
+              "order": 1,
+              "data": {
+                "quiz": {
+                  "instructions": "Answer the following questions about Git basics",
+                  "timeLimit": 600,
+                  "attempts": 3,
+                  "shuffleQuestions": true,
+                  "showFeedback": true,
+                  "passingScore": 70,
+                  "questions": [
+                    {
+                      "type": "single_choice",
+                      "order": 1,
+                      "question": "Which command initializes a new Git repository?",
+                      "options": [
+                        { "text": "git init", "isCorrect": true },
+                        { "text": "git start", "isCorrect": false },
+                        { "text": "git create", "isCorrect": false },
+                        { "text": "git new", "isCorrect": false }
+                      ],
+                      "points": 10,
+                      "explanation": "git init creates a new Git repository in the current directory",
+                      "isRequired": true
+                    },
+                    {
+                      "type": "multiple_choice",
+                      "order": 2,
+                      "question": "Which commands are used to save changes? (Select all that apply)",
+                      "options": [
+                        { "text": "git add", "isCorrect": true },
+                        { "text": "git commit", "isCorrect": true },
+                        { "text": "git save", "isCorrect": false },
+                        { "text": "git push", "isCorrect": false }
+                      ],
+                      "points": 15,
+                      "explanation": "git add stages changes and git commit saves them to the repository",
+                      "isRequired": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Git Workflow Assignment",
+          "description": "Practice creating a repository and making commits",
+          "type": "assignment",
+          "order": 4,
+          "estimatedDuration": 30,
+          "content": [
+            {
+              "type": "assignment",
+              "title": "Create Your First Repository",
+              "order": 1,
+              "data": {
+                "assignment": {
+                  "title": "Git Basics Assignment",
+                  "description": "Create a repository, make commits, and document your process",
+                  "instructions": "1. Create a new directory\n2. Initialize a Git repository\n3. Create a README.md file\n4. Make at least 3 commits\n5. Take screenshots of your git log\n6. Submit your repository URL",
+                  "submissionType": "mixed",
+                  "maxFileSize": 10485760,
+                  "allowedFileTypes": ["pdf", "png", "jpg", "txt"],
+                  "maxSubmissions": 3,
+                  "maxPoints": 100,
+                  "dueDate": "2026-02-01T23:59:59Z",
+                  "allowLateSubmission": true,
+                  "lateSubmissionPenalty": 10
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Branching & Merging",
+      "description": "Master Git branches and merge strategies",
+      "order": 3,
+      "lessons": [
+        {
+          "title": "Understanding Branches",
+          "description": "What are branches and why use them",
+          "type": "video",
+          "order": 1,
+          "estimatedDuration": 18,
+          "content": [
+            {
+              "type": "video",
+              "title": "Git Branching Explained",
+              "order": 1,
+              "data": {
+                "url": "https://www.youtube.com/embed/FyAAIHHClqI",
+                "title": "Git Branching Tutorial",
+                "duration": 1080
+              }
+            }
+          ]
+        },
+        {
+          "title": "Creating and Switching Branches",
+          "description": "Branch operations and best practices",
+          "type": "block",
+          "order": 2,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "block",
+              "title": "Branch Management",
+              "order": 1,
+              "data": {
+                "items": [
+                  {
+                    "type": "text",
+                    "order": 1,
+                    "data": {
+                      "text": "## Branch Commands\n\n**Create a new branch:**\n```bash\ngit branch feature-name\n```\n\n**Switch to a branch:**\n```bash\ngit checkout feature-name\n# or\ngit switch feature-name\n```\n\n**Create and switch:**\n```bash\ngit checkout -b feature-name\n```"
+                    }
+                  },
+                  {
+                    "type": "video",
+                    "order": 2,
+                    "data": {
+                      "url": "https://www.youtube.com/embed/JTE2Fn_sCZs",
+                      "title": "Branch Demo",
+                      "duration": 420
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "order": 3,
+                    "data": {
+                      "text": "**List branches:**\n```bash\ngit branch        # Local branches\ngit branch -a     # All branches\n```\n\n**Delete a branch:**\n```bash\ngit branch -d feature-name\n```"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Merging Branches",
+          "description": "Merge strategies and conflict resolution",
+          "type": "audio",
+          "order": 3,
+          "estimatedDuration": 15,
+          "content": [
+            {
+              "type": "audio",
+              "title": "Merge Strategies Podcast",
+              "order": 1,
+              "data": {
+                "url": "https://example.com/merge-strategies.mp3",
+                "filename": "merge-strategies.mp3",
+                "duration": 900,
+                "mimeType": "audio/mpeg"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Branching Quiz",
+          "description": "Test your branching knowledge",
+          "type": "quiz",
+          "order": 4,
+          "estimatedDuration": 12,
+          "content": [
+            {
+              "type": "quiz",
+              "title": "Branching & Merging Quiz",
+              "order": 1,
+              "data": {
+                "quiz": {
+                  "instructions": "Test your understanding of Git branching",
+                  "timeLimit": 720,
+                  "attempts": 2,
+                  "shuffleQuestions": false,
+                  "showFeedback": true,
+                  "passingScore": 75,
+                  "questions": [
+                    {
+                      "type": "single_choice",
+                      "order": 1,
+                      "question": "What is the default branch name in Git?",
+                      "options": [
+                        { "text": "main", "isCorrect": true },
+                        { "text": "master", "isCorrect": false },
+                        { "text": "default", "isCorrect": false },
+                        { "text": "trunk", "isCorrect": false }
+                      ],
+                      "points": 10,
+                      "isRequired": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "GitHub Collaboration",
+      "description": "Working with teams using GitHub",
+      "order": 4,
+      "lessons": [
+        {
+          "title": "Pull Requests Explained",
+          "description": "Creating and reviewing pull requests",
+          "type": "block",
+          "order": 1,
+          "estimatedDuration": 25,
+          "content": [
+            {
+              "type": "block",
+              "title": "Pull Request Workflow",
+              "order": 1,
+              "data": {
+                "items": [
+                  {
+                    "type": "text",
+                    "order": 1,
+                    "data": {
+                      "text": "# Pull Requests\n\nA pull request (PR) is a way to propose changes to a repository."
+                    }
+                  },
+                  {
+                    "type": "image",
+                    "order": 2,
+                    "data": {
+                      "url": "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600",
+                      "alt": "Pull request workflow",
+                      "title": "PR Workflow"
+                    }
+                  },
+                  {
+                    "type": "video",
+                    "order": 3,
+                    "data": {
+                      "url": "https://www.youtube.com/embed/8lGpZkjnkt4",
+                      "title": "Pull Request Tutorial",
+                      "duration": 600
+                    }
+                  },
+                  {
+                    "type": "document",
+                    "order": 4,
+                    "data": {
+                      "url": "https://example.com/pr-best-practices.pdf",
+                      "filename": "pr-best-practices.pdf",
+                      "size": 1048576,
+                      "mimeType": "application/pdf"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Code Review Best Practices",
+          "description": "How to review code effectively",
+          "type": "text",
+          "order": 2,
+          "estimatedDuration": 15,
+          "content": [
+            {
+              "type": "text",
+              "title": "Code Review Guidelines",
+              "order": 1,
+              "data": {
+                "text": "## Code Review Checklist\n\n✅ Code quality and readability\n✅ Test coverage\n✅ Documentation updates\n✅ Performance considerations\n✅ Security implications\n\n**Review Comments:**\n- Be constructive and specific\n- Explain the 'why'\n- Suggest improvements\n- Acknowledge good work"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Collaboration Assignment",
+          "description": "Practice pull request workflow",
+          "type": "assignment",
+          "order": 3,
+          "estimatedDuration": 45,
+          "content": [
+            {
+              "type": "assignment",
+              "title": "Create a Pull Request",
+              "order": 1,
+              "data": {
+                "assignment": {
+                  "title": "Pull Request Practice",
+                  "description": "Fork a repository, make changes, and create a pull request",
+                  "instructions": "1. Fork the practice repository\n2. Clone your fork\n3. Create a feature branch\n4. Make meaningful changes\n5. Push to your fork\n6. Create a pull request\n7. Submit the PR URL",
+                  "submissionType": "url",
+                  "maxSubmissions": 2,
+                  "maxPoints": 150,
+                  "dueDate": "2026-02-15T23:59:59Z",
+                  "allowLateSubmission": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "GitHub Issues & Projects",
+          "description": "Project management with GitHub",
+          "type": "video",
+          "order": 4,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "video",
+              "title": "GitHub Project Management",
+              "order": 1,
+              "data": {
+                "url": "https://www.youtube.com/embed/MYNIXz9iViU",
+                "title": "GitHub Issues Tutorial",
+                "duration": 1200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "GitHub Actions & CI/CD",
+      "description": "Automating workflows with GitHub Actions",
+      "order": 5,
+      "lessons": [
+        {
+          "title": "Introduction to GitHub Actions",
+          "description": "What is CI/CD and GitHub Actions",
+          "type": "block",
+          "order": 1,
+          "estimatedDuration": 22,
+          "content": [
+            {
+              "type": "block",
+              "title": "GitHub Actions Overview",
+              "order": 1,
+              "data": {
+                "items": [
+                  {
+                    "type": "text",
+                    "order": 1,
+                    "data": {
+                      "text": "# GitHub Actions\n\nAutomate your software workflows with CI/CD"
+                    }
+                  },
+                  {
+                    "type": "video",
+                    "order": 2,
+                    "data": {
+                      "url": "https://www.youtube.com/embed/R8_veQiYBjI",
+                      "title": "GitHub Actions Introduction",
+                      "duration": 900
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "order": 3,
+                    "data": {
+                      "text": "## Key Concepts\n\n- **Workflows**: Automated processes\n- **Jobs**: Set of steps\n- **Actions**: Reusable units\n- **Runners**: Servers that run workflows"
+                    }
+                  },
+                  {
+                    "type": "image",
+                    "order": 4,
+                    "data": {
+                      "url": "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=600",
+                      "alt": "CI/CD pipeline",
+                      "title": "CI/CD Workflow"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "title": "Creating Your First Workflow",
+          "description": "Build a simple CI workflow",
+          "type": "document",
+          "order": 2,
+          "estimatedDuration": 18,
+          "content": [
+            {
+              "type": "document",
+              "title": "GitHub Actions Workflow Guide",
+              "order": 1,
+              "data": {
+                "url": "https://example.com/github-actions-guide.pdf",
+                "filename": "github-actions-workflow.pdf",
+                "size": 2097152,
+                "mimeType": "application/pdf"
+              }
+            }
+          ]
+        },
+        {
+          "title": "GitHub Actions Quiz",
+          "description": "Test your CI/CD knowledge",
+          "type": "quiz",
+          "order": 3,
+          "estimatedDuration": 15,
+          "content": [
+            {
+              "type": "quiz",
+              "title": "CI/CD with GitHub Actions",
+              "order": 1,
+              "data": {
+                "quiz": {
+                  "instructions": "Answer questions about GitHub Actions",
+                  "timeLimit": 900,
+                  "attempts": 3,
+                  "shuffleQuestions": true,
+                  "showFeedback": true,
+                  "passingScore": 80,
+                  "questions": [
+                    {
+                      "type": "single_choice",
+                      "order": 1,
+                      "question": "What file format is used for GitHub Actions workflows?",
+                      "options": [
+                        { "text": "YAML", "isCorrect": true },
+                        { "text": "JSON", "isCorrect": false },
+                        { "text": "XML", "isCorrect": false },
+                        { "text": "TOML", "isCorrect": false }
+                      ],
+                      "points": 10,
+                      "isRequired": true
+                    },
+                    {
+                      "type": "multiple_choice",
+                      "order": 2,
+                      "question": "Which events can trigger a GitHub Actions workflow?",
+                      "options": [
+                        { "text": "push", "isCorrect": true },
+                        { "text": "pull_request", "isCorrect": true },
+                        { "text": "schedule", "isCorrect": true },
+                        { "text": "email", "isCorrect": false }
+                      ],
+                      "points": 15,
+                      "isRequired": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Final Project: Build a CI/CD Pipeline",
+          "description": "Create a complete CI/CD workflow",
+          "type": "assignment",
+          "order": 4,
+          "estimatedDuration": 60,
+          "content": [
+            {
+              "type": "assignment",
+              "title": "CI/CD Pipeline Project",
+              "order": 1,
+              "data": {
+                "assignment": {
+                  "title": "Build Your CI/CD Pipeline",
+                  "description": "Create a GitHub Actions workflow that runs tests, builds, and deploys your application",
+                  "instructions": "1. Create a sample application\n2. Write unit tests\n3. Create a GitHub Actions workflow\n4. Configure automated testing\n5. Add build and deployment steps\n6. Document your workflow\n7. Submit repository URL and workflow file",
+                  "submissionType": "mixed",
+                  "maxFileSize": 20971520,
+                  "allowedFileTypes": ["yml", "yaml", "pdf", "md"],
+                  "maxSubmissions": 3,
+                  "maxPoints": 200,
+                  "gradingRubric": "- Workflow file (40 pts)\n- Tests (30 pts)\n- Build process (30 pts)\n- Documentation (20 pts)\n- Code quality (80 pts)",
+                  "dueDate": "2026-03-01T23:59:59Z",
+                  "allowLateSubmission": true,
+                  "lateSubmissionPenalty": 15,
+                  "autoGrade": false
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "standaloneLesson": {
+    "title": "GitHub Cheat Sheet & Resources",
+    "description": "Quick reference guide and additional resources",
+    "type": "document",
+    "order": 999,
+    "estimatedDuration": 5,
+    "content": [
+      {
+        "type": "document",
+        "title": "GitHub Cheat Sheet",
+        "order": 1,
+        "data": {
+          "url": "https://education.github.com/git-cheat-sheet-education.pdf",
+          "filename": "github-cheat-sheet.pdf",
+          "size": 524288,
+          "mimeType": "application/pdf"
+        }
+      }
+    ]
+  }
+}

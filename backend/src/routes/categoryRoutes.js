@@ -20,11 +20,11 @@ router.get('/:id', categoryIdValidation(), getCategoryById);
 // Protected routes - require authentication
 router.use(protect);
 
-// Routes for instructors and admins
-router.post('/', restrictTo('instructor', 'admin'), categoryValidationRules(), createCategory);
-router.put('/:id', restrictTo('instructor', 'admin'), categoryIdValidation(), categoryValidationRules(), updateCategory);
+// Routes for instructors and super_admins
+router.post('/', restrictTo('instructor', 'super_admin'), categoryValidationRules(), createCategory);
+router.put('/:id', restrictTo('instructor', 'super_admin'), categoryIdValidation(), categoryValidationRules(), updateCategory);
 
-// Admin only routes
-router.delete('/:id', restrictTo('admin'), categoryIdValidation(), deleteCategory);
+// Super admin only routes
+router.delete('/:id', restrictTo('super_admin'), categoryIdValidation(), deleteCategory);
 
 module.exports = router;

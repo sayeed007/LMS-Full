@@ -429,13 +429,9 @@ export interface Course extends BaseDocument {
   shortDescription?: string;
   instructor: string | User; // User ObjectId or populated User object
   coInstructors: string[]; // User ObjectIds
-  category: 'programming' | 'web-development' | 'mobile-development' | 'data-science' |
-  'machine-learning' | 'artificial-intelligence' | 'cybersecurity' | 'cloud-computing' |
-  'devops' | 'blockchain' | 'game-development' | 'ui-ux-design' | 'digital-marketing' |
-  'business' | 'finance' | 'management' | 'personal-development' | 'health-fitness' |
-  'language-learning' | 'arts-crafts' | 'music' | 'photography' | 'other';
+  category: string; // Dynamic category from Category collection
   subcategory?: string;
-  level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  level: 'Beginner' | 'Intermediate' | 'Expert' | 'All Levels';
   language: string;
   subtitles: CourseSubtitle[];
   price: number;

@@ -4,14 +4,16 @@ import { Input } from "@/components/ui/input";
 import { useModalActions } from "@/lib/modal-utils";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
 import { getErrorMessage } from "@/lib/utils";
-import { getCategoryOptions, useGetCategoriesQuery } from "@/store/api/categoryApi";
+import {
+  getCategoryOptions,
+  useGetCategoriesQuery,
+} from "@/store/api/categoryApi";
 import { useCreateCourseMutation } from "@/store/api/courseApi";
 import { Course } from "@/types/backend-models";
 import { useFormik } from "formik";
 import { Plus } from "lucide-react";
 import Select from "react-select";
 import * as Yup from "yup";
-
 
 export function CreateCourseModal({
   onClose,
@@ -30,7 +32,7 @@ export function CreateCourseModal({
     error: categoriesError,
   } = useGetCategoriesQuery({
     isActive: true,
-    limit: 100
+    limit: 100,
   });
 
   const categories = categoriesResponse?.data || [];
@@ -39,7 +41,7 @@ export function CreateCourseModal({
   // Show error if categories failed to load
   if (categoriesError) {
     showErrorToast("Failed to load categories");
-  };
+  }
 
   const {
     handleSubmit,
@@ -71,11 +73,16 @@ export function CreateCourseModal({
         const result = await createCourse({
           title: values.name,
           description: values.description,
-          category: (values.category?.value as Course['category']) || "programming",
-          level: values.difficulty.toLowerCase() as "beginner" | "intermediate" | "advanced",
+          category:
+            (values.category?.value as Course["category"]) || "Development",
+          level: values.difficulty as
+            | "Beginner"
+            | "Intermediate"
+            | "Expert"
+            | "All Levels",
           language: "English", // Default language
           price: 0, // Default free course
-          currency: "USD"
+          currency: "USD",
         }).unwrap();
 
         showSuccessToast("Course created successfully!");
@@ -96,19 +103,15 @@ export function CreateCourseModal({
   });
 
   const openCreateCategoryModal = () => {
-    openModal(
-      <CreateCategoryModal
-        onClose={() => closeModal()}
-      />,
-      { size: 'md', position: 'center' }
-    );
+    openModal(<CreateCategoryModal onClose={() => closeModal()} />, {
+      size: "md",
+      position: "center",
+    });
   };
 
   return (
     <div className="p-6 max-w-md">
-      <h2 className="text-xl font-bold mb-4 text-gray-900">
-        Create Course
-      </h2>
+      <h2 className="text-xl font-bold mb-4 text-gray-900">Create Course</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* Course Name */}
         <div>
@@ -139,7 +142,9 @@ export function CreateCourseModal({
             onChange={(option) => setFieldValue("category", option)}
             onBlur={() => setFieldTouched("category", true)}
             isLoading={categoriesLoading}
-            placeholder={categoriesLoading ? "Loading categories..." : "Select a category"}
+            placeholder={
+              categoriesLoading ? "Loading categories..." : "Select a category"
+            }
             classNamePrefix="react-select"
             styles={{
               control: (base) => ({
@@ -162,9 +167,7 @@ export function CreateCourseModal({
             </button>
           </div>
           {touched.category && errors.category && (
-            <p className="text-xs text-red-600 mt-1">
-              {errors.category}
-            </p>
+            <p className="text-xs text-red-600 mt-1">{errors.category}</p>
           )}
         </div>
 
@@ -198,22 +201,24 @@ export function CreateCourseModal({
             Difficulty <span className="text-red-500">*</span>
           </div>
           <div className="flex gap-6">
-            {["Beginner", "Intermediate", "Advanced"].map((level) => (
-              <label
-                key={level}
-                className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="difficulty"
-                  value={level}
-                  checked={values.difficulty === level}
-                  onChange={handleChange}
-                  className="accent-blue-600"
-                />
-                {level}
-              </label>
-            ))}
+            {["Beginner", "Intermediate", "Expert", "All Levels"].map(
+              (level) => (
+                <label
+                  key={level}
+                  className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="difficulty"
+                    value={level}
+                    checked={values.difficulty === level}
+                    onChange={handleChange}
+                    className="accent-blue-600"
+                  />
+                  {level}
+                </label>
+              )
+            )}
           </div>
           {touched.difficulty && errors.difficulty && (
             <p className="text-xs text-red-600 mt-1">{errors.difficulty}</p>

@@ -2,11 +2,15 @@
 // Backend reference: backend/src/models/Course.js line 319
 
 export const COURSE_LEVELS = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
-  { value: 'expert', label: 'Expert' },
+  { value: 'Beginner', label: 'Beginner' },
+  { value: 'Intermediate', label: 'Intermediate' },
+  { value: 'Expert', label: 'Expert' },
+  { value: 'All Levels', label: 'All Levels' },
 ] as const;
+
+// Note: COURSE_CATEGORIES are fetched dynamically from the API
+// Use useGetCategoriesQuery() from @/store/api/categoryApi
+
 
 export const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },

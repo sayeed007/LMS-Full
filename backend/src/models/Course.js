@@ -25,21 +25,22 @@ const courseSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Please select a category'],
-    enum: [
-      'Development',
-      'Business',
-      'Finance',
-      'IT & Software',
-      'Office Productivity',
-      'Personal Development',
-      'Design',
-      'Marketing',
-      'Lifestyle',
-      'Photography',
-      'Health & Fitness',
-      'Music',
-      'Teaching & Academics'
-    ]
+    trim: true,
+    // No enum - categories are dynamic and managed via Category collection
+    validate: {
+      validator: async function(value) {
+        // Only validate if Category model is available
+        try {
+          const Category = require('./Category');
+          const category = await Category.findOne({ name: value, isActive: true });
+          return !!category;
+        } catch (error) {
+          // If Category model not available or error, skip validation
+          return true;
+        }
+      },
+      message: 'Please select a valid category'
+    }
   },
   level: {
     type: String,
@@ -95,6 +96,15 @@ const courseSchema = new mongoose.Schema({
     default: false
   },
   publishedAt: Date,
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: Date,
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   
   // Statistics (Cached)
   averageRating: {
