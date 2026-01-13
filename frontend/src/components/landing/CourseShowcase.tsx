@@ -10,7 +10,7 @@ import Container from "@/components/ui/Container";
 
 const CourseShowcase = () => {
   const { data, isLoading } = useGetFeaturedCoursesQuery({ limit: 4 });
-  const courses = data?.data?.courses || [];
+  const courses = data?.data || [];
 
   if (isLoading) {
     return (
@@ -100,8 +100,8 @@ const CourseShowcase = () => {
                 <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                   <div className="flex items-center text-gray-500 text-xs">
                     <Clock size={14} className="mr-1" />
-                    {course.stats?.totalDuration
-                      ? Math.round(course.stats.totalDuration / 60) + "h"
+                    {course.duration
+                      ? Math.round(course.duration / 60) + "h"
                       : "10h"}
                   </div>
                   <span className="text-lg font-bold text-blue-600">
