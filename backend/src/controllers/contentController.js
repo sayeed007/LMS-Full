@@ -183,9 +183,10 @@ const createContent = catchAsync(async (req, res, next) => {
       if (!req.body.data || !req.body.data.text) {
         return next(new AppError('Text content is required for text type', 400));
       }
-      // Clean up - only keep text field
+      // Clean up - keep text and title fields
       req.body.data = {
-        text: req.body.data.text
+        text: req.body.data.text,
+        title: req.body.data.title
       };
       break;
 
@@ -304,9 +305,10 @@ const updateContent = catchAsync(async (req, res, next) => {
   if (req.body.data) {
     switch (content.type) {
       case 'text':
-        // Clean up - only keep text field
+        // Clean up - keep text and title fields
         req.body.data = {
-          text: req.body.data.text
+          text: req.body.data.text,
+          title: req.body.data.title
         };
         break;
 

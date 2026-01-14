@@ -309,3 +309,76 @@
 .animate-fade-scale-in {
   animation: fadeScaleIn 0.3s ease-out;
 }
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.3s ease-in forwards;
+}
+
+/* Custom Drawer Animations */
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes drawerSlideOut {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes fadeOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOverlayOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.drawer-slide-in {
+  /* Smooth iOS-like easing */
+  animation: drawerSlideIn 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
+  will-change: transform;
+}
+
+.drawer-slide-out {
+  animation: drawerSlideOut 0.3s ease-in forwards !important;
+  will-change: transform;
+}
+
+.drawer-fade-in {
+  animation: fadeOverlayIn 0.5s ease-out forwards !important;
+}
+
+.drawer-fade-out {
+  animation: fadeOverlayOut 0.3s ease-in forwards !important;
+}

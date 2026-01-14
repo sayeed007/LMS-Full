@@ -7,14 +7,17 @@ import {
   useCreateContentMutation,
   useUpdateContentMutation,
   useGetLessonByIdQuery,
-  useGetContentByIdQuery
+  useGetContentByIdQuery,
 } from "@/store/api/courseApi";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import TextContentEditor from "@/components/content-editors/TextContentEditor";
 import MediaContentEditor from "@/components/content-editors/MediaContentEditor";
-import { useUploadFileToCloudinaryMutation, useDeleteFileFromCloudinaryMutation } from "@/store/api/uploadApi";
+import {
+  useUploadFileToCloudinaryMutation,
+  useDeleteFileFromCloudinaryMutation,
+} from "@/store/api/uploadApi";
 import BlocksContentEditor from "@/components/content-editors/BlocksContentEditor";
 import AssignmentContentEditor from "@/components/content-editors/AssignmentContentEditor";
 import QuizContentEditor from "@/components/content-editors/QuizContentEditor";
@@ -23,7 +26,7 @@ import { decodeHTMLEntities } from "@/lib/html-utils";
 
 interface ContentBlock {
   id: string;
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  type: "text" | "image" | "video" | "audio" | "document";
   content: string | { url?: string; text?: string; [key: string]: unknown };
   order: number;
   title?: string;
@@ -36,11 +39,11 @@ interface ContentBlock {
   publicId?: string;
   resourceType?: string;
   embedUrl?: string;
-  videoType?: 'embed' | 'upload';
+  videoType?: "embed" | "upload";
 }
 
 interface LessonContent {
-  type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
+  type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
   blocks: ContentBlock[];
   textContent?: string;
   title?: string;
@@ -57,7 +60,7 @@ interface LessonContent {
 interface BackendBlock {
   _id?: string;
   id?: string;
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  type: "text" | "image" | "video" | "audio" | "document";
   order: number;
   data?: {
     text?: string;
@@ -84,26 +87,34 @@ interface BackendBlock {
   publicId?: string;
   resourceType?: string;
   embedUrl?: string;
-  videoType?: 'embed' | 'upload';
+  videoType?: "embed" | "upload";
 }
 
 // Transform backend block format to frontend format
-const transformBlockFromBackend = (backendBlock: BackendBlock): ContentBlock => {
+const transformBlockFromBackend = (
+  backendBlock: BackendBlock
+): ContentBlock => {
   // Get the text content and decode HTML entities if present
-  const rawTextContent = backendBlock.data?.text || backendBlock.textContent || '';
-  const decodedTextContent = rawTextContent ? decodeHTMLEntities(rawTextContent) : '';
+  const rawTextContent =
+    backendBlock.data?.text || backendBlock.textContent || "";
+  const decodedTextContent = rawTextContent
+    ? decodeHTMLEntities(rawTextContent)
+    : "";
 
   // Extract metadata (publicId and resourceType) from nested data.metadata
-  const publicId = backendBlock.data?.metadata?.publicId || backendBlock.publicId;
-  const resourceType = backendBlock.data?.metadata?.resourceType || backendBlock.resourceType;
+  const publicId =
+    backendBlock.data?.metadata?.publicId || backendBlock.publicId;
+  const resourceType =
+    backendBlock.data?.metadata?.resourceType || backendBlock.resourceType;
 
   const transformed = {
     id: backendBlock._id || backendBlock.id || `block-${Date.now()}`,
     type: backendBlock.type,
     content: backendBlock.data || backendBlock.content || {},
     order: backendBlock.order,
-    title: backendBlock.data?.title || backendBlock.title || '',
-    description: backendBlock.data?.description || backendBlock.description || '',
+    title: backendBlock.data?.title || backendBlock.title || "",
+    description:
+      backendBlock.data?.description || backendBlock.description || "",
     textContent: decodedTextContent,
     fileUrl: backendBlock.data?.url || backendBlock.fileUrl,
     fileName: backendBlock.data?.filename || backendBlock.fileName,
@@ -120,7 +131,7 @@ const transformBlockFromBackend = (backendBlock: BackendBlock): ContentBlock => 
 
 // Backend format for saving
 interface BackendBlockForSave {
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  type: "text" | "image" | "video" | "audio" | "document";
   order: number;
   data: {
     text?: string;
@@ -162,14 +173,16 @@ interface ParsedContentData {
 }
 
 // Transform frontend block format to backend format
-const transformBlockToBackend = (frontendBlock: ContentBlock): BackendBlockForSave => {
+const transformBlockToBackend = (
+  frontendBlock: ContentBlock
+): BackendBlockForSave => {
   return {
     type: frontendBlock.type,
     order: frontendBlock.order,
     data: {
-      text: frontendBlock.textContent || '',
-      title: frontendBlock.title || '',
-      description: frontendBlock.description || '',
+      text: frontendBlock.textContent || "",
+      title: frontendBlock.title || "",
+      description: frontendBlock.description || "",
       url: frontendBlock.fileUrl,
       filename: frontendBlock.fileName,
       size: frontendBlock.fileSize,
@@ -178,8 +191,8 @@ const transformBlockToBackend = (frontendBlock: ContentBlock): BackendBlockForSa
       metadata: {
         publicId: frontendBlock.publicId,
         resourceType: frontendBlock.resourceType,
-      }
-    }
+      },
+    },
   };
 };
 
@@ -189,16 +202,16 @@ export default function ContentEditor() {
   const courseId = params.course_id as string;
   const lessonId = params.lesson_id as string;
 
-  const [contentType, setContentType] = useState<string>('text');
+  const [contentType, setContentType] = useState<string>("text");
   const [contentId, setContentId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   useEffect(() => {
     // Get content type and contentId from URL parameters
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      const typeParam = urlParams.get('type');
-      const contentIdParam = urlParams.get('contentId');
+      const typeParam = urlParams.get("type");
+      const contentIdParam = urlParams.get("contentId");
 
       if (typeParam) {
         setContentType(typeParam);
@@ -213,7 +226,14 @@ export default function ContentEditor() {
 
   const [lessonTitle, setLessonTitle] = useState("");
   const [content, setContent] = useState<LessonContent>({
-    type: (contentType as 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment') || 'text',
+    type:
+      (contentType as
+        | "text"
+        | "blocks"
+        | "video"
+        | "document"
+        | "quiz"
+        | "assignment") || "text",
     blocks: [],
     textContent: "",
   });
@@ -223,8 +243,12 @@ export default function ContentEditor() {
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
 
   // Multiple file management for blocks content
-  const [selectedFiles, setSelectedFiles] = useState<{ [blockId: string]: File | null }>({});
-  const [filePreviewUrls, setFilePreviewUrls] = useState<{ [blockId: string]: string | null }>({});
+  const [selectedFiles, setSelectedFiles] = useState<{
+    [blockId: string]: File | null;
+  }>({});
+  const [filePreviewUrls, setFilePreviewUrls] = useState<{
+    [blockId: string]: string | null;
+  }>({});
 
   // Loading states
   const [isUploading, setIsUploading] = useState(false);
@@ -237,10 +261,11 @@ export default function ContentEditor() {
   );
 
   // Fetch specific content when in edit mode
-  const { data: contentData, isLoading: isLoadingContent } = useGetContentByIdQuery(
-    { courseId, lessonId, contentId: contentId! },
-    { skip: !isEditMode || !contentId || !courseId || !lessonId }
-  );
+  const { data: contentData, isLoading: isLoadingContent } =
+    useGetContentByIdQuery(
+      { courseId, lessonId, contentId: contentId! },
+      { skip: !isEditMode || !contentId || !courseId || !lessonId }
+    );
 
   const [createContent, { isLoading: isCreating }] = useCreateContentMutation();
   const [updateContent, { isLoading: isUpdating }] = useUpdateContentMutation();
@@ -260,11 +285,17 @@ export default function ContentEditor() {
   useEffect(() => {
     if (isEditMode && existingContent) {
       try {
-        const parsedData: ParsedContentData = existingContent.data ? (typeof existingContent.data === 'string' ? JSON.parse(existingContent.data) as ParsedContentData : existingContent.data as ParsedContentData) : {};
+        const parsedData: ParsedContentData = existingContent.data
+          ? typeof existingContent.data === "string"
+            ? (JSON.parse(existingContent.data) as ParsedContentData)
+            : (existingContent.data as ParsedContentData)
+          : {};
 
         // Decode HTML entities in textContent if present
         const textContent = parsedData.textContent || parsedData.text || "";
-        const decodedTextContent = textContent ? decodeHTMLEntities(textContent) : "";
+        const decodedTextContent = textContent
+          ? decodeHTMLEntities(textContent)
+          : "";
 
         // Get blocks array from parsed data and transform them
         const backendBlocks = parsedData.blocks || [];
@@ -276,24 +307,27 @@ export default function ContentEditor() {
         const fileSize = parsedData.size || parsedData.fileSize;
         const fileType = parsedData.mimeType || parsedData.fileType;
         const publicId = parsedData.metadata?.publicId || parsedData.publicId;
-        const resourceType = parsedData.metadata?.resourceType || parsedData.resourceType;
+        const resourceType =
+          parsedData.metadata?.resourceType || parsedData.resourceType;
 
         // Set the content with ONLY the fields needed for the content type
         let newContent: LessonContent;
 
-        if (contentType === 'blocks' || contentType === 'block') {
+        if (contentType === "blocks" || contentType === "block") {
           // For blocks content
           newContent = {
-            type: 'blocks',
+            type: "blocks",
             textContent: decodedTextContent,
             title: "",
             description: "",
             blocks: blocks,
           };
-        } else if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+        } else if (
+          ["video", "audio", "document", "assignment"].includes(contentType)
+        ) {
           // For media content - only include relevant fields
           newContent = {
-            type: contentType as 'video' | 'document' | 'assignment',
+            type: contentType as "video" | "document" | "assignment",
             textContent: "",
             title: parsedData.title || "",
             description: parsedData.description || "",
@@ -308,7 +342,7 @@ export default function ContentEditor() {
         } else {
           // For text content
           newContent = {
-            type: 'text',
+            type: "text",
             textContent: decodedTextContent,
             title: "",
             description: "",
@@ -318,12 +352,18 @@ export default function ContentEditor() {
         setContent(newContent);
 
         // For media content (video, audio, document, assignment), set file preview if URL exists
-        if (['video', 'audio', 'document', 'assignment'].includes(contentType) && fileUrl) {
+        if (
+          ["video", "audio", "document", "assignment"].includes(contentType) &&
+          fileUrl
+        ) {
           setFilePreviewUrl(fileUrl);
         }
 
         // For blocks content, set file previews for each block that has a fileUrl
-        if ((contentType === 'blocks' || contentType === 'block') && blocks.length > 0) {
+        if (
+          (contentType === "blocks" || contentType === "block") &&
+          blocks.length > 0
+        ) {
           const blockPreviews: { [blockId: string]: string | null } = {};
           blocks.forEach((block: ContentBlock) => {
             if (block.fileUrl) {
@@ -346,7 +386,7 @@ export default function ContentEditor() {
     // Check file size (150MB limit)
     const maxSize = 150 * 1024 * 1024; // 150MB in bytes
     if (file.size > maxSize) {
-      showErrorToast('File size exceeds 150MB limit');
+      showErrorToast("File size exceeds 150MB limit");
       return;
     }
 
@@ -358,7 +398,7 @@ export default function ContentEditor() {
     setFilePreviewUrl(previewUrl);
 
     // Update content with local file info (no upload yet)
-    setContent(prevContent => ({
+    setContent((prevContent) => ({
       ...prevContent,
       fileName: file.name,
       fileSize: file.size,
@@ -366,23 +406,31 @@ export default function ContentEditor() {
       // Clear any existing uploaded file data
       fileUrl: undefined,
       publicId: undefined,
-      resourceType: undefined
+      resourceType: undefined,
     }));
   };
 
   const handleFileRemove = async () => {
     // If there's an uploaded file, delete it from Cloudinary
-    if ((content as { publicId?: string; resourceType?: string }).publicId && (content as { publicId?: string; resourceType?: string }).resourceType) {
+    if (
+      (content as { publicId?: string; resourceType?: string }).publicId &&
+      (content as { publicId?: string; resourceType?: string }).resourceType
+    ) {
       try {
         await deleteFileFromCloudinary({
-          publicId: (content as { publicId?: string; resourceType?: string }).publicId!,
-          resourceType: (content as { publicId?: string; resourceType?: string }).resourceType!
+          publicId: (content as { publicId?: string; resourceType?: string })
+            .publicId!,
+          resourceType: (
+            content as { publicId?: string; resourceType?: string }
+          ).resourceType!,
         }).unwrap();
-        showSuccessToast('File removed successfully!');
+        showSuccessToast("File removed successfully!");
       } catch (error) {
-        console.error('Error deleting file:', error);
+        console.error("Error deleting file:", error);
         const apiError = error as { data?: { message?: string } };
-        showErrorToast(apiError?.data?.message || 'Error removing file. Please try again.');
+        showErrorToast(
+          apiError?.data?.message || "Error removing file. Please try again."
+        );
       }
     }
 
@@ -394,14 +442,14 @@ export default function ContentEditor() {
     setSelectedFile(null);
 
     // Clear file data from content
-    setContent(prevContent => ({
+    setContent((prevContent) => ({
       ...prevContent,
       fileName: undefined,
       fileSize: undefined,
       fileType: undefined,
       fileUrl: undefined,
       publicId: undefined,
-      resourceType: undefined
+      resourceType: undefined,
     }));
   };
 
@@ -410,53 +458,60 @@ export default function ContentEditor() {
     // Check file size (150MB limit)
     const maxSize = 150 * 1024 * 1024; // 150MB in bytes
     if (file.size > maxSize) {
-      showErrorToast('File size exceeds 150MB limit');
+      showErrorToast("File size exceeds 150MB limit");
       return;
     }
 
     // Store file locally and create preview URL
-    setSelectedFiles(prev => ({ ...prev, [blockId]: file }));
+    setSelectedFiles((prev) => ({ ...prev, [blockId]: file }));
 
     // Create preview URL for display
     const previewUrl = URL.createObjectURL(file);
-    setFilePreviewUrls(prev => ({ ...prev, [blockId]: previewUrl }));
+    setFilePreviewUrls((prev) => ({ ...prev, [blockId]: previewUrl }));
 
     // Update the specific block with local file info
-    setContent(prevContent => ({
+    setContent((prevContent) => ({
       ...prevContent,
-      blocks: prevContent.blocks.map(block =>
+      blocks: prevContent.blocks.map((block) =>
         block.id === blockId
           ? {
-            ...block,
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type,
-            // Clear any existing uploaded file data
-            fileUrl: undefined,
-            publicId: undefined,
-            resourceType: undefined
-          }
+              ...block,
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              // Clear any existing uploaded file data
+              fileUrl: undefined,
+              publicId: undefined,
+              resourceType: undefined,
+            }
           : block
-      )
+      ),
     }));
   };
 
   const handleBlockFileRemove = async (blockId: string) => {
     // Find the block to get cloudinary info
-    const block = content.blocks.find(b => b.id === blockId);
+    const block = content.blocks.find((b) => b.id === blockId);
 
     // If there's an uploaded file, delete it from Cloudinary
-    if ((block as { publicId?: string; resourceType?: string })?.publicId && (block as { publicId?: string; resourceType?: string })?.resourceType) {
+    if (
+      (block as { publicId?: string; resourceType?: string })?.publicId &&
+      (block as { publicId?: string; resourceType?: string })?.resourceType
+    ) {
       try {
         await deleteFileFromCloudinary({
-          publicId: (block as { publicId?: string; resourceType?: string }).publicId!,
-          resourceType: (block as { publicId?: string; resourceType?: string }).resourceType!
+          publicId: (block as { publicId?: string; resourceType?: string })
+            .publicId!,
+          resourceType: (block as { publicId?: string; resourceType?: string })
+            .resourceType!,
         }).unwrap();
-        showSuccessToast('File removed successfully!');
+        showSuccessToast("File removed successfully!");
       } catch (error) {
-        console.error('Error deleting file:', error);
+        console.error("Error deleting file:", error);
         const apiError = error as { data?: { message?: string } };
-        showErrorToast(apiError?.data?.message || 'Error removing file. Please try again.');
+        showErrorToast(
+          apiError?.data?.message || "Error removing file. Please try again."
+        );
       }
     }
 
@@ -464,35 +519,35 @@ export default function ContentEditor() {
     const previewUrl = filePreviewUrls[blockId];
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
-      setFilePreviewUrls(prev => {
+      setFilePreviewUrls((prev) => {
         const newUrls = { ...prev };
         delete newUrls[blockId];
         return newUrls;
       });
     }
 
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       const newFiles = { ...prev };
       delete newFiles[blockId];
       return newFiles;
     });
 
     // Clear file data from the specific block
-    setContent(prevContent => ({
+    setContent((prevContent) => ({
       ...prevContent,
-      blocks: prevContent.blocks.map(block =>
+      blocks: prevContent.blocks.map((block) =>
         block.id === blockId
           ? {
-            ...block,
-            fileName: undefined,
-            fileSize: undefined,
-            fileType: undefined,
-            fileUrl: undefined,
-            publicId: undefined,
-            resourceType: undefined
-          }
+              ...block,
+              fileName: undefined,
+              fileSize: undefined,
+              fileType: undefined,
+              fileUrl: undefined,
+              publicId: undefined,
+              resourceType: undefined,
+            }
           : block
-      )
+      ),
     }));
   };
 
@@ -502,7 +557,7 @@ export default function ContentEditor() {
     let currentContent = content; // Use local variable to track current content
 
     // For blocks content, upload files for each block that needs it
-    if (contentType === 'blocks' || contentType === 'block') {
+    if (contentType === "blocks" || contentType === "block") {
       setIsUploading(true);
       setUploadProgress("Processing blocks...");
 
@@ -513,10 +568,15 @@ export default function ContentEditor() {
         const selectedBlockFile = selectedFiles[block.id];
 
         // Skip text blocks or blocks that already have uploaded files
-        if (block.type === 'text' || (block as { fileUrl?: string }).fileUrl) continue;
+        if (block.type === "text" || (block as { fileUrl?: string }).fileUrl)
+          continue;
 
         // Skip embed videos (they don't need file upload)
-        if (block.type === 'video' && (block as { videoType?: string }).videoType === 'embed') continue;
+        if (
+          block.type === "video" &&
+          (block as { videoType?: string }).videoType === "embed"
+        )
+          continue;
 
         // Skip blocks without selected files
         if (!selectedBlockFile) continue;
@@ -526,8 +586,8 @@ export default function ContentEditor() {
 
           // Create FormData for upload
           const formData = new FormData();
-          formData.append('file', selectedBlockFile);
-          formData.append('contentType', block.type);
+          formData.append("file", selectedBlockFile);
+          formData.append("contentType", block.type);
 
           // Upload to Cloudinary via backend
           const response = await uploadFileToCloudinary(formData).unwrap();
@@ -541,12 +601,12 @@ export default function ContentEditor() {
               fileSize: response.data.fileSize,
               fileType: response.data.fileType,
               publicId: response.data.publicId,
-              resourceType: response.data.resourceType
+              resourceType: response.data.resourceType,
             } as ContentBlock;
           }
 
           // Clean up local file references
-          setSelectedFiles(prev => {
+          setSelectedFiles((prev) => {
             const newFiles = { ...prev };
             delete newFiles[block.id];
             return newFiles;
@@ -555,18 +615,20 @@ export default function ContentEditor() {
           const previewUrl = filePreviewUrls[block.id];
           if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
-            setFilePreviewUrls(prev => {
+            setFilePreviewUrls((prev) => {
               const newUrls = { ...prev };
               delete newUrls[block.id];
               return newUrls;
             });
           }
-
         } catch (error) {
           setIsUploading(false);
           setUploadProgress("");
           const apiError = error as { data?: { message?: string } };
-          showErrorToast(apiError?.data?.message || `Failed to upload ${block.type} file. Please try again.`);
+          showErrorToast(
+            apiError?.data?.message ||
+              `Failed to upload ${block.type} file. Please try again.`
+          );
           return;
         }
       }
@@ -577,7 +639,7 @@ export default function ContentEditor() {
     }
 
     // For media and assignment content, upload file if selected
-    if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+    if (["video", "audio", "document", "assignment"].includes(contentType)) {
       // Check if there's a file selected or already uploaded
       if (!(currentContent as { fileUrl?: string }).fileUrl && !selectedFile) {
         showErrorToast("Please select a file before saving");
@@ -592,8 +654,8 @@ export default function ContentEditor() {
         try {
           // Create FormData for upload
           const formData = new FormData();
-          formData.append('file', selectedFile);
-          formData.append('contentType', contentType);
+          formData.append("file", selectedFile);
+          formData.append("contentType", contentType);
 
           // Upload to Cloudinary via backend
           const response = await uploadFileToCloudinary(formData).unwrap();
@@ -609,7 +671,7 @@ export default function ContentEditor() {
               fileSize: response.data.fileSize,
               fileType: response.data.fileType,
               publicId: response.data.publicId,
-              resourceType: response.data.resourceType
+              resourceType: response.data.resourceType,
             };
 
             setContent(updatedContent);
@@ -622,13 +684,14 @@ export default function ContentEditor() {
             URL.revokeObjectURL(filePreviewUrl);
             setFilePreviewUrl(null);
           }
-
-
         } catch (error) {
           setIsUploading(false);
           setUploadProgress("");
           const apiError = error as { data?: { message?: string } };
-          showErrorToast(apiError?.data?.message || "Failed to upload file. Please try again.");
+          showErrorToast(
+            apiError?.data?.message ||
+              "Failed to upload file. Please try again."
+          );
           return;
         }
       }
@@ -642,17 +705,22 @@ export default function ContentEditor() {
       const saveData: Record<string, unknown> = {};
 
       // For text content
-      if (contentType === 'text') {
+      if (contentType === "text") {
         saveData.text = currentContent.textContent || "";
+        if (currentContent.title) {
+          saveData.title = currentContent.title;
+        }
       }
 
       // For blocks content, transform and set blocks array
-      if (contentType === 'blocks' || contentType === 'block') {
-        saveData.blocks = currentContent.blocks ? currentContent.blocks.map(transformBlockToBackend) : [];
+      if (contentType === "blocks" || contentType === "block") {
+        saveData.blocks = currentContent.blocks
+          ? currentContent.blocks.map(transformBlockToBackend)
+          : [];
       }
 
       // For media content (video, audio, document, assignment)
-      if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+      if (["video", "audio", "document", "assignment"].includes(contentType)) {
         const typedContent = currentContent as {
           title?: string;
           description?: string;
@@ -665,7 +733,8 @@ export default function ContentEditor() {
         };
 
         if (typedContent.title) saveData.title = typedContent.title;
-        if (typedContent.description) saveData.description = typedContent.description;
+        if (typedContent.description)
+          saveData.description = typedContent.description;
         if (typedContent.fileUrl) {
           saveData.url = typedContent.fileUrl;
           saveData.filename = typedContent.fileName;
@@ -673,14 +742,14 @@ export default function ContentEditor() {
           saveData.mimeType = typedContent.fileType;
           saveData.metadata = {
             publicId: typedContent.publicId,
-            resourceType: typedContent.resourceType
+            resourceType: typedContent.resourceType,
           };
         }
       }
 
       // Determine the content title based on content type
       let contentTitle = lessonTitle;
-      if (['video', 'audio', 'document', 'assignment'].includes(contentType)) {
+      if (["video", "audio", "document", "assignment"].includes(contentType)) {
         // For media content, use the content's own title if available
         const typedContent = currentContent as { title?: string };
         contentTitle = typedContent.title || lessonTitle;
@@ -695,8 +764,17 @@ export default function ContentEditor() {
           contentId,
           data: {
             title: contentTitle,
-            type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
-            data: saveData
+            type:
+              (contentType === "blocks"
+                ? "block"
+                : (contentType as
+                    | "text"
+                    | "video"
+                    | "document"
+                    | "quiz"
+                    | "assignment"
+                    | "audio")) || "text",
+            data: saveData,
           },
         }).unwrap();
 
@@ -708,8 +786,17 @@ export default function ContentEditor() {
           lessonId,
           data: {
             title: contentTitle,
-            type: (contentType === 'blocks' ? 'block' : contentType as 'text' | 'video' | 'document' | 'quiz' | 'assignment' | 'audio') || 'text',
-            data: saveData
+            type:
+              (contentType === "blocks"
+                ? "block"
+                : (contentType as
+                    | "text"
+                    | "video"
+                    | "document"
+                    | "quiz"
+                    | "assignment"
+                    | "audio")) || "text",
+            data: saveData,
           },
         }).unwrap();
 
@@ -735,8 +822,6 @@ export default function ContentEditor() {
     router.back();
   };
 
-
-
   if (isLoading || (isEditMode && isLoadingContent)) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -750,42 +835,55 @@ export default function ContentEditor() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1">
             <Button variant="ghost" onClick={handleBack}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex items-center gap-2">
-              <Input
-                value={lessonTitle}
-                onChange={(e) => setLessonTitle(e.target.value)}
-                className="text-lg font-medium border-none shadow-none px-0 focus:ring-0"
-                placeholder="Lesson title"
-              />
-              <Button variant="ghost" size="sm">
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="flex flex-col gap-1 flex-1">
+              {/* Read-only lesson title for reference */}
+              <div className="text-sm text-gray-500">
+                Lesson:{" "}
+                <span className="font-medium text-gray-700">{lessonTitle}</span>
+              </div>
+              {/* Editable content title for text type */}
+              {contentType === "text" && (
+                <Input
+                  value={content.title || ""}
+                  onChange={(e) =>
+                    setContent({ ...content, title: e.target.value })
+                  }
+                  className="text-lg font-medium border-gray-300 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Content title (optional)"
+                />
+              )}
             </div>
           </div>
           <Button
             onClick={handleSave}
             disabled={isCreating || isUpdating}
-            className="bg-blue-600 text-white hover:bg-blue-700"
+            className="bg-blue-600 text-white hover:bg-blue-700 ml-8"
           >
-            {(isCreating || isUpdating) ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update" : "Save")}
+            {isCreating || isUpdating
+              ? isEditMode
+                ? "Updating..."
+                : "Saving..."
+              : isEditMode
+              ? "Update"
+              : "Save"}
           </Button>
         </div>
       </div>
 
       {/* Content Area */}
       <div className="max-w-4xl mx-auto p-6">
-        {contentType === 'text' && (
+        {contentType === "text" && (
           <TextContentEditor
             content={content}
             onChange={(newContent) => setContent(newContent as LessonContent)}
           />
         )}
 
-        {(contentType === 'blocks' || contentType === 'block') && (
+        {(contentType === "blocks" || contentType === "block") && (
           <BlocksContentEditor
             content={content}
             onChange={(newContent) => setContent(newContent as LessonContent)}
@@ -797,7 +895,7 @@ export default function ContentEditor() {
           />
         )}
 
-        {contentType === 'assignment' && (
+        {contentType === "assignment" && (
           <AssignmentContentEditor
             content={content}
             onChange={(newContent) => setContent(newContent as LessonContent)}
@@ -808,14 +906,14 @@ export default function ContentEditor() {
           />
         )}
 
-        {contentType === 'quiz' && (
+        {contentType === "quiz" && (
           <QuizContentEditor
             content={content}
             onChange={(newContent) => setContent(newContent as LessonContent)}
           />
         )}
 
-        {['video', 'audio', 'document'].includes(contentType) && (
+        {["video", "audio", "document"].includes(contentType) && (
           <MediaContentEditor
             content={content}
             onChange={(newContent) => setContent(newContent as LessonContent)}
@@ -829,10 +927,21 @@ export default function ContentEditor() {
         )}
 
         {/* Fallback if no valid content type */}
-        {!['text', 'blocks', 'block', 'assignment', 'quiz', 'video', 'audio', 'document'].includes(contentType) && (
+        {![
+          "text",
+          "blocks",
+          "block",
+          "assignment",
+          "quiz",
+          "video",
+          "audio",
+          "document",
+        ].includes(contentType) && (
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-4">Invalid Content Type</h2>
-            <p className="text-gray-600 mb-4">The content type &quot;{contentType}&quot; is not supported.</p>
+            <p className="text-gray-600 mb-4">
+              The content type &quot;{contentType}&quot; is not supported.
+            </p>
             <Button onClick={handleBack} variant="outline">
               Go Back
             </Button>
@@ -841,17 +950,7 @@ export default function ContentEditor() {
       </div>
 
       {/* Full Page Upload Loader */}
-      <UploadLoader
-        isOpen={isUploading}
-        uploadProgress={uploadProgress}
-      />
+      <UploadLoader isOpen={isUploading} uploadProgress={uploadProgress} />
     </div>
   );
 }
-
-
-
-
-
-
-

@@ -113,6 +113,16 @@ const lessonSchema = new mongoose.Schema({
 lessonSchema.index({ module: 1, order: 1 });
 lessonSchema.index({ course: 1 });
 
+// Static methods
+lessonSchema.statics.getNextOrder = async function (courseId) {
+  const lastLesson = await this.findOne({
+    course: courseId,
+    isDeleted: false
+  }).sort({ order: -1 });
+
+  return lastLesson ? lastLesson.order + 1 : 1;
+};
+
 const Lesson = mongoose.model('Lesson', lessonSchema);
 
 module.exports = Lesson;

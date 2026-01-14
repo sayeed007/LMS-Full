@@ -1,0 +1,3 @@
+﻿.next/types/app/courses/create/[course_id]/layout.ts(12,13): error TS2344: Type 'OmitWithTag<typeof import("D:/LMS-Full/frontend/src/app/courses/create/[course_id]/layout"), "default" | "metadata" | "viewport" | "config" | "generateStaticParams" | "revalidate" | "dynamic" | ... 7 more ... | "experimental_ppr", "">' does not satisfy the constraint '{ [x: string]: never; }'.
+  Property 'CourseHeaderContext' is incompatible with index signature.
+    Type 'Context<{ showHeaderActions: boolean; setShowHeaderActions: (value: boolean) => void; }>' is not assignable to type 'never'.

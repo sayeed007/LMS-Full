@@ -73,6 +73,7 @@ export interface CreateChapterRequest {
   title: string;
   description?: string;
   order?: number;
+  isPublished?: boolean;
 }
 
 export interface UpdateChapterRequest {
@@ -100,6 +101,7 @@ export interface CreateLessonRequest {
 export interface UpdateLessonRequest {
   title?: string;
   description?: string;
+  type?: CourseLesson['type'];
   estimatedDuration?: number;
   resources?: CourseLesson['resources'];
   isPreview?: boolean;
