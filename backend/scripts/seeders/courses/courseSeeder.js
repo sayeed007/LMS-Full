@@ -13,10 +13,26 @@ const seedCourses = async (users) => {
   const categories = await Category.find({ isActive: true }).select('name');
   const categoryNames = categories.map(cat => cat.name);
 
+  console.log('Available categories:', categoryNames.join(', '));
+
   // Helper function to get a valid category name
   const getCategory = (preferredCategory) => {
-    const found = categoryNames.find(name => name.toLowerCase().includes(preferredCategory));
-    return found || categoryNames[0]; // fallback to first category if not found
+    // Try exact match (case-insensitive)
+    const exactMatch = categoryNames.find(name => 
+      name.toLowerCase() === preferredCategory.toLowerCase()
+    );
+    if (exactMatch) return exactMatch;
+
+    // Try partial match (case-insensitive)
+    const partialMatch = categoryNames.find(name => 
+      name.toLowerCase().includes(preferredCategory.toLowerCase()) ||
+      preferredCategory.toLowerCase().includes(name.toLowerCase())
+    );
+    if (partialMatch) return partialMatch;
+
+    // Fallback to first category
+    console.warn(`Category "${preferredCategory}" not found, using "${categoryNames[0]}" as fallback`);
+    return categoryNames[0];
   };
 
   const courses = [
@@ -24,7 +40,7 @@ const seedCourses = async (users) => {
     {
       title: 'Complete JavaScript Mastery: From Beginner to Advanced',
       description: 'Master JavaScript from fundamentals to advanced concepts. Learn ES6+, async programming, DOM manipulation, and modern JavaScript frameworks. Perfect for beginners and intermediate developers.',
-      category: getCategory('development'),
+      category: getCategory('Technology & Development'),
       level: 'beginner',
       instructor: john._id,
       createdBy: john._id,
@@ -85,7 +101,7 @@ const seedCourses = async (users) => {
     {
       title: 'Node.js Backend Development Complete Course',
       description: 'Build scalable backend applications with Node.js, Express, and MongoDB. Learn REST APIs, authentication, middleware, and deployment strategies.',
-      category: getCategory('web development'),
+      category: getCategory('Web Development'),
       level: 'intermediate',
       instructor: john._id,
       createdBy: john._id,
@@ -140,7 +156,7 @@ const seedCourses = async (users) => {
     {
       title: 'Machine Learning with Python: Complete Practical Course',
       description: 'Learn machine learning from scratch using Python. Cover supervised and unsupervised learning, neural networks, and real-world projects with scikit-learn and TensorFlow.',
-      category: getCategory('data'),
+      category: getCategory('Data & Analytics'),
       level: 'intermediate',
       instructor: sarah._id,
       createdBy: sarah._id,
@@ -194,7 +210,7 @@ const seedCourses = async (users) => {
     {
       title: 'Data Analysis with Python and Pandas',
       description: 'Master data analysis using Python, Pandas, NumPy, and Matplotlib. Learn to clean, analyze, and visualize data for business insights.',
-      category: getCategory('data'),
+      category: getCategory('Data & Analytics'),
       level: 'beginner',
       instructor: sarah._id,
       createdBy: sarah._id,
@@ -242,7 +258,7 @@ const seedCourses = async (users) => {
     {
       title: 'Modern UI/UX Design: Complete Design System Course',
       description: 'Learn modern UI/UX design principles, create design systems, and build beautiful user interfaces. Master Figma, prototyping, and user research.',
-      category: getCategory('ui/ux design'),
+      category: getCategory('UI/UX Design'),
       level: 'beginner',
       instructor: michael._id,
       createdBy: michael._id,
@@ -296,7 +312,7 @@ const seedCourses = async (users) => {
     {
       title: 'React.js Frontend Development Bootcamp',
       description: 'Master React.js from basics to advanced concepts. Learn hooks, context, state management, routing, and build real-world applications.',
-      category: getCategory('web development'),
+      category: getCategory('Web Development'),
       level: 'intermediate',
       instructor: michael._id,
       createdBy: michael._id,
@@ -351,7 +367,7 @@ const seedCourses = async (users) => {
     {
       title: 'Ethical Hacking and Penetration Testing Complete Course',
       description: 'Learn ethical hacking techniques, penetration testing methodologies, and cybersecurity best practices. Includes hands-on labs and real-world scenarios.',
-      category: getCategory('cybersecurity'),
+      category: getCategory('Cybersecurity'),
       level: 'advanced',
       instructor: emily._id,
       createdBy: emily._id,
@@ -405,7 +421,7 @@ const seedCourses = async (users) => {
     {
       title: 'Network Security Fundamentals',
       description: 'Comprehensive course on network security principles, firewalls, VPNs, and security protocols. Learn to secure network infrastructure.',
-      category: getCategory('cybersecurity'),
+      category: getCategory('Cybersecurity'),
       level: 'intermediate',
       instructor: emily._id,
       createdBy: emily._id,
@@ -454,7 +470,7 @@ const seedCourses = async (users) => {
     {
       title: 'Advanced Database Design and Optimization',
       description: 'Deep dive into database design patterns, query optimization, indexing strategies, and performance tuning for large-scale applications.',
-      category: getCategory('development'),
+      category: getCategory('Technology & Development'),
       level: 'advanced',
       instructor: john._id,
       createdBy: john._id,

@@ -6,10 +6,8 @@ import { useSession } from "next-auth/react";
 import { NotificationPopover } from "../NotificationPopover";
 import { NavigationLink, Container } from "@/components/ui";
 import UserMenu from "./UserMenu";
-import LoginModal from "../auth/LoginModal";
 import { Button } from "@/components/ui/button";
 import MessageNotificationBadge from "../messaging/MessageNotificationBadge";
-import { useModal } from "@/lib/modal-context";
 import { useState } from "react";
 
 // Navigation items in the correct order
@@ -30,33 +28,10 @@ const Header = () => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const router = useRouter();
-  const { openModal, closeModal } = useModal();
 
-  // Check if user is admin
   const isAdmin =
     session?.user?.role === "org_admin" ||
     session?.user?.role === "super_admin";
-
-  // Open login modal
-  const handleOpenLogin = () => {
-    // Get current URL for redirect after login
-    const currentUrl = window.location.pathname + window.location.search;
-
-    openModal(
-      <LoginModal
-        isOpen={true}
-        onClose={() => closeModal()}
-        title="Sign in to continue"
-        message="Please sign in to access your account and enjoy all features."
-        callbackUrl={currentUrl}
-      />,
-      {
-        size: "md",
-        position: "center",
-        showCloseButton: false,
-      }
-    );
-  };
 
   // Filter navigation items based on auth status and admin role
   const visibleNavItems = navigationItems.filter((item) => {
@@ -174,13 +149,22 @@ const Header = () => {
                 />
               </div>
             ) : (
-              <Button
-                onClick={handleOpenLogin}
-                variant="outline"
-                className="hidden sm:block bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              >
-                Sign In
-              </Button>
+              <div className="hidden sm:flex items-center gap-3">
+                <Button
+                  onClick={() => router.push("/auth/login")}
+                  variant="ghost"
+                  className="bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  onClick={() => router.push("/auth/register")}
+                  variant="outline"
+                  className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  Register
+                </Button>
+              </div>
             )}
 
             {/* Mobile Menu Button - Always show (for public nav items) */}
@@ -266,16 +250,25 @@ const Header = () => {
                   />
                 </div>
               ) : (
-                <div className="px-4 py-3 md:px-6 lg:px-8">
+                <div className="px-4 py-3 md:px-6 lg:px-8 space-y-3">
                   <Button
                     onClick={() => {
-                      handleOpenLogin();
+                      router.push("/auth/login");
                       setIsMobileMenuOpen(false);
                     }}
                     className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                     variant="outline"
                   >
                     Sign In
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      router.push("/auth/register");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700 border-transparent"
+                  >
+                    Register
                   </Button>
                 </div>
               )}

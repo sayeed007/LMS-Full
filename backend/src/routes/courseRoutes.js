@@ -346,6 +346,22 @@ router.get('/', optionalAuth, courseController.getAllCourses);
  */
 router.get('/:id', optionalAuth, courseController.getCourse);
 
+// Public routes for course content (chapters and lessons) - allow preview
+router.get('/:id/chapters', optionalAuth, (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getChapters(req, res, next);
+});
+
+router.get('/:id/lessons', optionalAuth, (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getLessons(req, res, next);
+});
+
+router.get('/:id/lessons/:lessonId/content', optionalAuth, (req, res, next) => {
+  req.params.courseId = req.params.id;
+  getContentByLesson(req, res, next);
+});
+
 // Protected routes
 router.use(protect);
 

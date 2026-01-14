@@ -187,17 +187,6 @@ export const enrollmentApi = baseApi.injectEndpoints({
       ],
     }),
 
-    generateCertificate: builder.mutation<BaseApiResponse<{ enrollment: EnrollmentPopulated; certificateUrl: string }>, string>({
-      query: (enrollmentId) => ({
-        url: `/enrollments/${enrollmentId}/certificate`,
-        method: 'POST',
-      }),
-      invalidatesTags: (result, error, enrollmentId) => [
-        { type: 'Enrollment', id: enrollmentId },
-        'Enrollment'
-      ],
-    }),
-
     downloadEnrollmentCertificate: builder.query<Blob, string>({
       query: (enrollmentId) => ({
         url: `/enrollments/${enrollmentId}/certificate/download`,
@@ -265,7 +254,6 @@ export const {
   useRateCourseMutation,
   useUpdateRatingMutation,
   useDeleteRatingMutation,
-  useGenerateCertificateMutation,
   useLazyDownloadEnrollmentCertificateQuery,
   useGetEnrollmentStatsQuery,
   useLazyExportEnrollmentsQuery,

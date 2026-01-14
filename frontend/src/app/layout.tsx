@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Merriweather, Poppins } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/Footer";
-import { Toaster } from '@/components/ui/sonner';
+import LayoutWrapper from "@/components/layout/LayoutWrapper";
+import { Toaster } from "@/components/ui/sonner";
 // import ToastExample from "@/components/ToastExample";
 // import ModalExample from "@/components/ModalExample";
 import { ModalProviderWithGlobal } from "@/lib/modal-utils";
@@ -12,18 +11,17 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import SessionSync from "@/components/auth/SessionSync";
 import { SocketProvider } from "@/lib/socket-context";
 
-
 // Google Fonts
 const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-poppins',
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-poppins",
 });
 
 const merriweather = Merriweather({
-  subsets: ['latin'],
-  weight: ['300', '400', '700', '900'],
-  variable: '--font-merriweather',
+  subsets: ["latin"],
+  weight: ["300", "400", "700", "900"],
+  variable: "--font-merriweather",
 });
 
 const geistSans = Geist({
@@ -56,45 +54,41 @@ export default function RootLayout({
         {/* <link rel="preload" as="image" href="/icons/RequestDemoPopupLight-min.webp" type="image/webp" /> */}
       </head>
 
-
       <body className="min-h-screen bg-body overflow-x-clip flex flex-col">
         <SessionProvider>
           <ReduxProvider>
             <SessionSync />
             <SocketProvider>
               <ModalProviderWithGlobal>
-                <Header />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
+                <LayoutWrapper>{children}</LayoutWrapper>
 
-              {/* TOAST EXAMPLE */}
-              {/* <ToastExample /> */}
+                {/* TOAST EXAMPLE */}
+                {/* <ToastExample /> */}
 
-              {/* MODAL EXAMPLE */}
-              {/* <ModalExample /> */}
+                {/* MODAL EXAMPLE */}
+                {/* <ModalExample /> */}
 
-              {/* TOAST */}
-              <Toaster
-                position="top-right"
-                expand={true}
-                richColors={true}
-                closeButton={true}
-                toastOptions={{
-                  style: {
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    padding: '16px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  },
-                  className: 'sonner-toast',
-                  duration: 3000,
-                }}
-              />
+                {/* TOAST */}
+                <Toaster
+                  position="top-right"
+                  expand={true}
+                  richColors={true}
+                  closeButton={true}
+                  toastOptions={{
+                    style: {
+                      background: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "12px",
+                      boxShadow:
+                        "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                      padding: "16px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    },
+                    className: "sonner-toast",
+                    duration: 3000,
+                  }}
+                />
               </ModalProviderWithGlobal>
             </SocketProvider>
           </ReduxProvider>

@@ -1,44 +1,47 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
-import { useSocket } from '@/lib/socket-context';
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useSocket } from "@/lib/socket-context";
 import {
   useGetConversationsQuery,
-  useLazySearchUsersQuery,
+  useLazySearchUsersForMessagingQuery,
   useGetUnreadCountQuery,
   type Conversation,
-  type UserSearchResult
-} from '@/store/api/messageApi';
-import ChatInterface from '@/components/messaging/ChatInterface';
-import { Search, MessageSquare, Users, Loader2 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+  type UserSearchResult,
+} from "@/store/api/messageApi";
+import ChatInterface from "@/components/messaging/ChatInterface";
+import { Search, MessageSquare, Users, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export default function MessagesPage() {
   const user = useSelector((state: RootState) => state.auth.user);
   const { isConnected } = useSocket();
 
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showUserSearch, setShowUserSearch] = useState(false);
 
   // Fetch conversations
   const {
     data: conversationsData,
     isLoading: conversationsLoading,
-    refetch: refetchConversations
+    refetch: refetchConversations,
   } = useGetConversationsQuery({
     limit: 50,
-    page: 1
+    page: 1,
   });
 
   // Fetch unread count
   const { data: unreadData } = useGetUnreadCountQuery();
 
   // Search users
-  const [searchUsers, { data: searchResults, isLoading: searchLoading }] = useLazySearchUsersQuery();
+  const [searchUsers, { data: searchResults, isLoading: searchLoading }] =
+    useLazySearchUsersForMessagingQuery();
 
   // Handle user search
   useEffect(() => {
@@ -59,7 +62,7 @@ export default function MessagesPage() {
     setSelectedUserId(userId);
     setSelectedConversationId(null);
     setShowUserSearch(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const conversations = conversationsData?.data || [];
@@ -88,9 +91,13 @@ export default function MessagesPage() {
 
             {/* Connection Status */}
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  isConnected ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
               <span className="text-sm text-gray-600">
-                {isConnected ? 'Connected' : 'Connecting...'}
+                {isConnected ? "Connected" : "Connecting..."}
               </span>
             </div>
           </div>
@@ -129,7 +136,8 @@ export default function MessagesPage() {
                           <div className="p-4 text-center">
                             <Loader2 className="w-5 h-5 animate-spin mx-auto text-gray-400" />
                           </div>
-                        ) : searchResults?.data && searchResults.data.length > 0 ? (
+                        ) : searchResults?.data &&
+                          searchResults.data.length > 0 ? (
                           searchResults.data.map((user: UserSearchResult) => (
                             <button
                               key={user._id}
@@ -142,8 +150,12 @@ export default function MessagesPage() {
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{user.name}</p>
-                                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                <p className="font-medium text-gray-900 truncate">
+                                  {user.name}
+                                </p>
+                                <p className="text-sm text-gray-500 truncate">
+                                  {user.email}
+                                </p>
                               </div>
                               <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
                                 {user.role}
@@ -162,56 +174,88 @@ export default function MessagesPage() {
               </div>
 
               {/* Conversations */}
-              <div className="overflow-y-auto" style={{ height: 'calc(100% - 140px)' }}>
+              <div
+                className="overflow-y-auto"
+                style={{ height: "calc(100% - 140px)" }}
+              >
                 {conversationsLoading ? (
                   <div className="p-8 text-center">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-                    <p className="text-gray-500 mt-2">Loading conversations...</p>
+                    <p className="text-gray-500 mt-2">
+                      Loading conversations...
+                    </p>
                   </div>
                 ) : conversations.length === 0 ? (
                   <div className="p-8 text-center">
                     <MessageSquare className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                     <p className="text-gray-500">No conversations yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Start a new message to begin chatting</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Start a new message to begin chatting
+                    </p>
                   </div>
                 ) : (
                   conversations.map((conversation: Conversation) => {
-                    const isSelected = conversation._id === selectedConversationId;
+                    const isSelected =
+                      conversation._id === selectedConversationId;
                     const lastMessage = conversation.lastMessage;
                     const unreadCount = conversation.unreadCount || 0;
 
                     return (
                       <button
                         key={conversation._id}
-                        onClick={() => handleSelectConversation(conversation._id)}
+                        onClick={() =>
+                          handleSelectConversation(conversation._id)
+                        }
                         className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                          isSelected ? 'bg-primary-50 border-l-4 border-l-primary-600' : ''
+                          isSelected
+                            ? "bg-primary-50 border-l-4 border-l-primary-600"
+                            : ""
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           {/* Avatar */}
                           <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-white font-semibold text-lg">
-                              {conversation.otherParticipant?.name?.charAt(0).toUpperCase() || '?'}
+                              {conversation.otherParticipant?.name
+                                ?.charAt(0)
+                                .toUpperCase() || "?"}
                             </span>
                           </div>
 
                           {/* Content */}
                           <div className="flex-1 min-w-0 text-left">
                             <div className="flex items-center justify-between mb-1">
-                              <p className={`font-semibold truncate ${unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'}`}>
-                                {conversation.otherParticipant?.name || 'Unknown User'}
+                              <p
+                                className={`font-semibold truncate ${
+                                  unreadCount > 0
+                                    ? "text-gray-900"
+                                    : "text-gray-700"
+                                }`}
+                              >
+                                {conversation.otherParticipant?.name ||
+                                  "Unknown User"}
                               </p>
                               {lastMessage && (
                                 <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                                  {formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })}
+                                  {formatDistanceToNow(
+                                    new Date(lastMessage.createdAt),
+                                    { addSuffix: true }
+                                  )}
                                 </span>
                               )}
                             </div>
 
                             {lastMessage && (
-                              <p className={`text-sm truncate ${unreadCount > 0 ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
-                                {lastMessage.sender._id === user?._id ? 'You: ' : ''}
+                              <p
+                                className={`text-sm truncate ${
+                                  unreadCount > 0
+                                    ? "font-medium text-gray-900"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                {lastMessage.sender._id === user?._id
+                                  ? "You: "
+                                  : ""}
                                 {lastMessage.content}
                               </p>
                             )}
@@ -249,8 +293,12 @@ export default function MessagesPage() {
               <div className="bg-white rounded-lg shadow-sm h-[calc(100vh-240px)] flex items-center justify-center">
                 <div className="text-center">
                   <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Select a conversation</h3>
-                  <p className="text-gray-500">Choose a conversation from the list or start a new one</p>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                    Select a conversation
+                  </h3>
+                  <p className="text-gray-500">
+                    Choose a conversation from the list or start a new one
+                  </p>
                 </div>
               </div>
             )}

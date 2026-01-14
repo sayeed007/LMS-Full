@@ -29,10 +29,12 @@ const getContentByLesson = catchAsync(async (req, res, next) => {
   // Check if user has access to course
   let canViewUnpublished = false;
 
-  if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
-    canViewUnpublished = true;
-  } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
-    canViewUnpublished = true;
+  if (req.user) {
+    if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
+      canViewUnpublished = true;
+    } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
+      canViewUnpublished = true;
+    }
   }
 
   let filter = {
@@ -103,11 +105,16 @@ const getContentById = catchAsync(async (req, res, next) => {
   let hasAccess = false;
 
   // Instructor and admin access
-  if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
-    hasAccess = true;
-  } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
-    hasAccess = true;
-  } else if (content.isPublished) {
+  if (req.user) {
+    if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
+      hasAccess = true;
+    } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
+      hasAccess = true;
+    }
+  }
+  
+  // Public access for published content
+  if (content.isPublished) {
     hasAccess = true;
   }
 
@@ -116,7 +123,7 @@ const getContentById = catchAsync(async (req, res, next) => {
   }
 
   // Increment views if not the creator
-  if (req.user.id !== content.createdBy.toString()) {
+  if (!req.user || req.user.id !== content.createdBy.toString()) {
     await content.incrementViews();
   }
 
@@ -539,10 +546,12 @@ const getContentByType = catchAsync(async (req, res, next) => {
 
   // Check permissions
   let canViewUnpublished = false;
-  if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
-    canViewUnpublished = true;
-  } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
-    canViewUnpublished = true;
+  if (req.user) {
+    if (req.user.role === 'instructor' && course.instructor.toString() === req.user.id) {
+      canViewUnpublished = true;
+    } else if (['org_admin', 'super_admin'].includes(req.user.role)) {
+      canViewUnpublished = true;
+    }
   }
 
   // Get all lessons for the course

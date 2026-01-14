@@ -10,7 +10,7 @@ import Container from "@/components/ui/Container";
 
 const CourseShowcase = () => {
   const { data, isLoading } = useGetFeaturedCoursesQuery({ limit: 4 });
-  const courses = data?.data || [];
+  const courses = data?.data?.courses || [];
 
   if (isLoading) {
     return (

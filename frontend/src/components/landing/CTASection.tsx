@@ -44,9 +44,10 @@ const CTASection = () => {
             <LandingButton
               href="/auth/register"
               size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100 hover:shadow-xl border-none"
+              showArrow
+              className="bg-white text-blue-600 hover:bg-blue-50"
             >
-              Get Started for Free
+              Get Started Now
             </LandingButton>
             <LandingButton href="/courses" variant="outline" size="lg">
               Browse Courses

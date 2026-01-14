@@ -16,10 +16,9 @@ const getAllCourses = catchAsync(async (req, res, next) => {
 
   const filter = JSON.parse(queryStr);
 
-  // Only show published and approved courses for non-authenticated users
+  // Only show published courses for non-authenticated users (allow preview without approval)
   if (!req.user) {
     filter.isPublished = true;
-    filter.isApproved = true;
     filter.isDeleted = false;
   }
 
@@ -123,8 +122,8 @@ const getCourse = catchAsync(async (req, res, next) => {
     ['org_admin', 'super_admin'].includes(req.user.role)
   );
 
-  // If user is not the owner and course is not published, deny access
-  if (!isOwner && (!course.isPublished || !course.isApproved)) {
+  // If user is not the owner and course is not published, deny access (allow preview without approval)
+  if (!isOwner && !course.isPublished) {
     return next(new AppError('No course found with that ID', 404));
   }
 

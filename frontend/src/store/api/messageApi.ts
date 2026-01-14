@@ -129,9 +129,9 @@ export const messageApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ _id }) => ({ type: 'Message' as const, id: `conversation-${_id}` })),
-              { type: 'Message', id: 'CONVERSATION_LIST' }
-            ]
+            ...result.data.map(({ _id }) => ({ type: 'Message' as const, id: `conversation-${_id}` })),
+            { type: 'Message', id: 'CONVERSATION_LIST' }
+          ]
           : [{ type: 'Message', id: 'CONVERSATION_LIST' }]
     }),
 
@@ -187,10 +187,10 @@ export const messageApi = baseApi.injectEndpoints({
       invalidatesTags: (result) =>
         result?.data
           ? [
-              { type: 'Message', id: 'CONVERSATION_LIST' },
-              { type: 'Message', id: `messages-${result.data.conversationId}` },
-              { type: 'Message', id: `conversation-${result.data.conversationId}` }
-            ]
+            { type: 'Message', id: 'CONVERSATION_LIST' },
+            { type: 'Message', id: `messages-${result.data.conversationId}` },
+            { type: 'Message', id: `conversation-${result.data.conversationId}` }
+          ]
           : []
     }),
 
@@ -219,8 +219,8 @@ export const messageApi = baseApi.injectEndpoints({
       ]
     }),
 
-    // Search users
-    searchUsers: builder.query<BaseApiResponse<UserSearchResult[]>, SearchUsersParams>({
+    // Search users for messaging
+    searchUsersForMessaging: builder.query<BaseApiResponse<UserSearchResult[]>, SearchUsersParams>({
       query: (params) => ({
         url: '/messages/users/search',
         params
@@ -268,8 +268,8 @@ export const {
   useSendMessageMutation,
   useMarkAsReadMutation,
   useDeleteMessageMutation,
-  useSearchUsersQuery,
-  useLazySearchUsersQuery,
+  useSearchUsersForMessagingQuery,
+  useLazySearchUsersForMessagingQuery,
   useGetUnreadCountQuery,
   useArchiveConversationMutation,
   useUnarchiveConversationMutation

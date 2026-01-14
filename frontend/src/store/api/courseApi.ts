@@ -401,7 +401,7 @@ export const courseApi = baseApi.injectEndpoints({
     }),
 
     // Featured Courses
-    getFeaturedCourses: builder.query<BaseApiResponse<CoursePopulated[]>, { limit?: number }>({
+    getFeaturedCourses: builder.query<BaseApiResponse<{ courses: CoursePopulated[] }>, { limit?: number }>({
       query: (params) => ({
         url: '/courses/featured',
         params,

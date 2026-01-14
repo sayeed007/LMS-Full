@@ -73,8 +73,7 @@ export function CreateCourseModal({
         const result = await createCourse({
           title: values.name,
           description: values.description,
-          category:
-            (values.category?.value as Course["category"]) || "Development",
+          category: values.category?.value as Course["category"],
           level: values.difficulty as
             | "Beginner"
             | "Intermediate"
