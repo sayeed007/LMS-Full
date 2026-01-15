@@ -25,12 +25,20 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   striped?: boolean;
+  outerBorder?: boolean;
+  headerBorder?: boolean;
+  rowBorder?: boolean;
+  borderColor?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   striped = false,
+  outerBorder = true,
+  headerBorder = true,
+  rowBorder = true,
+  borderColor = "border-gray-200",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
@@ -49,18 +57,31 @@ export function DataTable<TData, TValue>({
   // Calculate if pagination should be shown (more than 1 page)
   const showPagination = table.getPageCount() > 1;
 
+  // Function to merge border color classes
+  const getBorderColorClass = () => borderColor;
+
   return (
     <div className="space-y-4">
-      <div className="rounded-md border overflow-hidden">
+      <div
+        className={`rounded-md overflow-hidden ${outerBorder ? "border" : ""} ${
+          outerBorder ? getBorderColorClass() : ""
+        }`}
+      >
         <Table>
-          <TableHeader className="bg-gray-50/80">
+          <TableHeader
+            className={`bg-[#EBF5F0]/50 ${
+              !headerBorder ? "[&_tr]:border-0" : getBorderColorClass()
+            }`}
+          >
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
-                      className="font-semibold text-gray-900"
+                      className={`font-semibold text-gray-900 ${
+                        headerBorder ? "border-b" : "border-0"
+                      } ${headerBorder ? getBorderColorClass() : ""}`}
                     >
                       {header.isPlaceholder
                         ? null
@@ -80,9 +101,17 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={
-                    striped && index % 2 === 0 ? "bg-gray-50/30" : "bg-white"
-                  }
+                  className={`
+                    ${
+                      striped
+                        ? index % 2 === 0
+                          ? "bg-white"
+                          : "bg-off-white-1"
+                        : "bg-white"
+                    }
+                    ${!rowBorder ? "border-0" : "border-b"}
+                    ${rowBorder ? getBorderColorClass() : ""}
+                  `}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

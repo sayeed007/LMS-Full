@@ -5,28 +5,15 @@ import { useGetCourseByIdQuery } from "@/store/api/courseApi";
 import { useAppSelector } from "@/store/hooks";
 import { useState, useMemo } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import Learners from "./learner/page";
-import CourseSettings from "./setting/page";
-import CourseOutline from "@/components/courses/course_create/CourseOutline";
 import SimplePageContainer from "@/components/layout/SimplePageContainer";
 import TabNav from "@/components/ui/TabNav";
 import { CourseHeaderContext } from "./CourseHeaderContext";
-import Leaderboard from "./leaderboard/page";
-
-const tabs = [
-  { key: "outline", label: "Course Outline" },
-  { key: "learners", label: "Learners" },
-  { key: "evaluation", label: "Evaluation" },
-  { key: "leaderboard", label: "Leaderboard" },
-  { key: "setting", label: "Setting" },
-];
 
 export default function CourseLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState("setting");
   const [showHeaderActions, setShowHeaderActions] = useState(false);
 
   // Get course ID from URL params and current pathname
@@ -78,18 +65,51 @@ export default function CourseLayout({
     );
   }, [pathname]);
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "learners":
-        return <Learners />;
-      case "evaluation":
-        return <div>Evaluation content...</div>;
-      case "leaderboard":
-        return <Leaderboard />;
-      case "setting":
-        return <CourseSettings />;
-      default:
-        return <CourseOutline course={course} />;
+  // Define tabs with their target paths
+  // The 'key' is used for the TabNav to know which one is active
+  // We'll determine the active key based on the current pathname
+  const tabs = [
+    {
+      key: "outline",
+      label: "Course Outline",
+      path: `/courses/create/${courseId}/courseOutline`,
+    },
+    {
+      key: "learners",
+      label: "Learners",
+      path: `/courses/create/${courseId}/learner`,
+    },
+    {
+      key: "evaluation",
+      label: "Evaluation",
+      path: `/courses/create/${courseId}/evaluation`,
+    }, // Assuming this route exists or will be created
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      path: `/courses/create/${courseId}/leaderboard`,
+    },
+    {
+      key: "setting",
+      label: "Setting",
+      path: `/courses/create/${courseId}/setting`,
+    },
+  ];
+
+  // Determine active tab based on pathname
+  const activeTab = useMemo(() => {
+    if (pathname.includes("/courseOutline")) return "outline";
+    if (pathname.endsWith("/learner")) return "learners";
+    if (pathname.endsWith("/evaluation")) return "evaluation";
+    if (pathname.endsWith("/leaderboard")) return "leaderboard";
+    if (pathname.endsWith("/setting")) return "setting";
+    return ""; // No tab active if none match
+  }, [pathname]);
+
+  const handleTabChange = (key: string) => {
+    const tab = tabs.find((t) => t.key === key);
+    if (tab) {
+      router.push(tab.path);
     }
   };
 
@@ -126,7 +146,6 @@ export default function CourseLayout({
     <CourseHeaderContext.Provider
       value={{ showHeaderActions, setShowHeaderActions }}
     >
-      {/* <div className="px-6 pt-4"> */}
       <SimplePageContainer
         containerSize="xl"
         containerPadding="none"
@@ -169,14 +188,14 @@ export default function CourseLayout({
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-4">
           <TabNav
-            tabs={tabs}
+            tabs={tabs.map((t) => ({ key: t.key, label: t.label }))}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
             variant="underline"
           />
         </div>
 
-        {renderTabContent()}
+        {/* Render the children (the page content) */}
         {children}
       </SimplePageContainer>
     </CourseHeaderContext.Provider>

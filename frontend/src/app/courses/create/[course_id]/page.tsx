@@ -1,5 +1,9 @@
-// This page is handled by the layout.tsx tab system
-// The CourseOutline is rendered through layout.tsx when activeTab is "outline"
-export default function CourseCreate() {
-  return null;
+import { redirect } from "next/navigation";
+
+export default function CourseCreate({
+  params,
+}: {
+  params: { course_id: string };
+}) {
+  redirect(`/courses/create/${params.course_id}/courseOutline`);
 }
