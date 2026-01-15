@@ -76,11 +76,28 @@ const authSlice = createSlice({
       state.isLoading = action.payload;
     },
     logout: (state) => {
+      // Clear Redux state
       state.user = null;
       state.token = null;
       state.refreshToken = null;
       state.isAuthenticated = false;
       state.isLoading = false;
+
+      // Clear persisted storage (redux-persist stores in localStorage)
+      if (typeof window !== 'undefined') {
+        try {
+          // Clear redux-persist storage
+          localStorage.removeItem('persist:root');
+          // Clear any other auth-related items
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          // Clear session storage as well
+          sessionStorage.clear();
+        } catch (error) {
+          console.error('Error clearing storage on logout:', error);
+        }
+      }
     },
   },
 });

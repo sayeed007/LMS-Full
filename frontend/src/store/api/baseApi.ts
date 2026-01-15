@@ -49,7 +49,22 @@ const baseQueryWithReauth: BaseQueryFn<
     const url = typeof args === 'string' ? args : args.url;
     if (url.includes('/auth/refresh-token')) {
       console.info('Refresh token request failed - user needs to re-authenticate');
+
+      // Dispatch Redux logout to clear Redux state and localStorage
       api.dispatch(logout());
+
+      // Also trigger NextAuth signOut to clear NextAuth session
+      if (typeof window !== 'undefined') {
+        console.info('Clearing NextAuth session and redirecting to login');
+        // Dynamically import signOut to avoid SSR issues
+        import('next-auth/react').then(({ signOut }) => {
+          signOut({
+            callbackUrl: '/login',
+            redirect: true
+          });
+        });
+      }
+
       return result;
     }
 
@@ -104,10 +119,20 @@ const baseQueryWithReauth: BaseQueryFn<
       } else {
         console.info('Token refresh failed - invalid response format');
         api.dispatch(logout());
+        if (typeof window !== 'undefined') {
+          import('next-auth/react').then(({ signOut }) => {
+            signOut({ callbackUrl: '/login', redirect: true });
+          });
+        }
       }
     } else {
       console.info('Token refresh failed - logging out');
       api.dispatch(logout());
+      if (typeof window !== 'undefined') {
+        import('next-auth/react').then(({ signOut }) => {
+          signOut({ callbackUrl: '/login', redirect: true });
+        });
+      }
     }
   }
 

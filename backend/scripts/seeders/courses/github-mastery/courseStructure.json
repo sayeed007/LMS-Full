@@ -359,7 +359,7 @@
         {
           "title": "Merging Branches",
           "description": "Merge strategies and conflict resolution",
-          "type": "audio",
+          "type": "block",
           "order": 3,
           "estimatedDuration": 15,
           "content": [

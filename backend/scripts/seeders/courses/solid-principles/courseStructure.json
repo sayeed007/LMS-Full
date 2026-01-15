@@ -1,0 +1,178 @@
+{
+  "course": {
+    "title": "SOLID Principles: Writing Clean, Maintainable Code",
+    "shortDescription": "Master the five SOLID principles of object-oriented design to write better, more maintainable software.",
+    "description": "Learn the fundamental SOLID principles that form the foundation of clean, maintainable object-oriented code.\\n\\n**What You'll Learn:**\\n• Single Responsibility Principle (SRP)\\n• Open/Closed Principle (OCP)\\n• Liskov Substitution Principle (LSP)\\n• Interface Segregation Principle (ISP)\\n• Dependency Inversion Principle (DIP)\\n\\n**Perfect For:**\\n• Software developers wanting to improve code quality\\n• Teams adopting clean code practices\\n• Anyone preparing for technical interviews\\n• Developers transitioning to OOP",
+    "category": "Software Engineering",
+    "subcategory": "Design Patterns",
+    "level": "Intermediate",
+    "thumbnail": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800",
+    "previewVideo": "https://www.youtube.com/embed/pTB30aXS77U",
+    "images": [
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800",
+      "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800"
+    ],
+    "price": 59.99,
+    "originalPrice": 89.99,
+    "discountPrice": 49.99,
+    "currency": "USD",
+    "estimatedDuration": 8,
+    "tags": ["solid", "oop", "design-patterns", "clean-code", "software-engineering"],
+    "prerequisites": ["Basic OOP knowledge", "Understanding of classes and objects"],
+    "learningOutcomes": [
+      "Apply SOLID principles in real-world projects",
+      "Write more maintainable and testable code",
+      "Recognize code smells and refactor effectively",
+      "Design flexible software architectures",
+      "Improve code quality and team collaboration"
+    ],
+    "isPublished": true,
+    "isApproved": true
+  },
+  "chapters": [
+    {
+      "title": "Introduction to SOLID Principles",
+      "description": "Understanding the importance of SOLID principles in software design",
+      "order": 1,
+      "lessons": [
+        {
+          "title": "What are SOLID Principles?",
+          "description": "Introduction to the five SOLID principles and their importance",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 15,
+          "content": [
+            {
+              "type": "text",
+              "title": "Understanding SOLID",
+              "order": 1,
+              "data": {
+                "text": "SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable:\\n\\n• **S**ingle Responsibility Principle\\n• **O**pen/Closed Principle\\n• **L**iskov Substitution Principle\\n• **I**nterface Segregation Principle\\n• **D**ependency Inversion Principle\\n\\nThese principles were introduced by Robert C. Martin (Uncle Bob) and have become fundamental to object-oriented design."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Single Responsibility Principle (SRP)",
+      "description": "A class should have only one reason to change",
+      "order": 2,
+      "lessons": [
+        {
+          "title": "Understanding SRP",
+          "description": "Learn what single responsibility means and why it matters",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "text",
+              "title": "Single Responsibility Principle",
+              "order": 1,
+              "data": {
+                "text": "**Definition:** A class should have only one reason to change.\\n\\n**Key Concepts:**\\n• Each class should focus on a single task or responsibility\\n• Changes to one responsibility shouldn't affect others\\n• Promotes high cohesion and low coupling\\n\\n**Benefits:**\\n• Easier to understand and maintain\\n• Reduces the risk of breaking existing functionality\\n• Improves testability\\n• Facilitates code reuse"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Open/Closed Principle (OCP)",
+      "description": "Software entities should be open for extension but closed for modification",
+      "order": 3,
+      "lessons": [
+        {
+          "title": "Understanding OCP",
+          "description": "Learn how to extend functionality without modifying existing code",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "text",
+              "title": "Open/Closed Principle",
+              "order": 1,
+              "data": {
+                "text": "**Definition:** Software entities should be open for extension but closed for modification.\\n\\n**Key Concepts:**\\n• Add new functionality without changing existing code\\n• Use abstraction and polymorphism\\n• Protect stable code from changes\\n\\n**Implementation Strategies:**\\n• Inheritance and polymorphism\\n• Strategy pattern\\n• Decorator pattern\\n• Dependency injection"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Liskov Substitution Principle (LSP)",
+      "description": "Objects should be replaceable with instances of their subtypes",
+      "order": 4,
+      "lessons": [
+        {
+          "title": "Understanding LSP",
+          "description": "Learn about proper inheritance and substitutability",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "text",
+              "title": "Liskov Substitution Principle",
+              "order": 1,
+              "data": {
+                "text": "**Definition:** Objects of a superclass should be replaceable with objects of its subclasses without breaking the application.\\n\\n**Key Concepts:**\\n• Subtypes must be substitutable for their base types\\n• Derived classes must not break base class contracts\\n• Preserve expected behavior\\n\\n**Common Violations:**\\n• Strengthening preconditions\\n• Weakening postconditions\\n• Throwing new exceptions\\n• Changing expected behavior"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Interface Segregation Principle (ISP)",
+      "description": "Clients should not be forced to depend on interfaces they don't use",
+      "order": 5,
+      "lessons": [
+        {
+          "title": "Understanding ISP",
+          "description": "Learn how to design focused, client-specific interfaces",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "text",
+              "title": "Interface Segregation Principle",
+              "order": 1,
+              "data": {
+                "text": "**Definition:** No client should be forced to depend on methods it does not use.\\n\\n**Key Concepts:**\\n• Create small, focused interfaces\\n• Split large interfaces into smaller ones\\n• Clients depend only on what they need\\n\\n**Benefits:**\\n• Reduces coupling\\n• Improves code clarity\\n• Makes systems more flexible\\n• Easier to refactor and maintain"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dependency Inversion Principle (DIP)",
+      "description": "Depend on abstractions, not concretions",
+      "order": 6,
+      "lessons": [
+        {
+          "title": "Understanding DIP",
+          "description": "Learn how to invert dependencies for better flexibility",
+          "type": "text",
+          "order": 1,
+          "estimatedDuration": 20,
+          "content": [
+            {
+              "type": "text",
+              "title": "Dependency Inversion Principle",
+              "order": 1,
+              "data": {
+                "text": "**Definition:** High-level modules should not depend on low-level modules. Both should depend on abstractions.\\n\\n**Key Concepts:**\\n• Depend on abstractions (interfaces), not concrete implementations\\n• Invert the direction of dependencies\\n• Use dependency injection\\n\\n**Benefits:**\\n• Reduces coupling between modules\\n• Makes code more testable\\n• Facilitates parallel development\\n• Improves flexibility and maintainability"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

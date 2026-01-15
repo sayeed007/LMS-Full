@@ -16,11 +16,8 @@
     "db:restore": "node scripts/restore-database.js",
     "db:restore:latest": "node scripts/restore-database.js --latest",
     "db:list-backups": "node scripts/restore-database.js --list",
-    "seedArticle": "node src/scripts/seedArticles.js",
-    "seed": "node src/scripts/seedAll.js",
-    "seed:clear": "node src/scripts/seedAll.js --clear",
-    "seed:help": "node src/scripts/seedAll.js --help",
-    "db:reset": "npm run seed:clear && npm run seed"
+    "seed": "node scripts/seed.js",
+    "seed:drop": "node scripts/dropDatabase.js"
   },
   "keywords": [
     "lms",
