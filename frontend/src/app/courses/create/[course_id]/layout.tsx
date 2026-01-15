@@ -11,6 +11,7 @@ import CourseOutline from "@/components/courses/course_create/CourseOutline";
 import SimplePageContainer from "@/components/layout/SimplePageContainer";
 import TabNav from "@/components/ui/TabNav";
 import { CourseHeaderContext } from "./CourseHeaderContext";
+import Leaderboard from "./leaderboard/page";
 
 const tabs = [
   { key: "outline", label: "Course Outline" },
@@ -25,7 +26,7 @@ export default function CourseLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState("outline");
+  const [activeTab, setActiveTab] = useState("setting");
   const [showHeaderActions, setShowHeaderActions] = useState(false);
 
   // Get course ID from URL params and current pathname
@@ -84,7 +85,7 @@ export default function CourseLayout({
       case "evaluation":
         return <div>Evaluation content...</div>;
       case "leaderboard":
-        return <div>Leaderboard content...</div>;
+        return <Leaderboard />;
       case "setting":
         return <CourseSettings />;
       default:
@@ -126,7 +127,11 @@ export default function CourseLayout({
       value={{ showHeaderActions, setShowHeaderActions }}
     >
       {/* <div className="px-6 pt-4"> */}
-      <SimplePageContainer containerSize="xl" containerPadding="none">
+      <SimplePageContainer
+        containerSize="xl"
+        containerPadding="none"
+        className="my-4"
+      >
         {/* Header */}
         <div className="relative flex items-center justify-center mb-4 h-10">
           <div className="absolute left-1/2 -translate-x-1/2 font-bold text-xl">

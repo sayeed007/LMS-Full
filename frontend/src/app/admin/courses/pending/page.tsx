@@ -1,73 +1,87 @@
-'use client';
+"use client";
 
-import { getErrorMessage } from '@/lib/utils';
-import { useApproveCourseMutation, useGetPendingCoursesQuery, useRejectCourseMutation, type CoursePopulated } from '@/store/api/courseApi';
-import { Check, Clock, Eye, X } from 'lucide-react';
-import moment from 'moment';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { useConfirm } from '@/hooks/useConfirm';
-import { Pagination } from '@/components/ui';
+import { getErrorMessage } from "@/lib/utils";
+import {
+  useApproveCourseMutation,
+  useGetPendingCoursesQuery,
+  useRejectCourseMutation,
+  type CoursePopulated,
+} from "@/store/api/courseApi";
+import { Check, Clock, Eye, X } from "lucide-react";
+import moment from "moment";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useConfirm } from "@/hooks/useConfirm";
+import { Container, Pagination } from "@/components/ui";
 
 export default function PendingCoursesPage() {
   const confirm = useConfirm();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<CoursePopulated | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState<CoursePopulated | null>(
+    null
+  );
+  const [rejectionReason, setRejectionReason] = useState("");
 
-  const { data, isLoading, refetch } = useGetPendingCoursesQuery({ page, limit });
-  const [approveCourse, { isLoading: isApproving }] = useApproveCourseMutation();
+  const { data, isLoading, refetch } = useGetPendingCoursesQuery({
+    page,
+    limit,
+  });
+  const [approveCourse, { isLoading: isApproving }] =
+    useApproveCourseMutation();
   const [rejectCourse, { isLoading: isRejecting }] = useRejectCourseMutation();
 
   const handleApprove = async (courseId: string, courseTitle: string) => {
     const confirmed = await confirm({
-      title: 'Approve Course',
+      title: "Approve Course",
       message: `Are you sure you want to approve "${courseTitle}"?`,
-      confirmText: 'Approve',
-      cancelText: 'Cancel',
-      variant: 'info'
+      confirmText: "Approve",
+      cancelText: "Cancel",
+      variant: "info",
     });
 
     if (!confirmed) return;
 
     try {
       await approveCourse({ id: courseId }).unwrap();
-      toast.success('Course approved successfully!');
+      toast.success("Course approved successfully!");
       refetch();
     } catch (error: unknown) {
-      console.error('Approval error:', error);
-      toast.error(getErrorMessage(error, 'Failed to approve course'));
+      console.error("Approval error:", error);
+      toast.error(getErrorMessage(error, "Failed to approve course"));
     }
   };
 
   const openRejectModal = (course: CoursePopulated) => {
     setSelectedCourse(course);
-    setRejectionReason('');
+    setRejectionReason("");
     setRejectModalOpen(true);
   };
 
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
-      toast.error('Please provide a reason for rejection');
+      toast.error("Please provide a reason for rejection");
       return;
     }
 
     if (!selectedCourse) return;
 
     try {
-      await rejectCourse({ id: selectedCourse._id, reason: rejectionReason }).unwrap();
-      toast.success('Course rejected successfully');
+      await rejectCourse({
+        id: selectedCourse._id,
+        reason: rejectionReason,
+      }).unwrap();
+      toast.success("Course rejected successfully");
       setRejectModalOpen(false);
       setSelectedCourse(null);
-      setRejectionReason('');
+      setRejectionReason("");
       refetch();
     } catch (error: unknown) {
-      console.error('Rejection error:', error);
-      toast.error(getErrorMessage(error, 'Failed to reject course'));
+      console.error("Rejection error:", error);
+      toast.error(getErrorMessage(error, "Failed to reject course"));
     }
   };
 
@@ -83,17 +97,23 @@ export default function PendingCoursesPage() {
   const pagination = data?.pagination;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <Container className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Pending Course Approvals</h1>
-          <p className="text-gray-600 mt-2">Review and approve courses submitted by instructors</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Pending Course Approvals
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Review and approve courses submitted by instructors
+          </p>
         </div>
 
         {courses.length === 0 ? (
           <div className="bg-white shadow rounded-lg p-12 text-center">
             <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No pending courses</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No pending courses
+            </h3>
             <p className="text-gray-600">All courses have been reviewed</p>
           </div>
         ) : (
@@ -151,8 +171,12 @@ export default function PendingCoursesPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{course.instructor?.name || 'Unknown'}</div>
-                          <div className="text-sm text-gray-500">{course.instructor?.email}</div>
+                          <div className="text-sm text-gray-900">
+                            {course.instructor?.name || "Unknown"}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {course.instructor?.email}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -160,7 +184,7 @@ export default function PendingCoursesPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {moment(course.createdAt).format('MMM DD, YYYY')}
+                          {moment(course.createdAt).format("MMM DD, YYYY")}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">
@@ -173,7 +197,9 @@ export default function PendingCoursesPage() {
                               Preview
                             </Link>
                             <button
-                              onClick={() => handleApprove(course._id, course.title)}
+                              onClick={() =>
+                                handleApprove(course._id, course.title)
+                              }
                               disabled={isApproving}
                               className="text-green-600 hover:text-green-900 flex items-center gap-1 disabled:opacity-50"
                             >
@@ -219,9 +245,13 @@ export default function PendingCoursesPage() {
       {rejectModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Reject Course</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Reject Course
+            </h2>
             <p className="text-gray-600 mb-4">
-              {'Please provide a reason for rejecting "{selectedCourse?.title}"'}
+              {
+                'Please provide a reason for rejecting "{selectedCourse?.title}"'
+              }
             </p>
             <textarea
               value={rejectionReason}
@@ -242,12 +272,12 @@ export default function PendingCoursesPage() {
                 disabled={isRejecting || !rejectionReason.trim()}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isRejecting ? 'Rejecting...' : 'Reject Course'}
+                {isRejecting ? "Rejecting..." : "Reject Course"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </Container>
   );
 }
