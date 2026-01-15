@@ -8,8 +8,8 @@ import {
 } from "@/store/api/courseApi";
 import { CourseLesson, LessonContent } from "@/types/backend-models";
 import {
-  ChevronsDownUp,
-  ChevronsUpDown,
+  ChevronDown,
+  ChevronRight,
   Edit,
   File,
   Plus,
@@ -196,6 +196,20 @@ export const LessonItem = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
+                {/* Collapse/Expand Chevron - moved to left for consistency with chapters */}
+                {content.length > 0 && (
+                  <button
+                    onClick={() => onToggleLessonExpansion(lesson._id)}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title={isExpanded ? "Collapse lesson" : "Expand lesson"}
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                  </button>
+                )}
                 <File className="w-4 h-4 text-gray-500" />
                 <span className="font-medium">{lesson.title}</span>
                 {content.length > 0 && (
@@ -206,22 +220,6 @@ export const LessonItem = ({
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {content.length > 0 && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onToggleLessonExpansion(lesson._id)}
-                  >
-                    {isExpanded ? (
-                      <ChevronsUpDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronsDownUp className="w-4 h-4" />
-                    )}
-                  </Button>
-                </>
-              )}
-
               <Button
                 variant="ghost"
                 size="sm"

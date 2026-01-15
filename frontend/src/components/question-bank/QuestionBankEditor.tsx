@@ -212,7 +212,7 @@ export default function QuestionBankEditor({
     <div className="space-y-6">
       {localQuestions.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-600 mb-6">Add question to your quiz test</p>
+          <p className="text-gray-600">Add question to your quiz test</p>
         </div>
       ) : (
         <DndContext

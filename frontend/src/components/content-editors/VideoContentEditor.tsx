@@ -6,8 +6,8 @@ import { Link, Upload, X } from "lucide-react";
 import { useState } from "react";
 
 interface LessonContent {
-  type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
-  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
+  type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
+  blocks?: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;
@@ -18,7 +18,8 @@ interface LessonContent {
   publicId?: string;
   resourceType?: string;
   embedUrl?: string;
-  videoType?: 'upload' | 'embed';
+  videoType?: "upload" | "embed";
+  data?: { quizId?: string };
 }
 
 interface VideoContentEditorProps {
@@ -38,16 +39,18 @@ export default function VideoContentEditor({
   filePreviewUrl,
   onFileSelect,
   onFileRemove,
-  isUploading
+  isUploading,
 }: VideoContentEditorProps) {
-  const [videoType, setVideoType] = useState<'upload' | 'embed'>(content.videoType || 'upload');
+  const [videoType, setVideoType] = useState<"upload" | "embed">(
+    content.videoType || "upload"
+  );
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,38 +60,48 @@ export default function VideoContentEditor({
     onFileSelect(file);
 
     // Clear the input value so the same file can be selected again if needed
-    e.target.value = '';
+    e.target.value = "";
   };
 
-  const handleVideoTypeChange = (type: 'upload' | 'embed') => {
+  const handleVideoTypeChange = (type: "upload" | "embed") => {
     setVideoType(type);
     onChange({
       ...content,
       videoType: type,
       // Clear opposite type data
-      ...(type === 'upload' ? { embedUrl: '' } : { fileUrl: '', fileName: '', fileSize: 0, fileType: '', publicId: '', resourceType: '' })
+      ...(type === "upload"
+        ? { embedUrl: "" }
+        : {
+            fileUrl: "",
+            fileName: "",
+            fileSize: 0,
+            fileType: "",
+            publicId: "",
+            resourceType: "",
+          }),
     });
 
     // If switching to upload and there's a selected file, keep it
     // If switching to embed, remove any selected file
-    if (type === 'embed' && selectedFile) {
+    if (type === "embed" && selectedFile) {
       onFileRemove();
     }
   };
 
   const extractVideoId = (url: string) => {
     // YouTube URL patterns
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeRegex =
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const youtubeMatch = url.match(youtubeRegex);
     if (youtubeMatch) {
-      return { platform: 'youtube', id: youtubeMatch[1] };
+      return { platform: "youtube", id: youtubeMatch[1] };
     }
 
     // Vimeo URL patterns
     const vimeoRegex = /(?:vimeo\.com\/)([0-9]+)/;
     const vimeoMatch = url.match(vimeoRegex);
     if (vimeoMatch) {
-      return { platform: 'vimeo', id: vimeoMatch[1] };
+      return { platform: "vimeo", id: vimeoMatch[1] };
     }
 
     return null;
@@ -99,9 +112,9 @@ export default function VideoContentEditor({
     if (!videoInfo) return url;
 
     switch (videoInfo.platform) {
-      case 'youtube':
+      case "youtube":
         return `https://www.youtube.com/embed/${videoInfo.id}`;
-      case 'vimeo':
+      case "vimeo":
         return `https://player.vimeo.com/video/${videoInfo.id}`;
       default:
         return url;
@@ -113,10 +126,12 @@ export default function VideoContentEditor({
       <div>
         <Input
           value={content.title || ""}
-          onChange={(e) => onChange({
-            ...content,
-            title: e.target.value
-          })}
+          onChange={(e) =>
+            onChange({
+              ...content,
+              title: e.target.value,
+            })
+          }
           placeholder="Add Video Title"
           className="text-lg"
         />
@@ -125,10 +140,12 @@ export default function VideoContentEditor({
       <div>
         <textarea
           value={content.description || ""}
-          onChange={(e) => onChange({
-            ...content,
-            description: e.target.value
-          })}
+          onChange={(e) =>
+            onChange({
+              ...content,
+              description: e.target.value,
+            })
+          }
           placeholder="Add Video Description"
           className="w-full border border-gray-300 rounded-lg p-4 min-h-[120px] resize-none"
         />
@@ -137,16 +154,16 @@ export default function VideoContentEditor({
       {/* Video Type Selector */}
       <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
         <Button
-          variant={videoType === 'upload' ? 'default' : 'outline'}
-          onClick={() => handleVideoTypeChange('upload')}
+          variant={videoType === "upload" ? "default" : "outline"}
+          onClick={() => handleVideoTypeChange("upload")}
           className="flex items-center gap-2"
         >
           <Upload className="w-4 h-4" />
           Upload Video
         </Button>
         <Button
-          variant={videoType === 'embed' ? 'default' : 'outline'}
-          onClick={() => handleVideoTypeChange('embed')}
+          variant={videoType === "embed" ? "default" : "outline"}
+          onClick={() => handleVideoTypeChange("embed")}
           className="flex items-center gap-2"
         >
           <Link className="w-4 h-4" />
@@ -155,7 +172,7 @@ export default function VideoContentEditor({
       </div>
 
       {/* Upload Video Section */}
-      {videoType === 'upload' && (
+      {videoType === "upload" && (
         <>
           {!content.fileUrl && !selectedFile ? (
             <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
@@ -174,12 +191,13 @@ export default function VideoContentEditor({
               />
               <label
                 htmlFor="video-upload"
-                className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${isUploading
-                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${
+                  isUploading
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
               >
-                {isUploading ? 'Processing...' : 'Select Video File'}
+                {isUploading ? "Processing..." : "Select Video File"}
               </label>
               <p className="text-gray-500 text-xs mt-2">
                 Maximum file upload size: 150 MB
@@ -192,11 +210,16 @@ export default function VideoContentEditor({
                 <div className="flex items-center gap-3">
                   <div className="text-amber-600 text-2xl">🎥</div>
                   <div>
-                    <h4 className="font-medium text-gray-900">{content.fileName}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {content.fileName}
+                    </h4>
                     <p className="text-sm text-gray-500">
-                      {formatFileSize(content.fileSize || 0)} • {content.fileType}
+                      {formatFileSize(content.fileSize || 0)} •{" "}
+                      {content.fileType}
                     </p>
-                    <p className="text-sm text-amber-600 font-medium">File selected - will upload when saved</p>
+                    <p className="text-sm text-amber-600 font-medium">
+                      File selected - will upload when saved
+                    </p>
                   </div>
                 </div>
                 <Button
@@ -235,12 +258,13 @@ export default function VideoContentEditor({
                 />
                 <label
                   htmlFor="video-replace-selected"
-                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${isUploading
-                      ? 'bg-gray-400 text-white cursor-not-allowed'
-                      : 'bg-gray-600 text-white hover:bg-gray-700'
-                    }`}
+                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+                    isUploading
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-gray-600 text-white hover:bg-gray-700"
+                  }`}
                 >
-                  {isUploading ? 'Processing...' : 'Replace File'}
+                  {isUploading ? "Processing..." : "Replace File"}
                 </label>
               </div>
             </div>
@@ -250,9 +274,12 @@ export default function VideoContentEditor({
                 <div className="flex items-center gap-3">
                   <div className="text-blue-600 text-2xl">🎥</div>
                   <div>
-                    <h4 className="font-medium text-gray-900">{content.fileName}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {content.fileName}
+                    </h4>
                     <p className="text-sm text-gray-500">
-                      {formatFileSize(content.fileSize || 0)} • {content.fileType}
+                      {formatFileSize(content.fileSize || 0)} •{" "}
+                      {content.fileType}
                     </p>
                   </div>
                 </div>
@@ -290,12 +317,13 @@ export default function VideoContentEditor({
                 />
                 <label
                   htmlFor="video-replace"
-                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${isUploading
-                      ? 'bg-gray-400 text-white cursor-not-allowed'
-                      : 'bg-gray-600 text-white hover:bg-gray-700'
-                    }`}
+                  className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
+                    isUploading
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-gray-600 text-white hover:bg-gray-700"
+                  }`}
                 >
-                  {isUploading ? 'Processing...' : 'Replace File'}
+                  {isUploading ? "Processing..." : "Replace File"}
                 </label>
               </div>
             </div>
@@ -304,15 +332,17 @@ export default function VideoContentEditor({
       )}
 
       {/* Embed Video Section */}
-      {videoType === 'embed' && (
+      {videoType === "embed" && (
         <div className="space-y-4">
           <div>
             <Input
               value={content.embedUrl || ""}
-              onChange={(e) => onChange({
-                ...content,
-                embedUrl: e.target.value
-              })}
+              onChange={(e) =>
+                onChange({
+                  ...content,
+                  embedUrl: e.target.value,
+                })
+              }
               placeholder="Enter video URL (YouTube, Vimeo, or direct video link)"
               className="text-sm"
             />

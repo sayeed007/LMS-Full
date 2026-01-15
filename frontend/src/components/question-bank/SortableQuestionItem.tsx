@@ -104,7 +104,7 @@ export function SortableQuestionItem({
 
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="ml-2">
-            {question.type.replace("-", " ")}
+            {question.type?.replace("-", " ") || "Unknown"}
           </Badge>
           <Button
             variant="ghost"
@@ -136,6 +136,21 @@ export function SortableQuestionItem({
               value={question.text}
               onChange={(e) => onUpdate(question._id, { text: e.target.value })}
               placeholder="Type your question here"
+              rows={2}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Explanation (Optional)
+            </label>
+            <Textarea
+              value={question.explanation || ""}
+              onChange={(e) =>
+                onUpdate(question._id, { explanation: e.target.value })
+              }
+              placeholder="Provide an explanation for the correct answer"
               rows={2}
               className="w-full"
             />

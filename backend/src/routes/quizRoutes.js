@@ -3,6 +3,7 @@ const { protect, restrictTo } = require('../middleware/auth');
 const {
   getAllQuizzes,
   getQuiz,
+  getQuizByLesson,
   createQuiz,
   updateQuiz,
   deleteQuiz,
@@ -435,6 +436,9 @@ router.use(protect);
 
 // Public quiz routes (for enrolled students)
 router.get('/', getAllQuizzes);
+
+// Get quiz by lesson ID (must be before /:id to avoid conflicts)
+router.get('/lesson/:lessonId', getQuizByLesson);
 
 router.get('/:id', getQuiz);
 

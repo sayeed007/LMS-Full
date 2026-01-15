@@ -8,12 +8,14 @@ import {
   useUpdateContentMutation,
   useGetLessonByIdQuery,
   useGetContentByIdQuery,
+  useGetContentByLessonQuery,
 } from "@/store/api/courseApi";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import TextContentEditor from "@/components/content-editors/TextContentEditor";
 import MediaContentEditor from "@/components/content-editors/MediaContentEditor";
+import VideoContentEditor from "@/components/content-editors/VideoContentEditor";
 import {
   useUploadFileToCloudinaryMutation,
   useDeleteFileFromCloudinaryMutation,
@@ -44,7 +46,7 @@ interface ContentBlock {
 
 interface LessonContent {
   type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
-  blocks: ContentBlock[];
+  blocks?: ContentBlock[]; // Optional for quiz content
   textContent?: string;
   title?: string;
   description?: string;
@@ -54,6 +56,7 @@ interface LessonContent {
   fileType?: string;
   publicId?: string;
   resourceType?: string;
+  data?: { quizId?: string }; // For quiz content
 }
 
 // Backend block type
@@ -170,6 +173,7 @@ interface ParsedContentData {
   };
   publicId?: string;
   resourceType?: string;
+  quizId?: string;
 }
 
 // Transform frontend block format to backend format
@@ -253,11 +257,31 @@ export default function ContentEditor() {
   // Loading states
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
+  const [hasAutoLoaded, setHasAutoLoaded] = useState(false); // Prevent multiple auto-loads
 
   // API hooks
   const { data: lessonData, isLoading } = useGetLessonByIdQuery(
     { courseId, lessonId },
     { skip: !courseId || !lessonId }
+  );
+
+  // Fetch content by lesson and type to auto-detect existing content
+  const { data: lessonContentData } = useGetContentByLessonQuery(
+    {
+      courseId,
+      lessonId,
+      params: {
+        type: contentType as
+          | "text"
+          | "video"
+          | "audio"
+          | "document"
+          | "quiz"
+          | "assignment"
+          | "block",
+      },
+    },
+    { skip: !courseId || !lessonId || !contentType || !!contentId }
   );
 
   // Fetch specific content when in edit mode
@@ -280,6 +304,24 @@ export default function ContentEditor() {
       setLessonTitle(lesson.title);
     }
   }, [lesson]);
+
+  // Auto-detect and load existing content for this lesson + type
+  useEffect(() => {
+    if (
+      lessonContentData?.data?.content &&
+      lessonContentData.data.content.length > 0 &&
+      !contentId &&
+      !hasAutoLoaded
+    ) {
+      const existingContent = lessonContentData.data.content[0];
+      setContentId(existingContent._id);
+      setIsEditMode(true);
+      setHasAutoLoaded(true); // Mark as loaded
+      // Update URL with contentId
+      const newUrl = `${window.location.pathname}?type=${contentType}&contentId=${existingContent._id}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [lessonContentData, contentId, contentType, hasAutoLoaded]);
 
   // Separate effect to load content in edit mode
   useEffect(() => {
@@ -321,6 +363,16 @@ export default function ContentEditor() {
             title: "",
             description: "",
             blocks: blocks,
+          };
+        } else if (contentType === "quiz") {
+          // For quiz content - preserve the data object with quizId
+          newContent = {
+            type: "quiz",
+            textContent: "",
+            title: parsedData.title || "",
+            description: parsedData.description || "",
+            blocks: [],
+            data: { quizId: parsedData.quizId }, // Extract only quizId from parsed data
           };
         } else if (
           ["video", "audio", "document", "assignment"].includes(contentType)
@@ -472,7 +524,7 @@ export default function ContentEditor() {
     // Update the specific block with local file info
     setContent((prevContent) => ({
       ...prevContent,
-      blocks: prevContent.blocks.map((block) =>
+      blocks: (prevContent.blocks || []).map((block) =>
         block.id === blockId
           ? {
               ...block,
@@ -491,7 +543,7 @@ export default function ContentEditor() {
 
   const handleBlockFileRemove = async (blockId: string) => {
     // Find the block to get cloudinary info
-    const block = content.blocks.find((b) => b.id === blockId);
+    const block = (content.blocks || []).find((b) => b.id === blockId);
 
     // If there's an uploaded file, delete it from Cloudinary
     if (
@@ -535,7 +587,7 @@ export default function ContentEditor() {
     // Clear file data from the specific block
     setContent((prevContent) => ({
       ...prevContent,
-      blocks: prevContent.blocks.map((block) =>
+      blocks: (prevContent.blocks || []).map((block) =>
         block.id === blockId
           ? {
               ...block,
@@ -561,7 +613,7 @@ export default function ContentEditor() {
       setIsUploading(true);
       setUploadProgress("Processing blocks...");
 
-      const updatedBlocks = [...currentContent.blocks];
+      const updatedBlocks = [...(currentContent.blocks || [])];
 
       for (let i = 0; i < updatedBlocks.length; i++) {
         const block = updatedBlocks[i];
@@ -640,10 +692,25 @@ export default function ContentEditor() {
 
     // For media and assignment content, upload file if selected
     if (["video", "audio", "document", "assignment"].includes(contentType)) {
-      // Check if there's a file selected or already uploaded
-      if (!(currentContent as { fileUrl?: string }).fileUrl && !selectedFile) {
-        showErrorToast("Please select a file before saving");
-        return;
+      // For video, allow either file upload OR embed URL
+      if (contentType === "video") {
+        const hasFile =
+          !!(currentContent as { fileUrl?: string }).fileUrl || !!selectedFile;
+        const hasEmbed = !!(currentContent as { embedUrl?: string }).embedUrl;
+
+        if (!hasFile && !hasEmbed) {
+          showErrorToast("Please upload a video file or provide an embed URL");
+          return;
+        }
+      } else {
+        // For other media types, require a file
+        if (
+          !(currentContent as { fileUrl?: string }).fileUrl &&
+          !selectedFile
+        ) {
+          showErrorToast("Please select a file before saving");
+          return;
+        }
       }
 
       // If there's a selected file but no URL, upload it first
@@ -717,6 +784,9 @@ export default function ContentEditor() {
         saveData.blocks = currentContent.blocks
           ? currentContent.blocks.map(transformBlockToBackend)
           : [];
+        if (currentContent.title) {
+          saveData.title = currentContent.title;
+        }
       }
 
       // For media content (video, audio, document, assignment)
@@ -730,12 +800,17 @@ export default function ContentEditor() {
           fileType?: string;
           publicId?: string;
           resourceType?: string;
+          embedUrl?: string;
         };
 
         if (typedContent.title) saveData.title = typedContent.title;
         if (typedContent.description)
           saveData.description = typedContent.description;
-        if (typedContent.fileUrl) {
+
+        // For video, save either fileUrl OR embedUrl
+        if (contentType === "video" && typedContent.embedUrl) {
+          saveData.embedUrl = typedContent.embedUrl;
+        } else if (typedContent.fileUrl) {
           saveData.url = typedContent.fileUrl;
           saveData.filename = typedContent.fileName;
           saveData.size = typedContent.fileSize;
@@ -744,6 +819,20 @@ export default function ContentEditor() {
             publicId: typedContent.publicId,
             resourceType: typedContent.resourceType,
           };
+        }
+      }
+
+      // For quiz content - preserve the quizId
+      if (contentType === "quiz") {
+        const typedContent = currentContent as {
+          data?: { quizId?: string };
+          title?: string;
+        };
+        if (typedContent.data?.quizId) {
+          saveData.quizId = typedContent.data.quizId; // Preserve quizId
+        }
+        if (typedContent.title) {
+          saveData.title = typedContent.title;
         }
       }
 
@@ -845,8 +934,10 @@ export default function ContentEditor() {
                 Lesson:{" "}
                 <span className="font-medium text-gray-700">{lessonTitle}</span>
               </div>
-              {/* Editable content title for text type */}
-              {contentType === "text" && (
+              {/* Editable content title for text and blocks types */}
+              {(contentType === "text" ||
+                contentType === "blocks" ||
+                contentType === "block") && (
                 <Input
                   value={content.title || ""}
                   onChange={(e) =>
@@ -913,7 +1004,19 @@ export default function ContentEditor() {
           />
         )}
 
-        {["video", "audio", "document"].includes(contentType) && (
+        {contentType === "video" && (
+          <VideoContentEditor
+            content={content}
+            onChange={(newContent) => setContent(newContent as LessonContent)}
+            selectedFile={selectedFile}
+            filePreviewUrl={filePreviewUrl}
+            onFileSelect={handleFileSelect}
+            onFileRemove={handleFileRemove}
+            isUploading={isUploading}
+          />
+        )}
+
+        {["audio", "document"].includes(contentType) && (
           <MediaContentEditor
             content={content}
             onChange={(newContent) => setContent(newContent as LessonContent)}

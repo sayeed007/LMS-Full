@@ -3,21 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { useGetCourseByIdQuery } from "@/store/api/courseApi";
 import { useAppSelector } from "@/store/hooks";
-import { createContext, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Learners from "./learner/page";
 import CourseSettings from "./setting/page";
 import CourseOutline from "@/components/courses/course_create/CourseOutline";
 import SimplePageContainer from "@/components/layout/SimplePageContainer";
 import TabNav from "@/components/ui/TabNav";
-
-export const CourseHeaderContext = createContext<{
-  showHeaderActions: boolean;
-  setShowHeaderActions: (value: boolean) => void;
-}>({
-  showHeaderActions: false,
-  setShowHeaderActions: () => { },
-});
+import { CourseHeaderContext } from "./CourseHeaderContext";
 
 const tabs = [
   { key: "outline", label: "Course Outline" },
@@ -27,7 +20,11 @@ const tabs = [
   { key: "setting", label: "Setting" },
 ];
 
-export default function CourseLayout({ children }: { children: React.ReactNode }) {
+export default function CourseLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [activeTab, setActiveTab] = useState("outline");
   const [showHeaderActions, setShowHeaderActions] = useState(false);
 
@@ -41,8 +38,12 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
   const user = useAppSelector((state) => state.auth.user);
 
   // Fetch course data
-  const { data: courseData, isLoading, error } = useGetCourseByIdQuery(courseId, {
-    skip: !courseId
+  const {
+    data: courseData,
+    isLoading,
+    error,
+  } = useGetCourseByIdQuery(courseId, {
+    skip: !courseId,
   });
 
   const course = courseData?.data?.course;
@@ -52,16 +53,16 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
     if (!user || !course) return false;
 
     // Check if user is the instructor
-    if (typeof course?.instructor === 'string') {
+    if (typeof course?.instructor === "string") {
       return course.instructor === user._id;
-    } else if (course.instructor && typeof course.instructor === 'object') {
+    } else if (course.instructor && typeof course.instructor === "object") {
       return course.instructor._id === user._id;
     }
 
     // Check if user is the creator (createdBy)
-    if (typeof course.createdBy === 'string') {
+    if (typeof course.createdBy === "string") {
       return course.createdBy === user._id;
-    } else if (course.createdBy && typeof course.createdBy === 'object') {
+    } else if (course.createdBy && typeof course.createdBy === "object") {
       return course.createdBy._id === user._id;
     }
 
@@ -70,8 +71,10 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
 
   // Check if we're on a nested route (like content editor or preview)
   const isOnNestedRoute = useMemo(() => {
-    return (pathname.includes('/courseOutline/') && pathname.includes('/content')) ||
-           pathname.includes('/preview');
+    return (
+      (pathname.includes("/courseOutline/") && pathname.includes("/content")) ||
+      pathname.includes("/preview")
+    );
   }, [pathname]);
 
   const renderTabContent = () => {
@@ -94,7 +97,9 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
     return (
       <div className="min-h-[60vh] px-6 pt-4 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Course Not Found</h2>
+          <h2 className="text-xl font-bold text-red-600 mb-2">
+            Course Not Found
+          </h2>
           <p className="text-gray-600">
             {`The course you're looking for doesn't exist or you don't have access to it.`}
           </p>
@@ -122,13 +127,14 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
     >
       {/* <div className="px-6 pt-4"> */}
       <SimplePageContainer containerSize="xl" containerPadding="none">
-
         {/* Header */}
         <div className="relative flex items-center justify-center mb-4 h-10">
           <div className="absolute left-1/2 -translate-x-1/2 font-bold text-xl">
             {isLoading ? (
               <div className="animate-pulse bg-gray-200 h-6 w-48 rounded"></div>
-            ) : course?.title || "Course Title"}
+            ) : (
+              course?.title || "Course Title"
+            )}
           </div>
 
           {(showHeaderActions || isOwner) && (
@@ -139,7 +145,9 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
               <Button
                 variant="outline"
                 className="border border-blue-600 text-blue-600"
-                onClick={() => router.push(`/courses/create/${courseId}/preview`)}
+                onClick={() =>
+                  router.push(`/courses/create/${courseId}/preview`)
+                }
               >
                 Preview
               </Button>

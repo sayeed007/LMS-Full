@@ -113,6 +113,12 @@ const lessonSchema = new mongoose.Schema({
 lessonSchema.index({ module: 1, order: 1 });
 lessonSchema.index({ course: 1 });
 
+// Instance methods
+lessonSchema.methods.softDelete = function() {
+  this.isDeleted = true;
+  return this.save();
+};
+
 // Static methods
 lessonSchema.statics.getNextOrder = async function (courseId) {
   const lastLesson = await this.findOne({

@@ -1,6 +1,6 @@
 const { Quiz, QuizAttempt } = require('../models/Quiz');
 const Course = require('../models/Course');
-const { Question } = require('../models/Question');
+const Question = require('../models/Question');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const APIFeatures = require('../utils/apiFeatures');
@@ -127,6 +127,49 @@ const createQuiz = catchAsync(async (req, res, next) => {
     { path: 'createdBy', select: 'name email' },
     { path: 'questions', select: 'questionText questionType points' }
   ]);
+
+  // DUPLICATE PREVENTION: Check if quiz already exists for this lesson
+  if (req.body.lesson) {
+    const Content = require('../models/Content');
+    
+    const existingContent = await Content.findOne({
+      lesson: req.body.lesson,
+      type: 'quiz'
+    });
+
+    if (existingContent && existingContent.data?.quizId) {
+      return next(new AppError('A quiz already exists for this lesson. Please edit the existing quiz instead.', 400));
+    }
+  }
+
+  // If lessonId is provided, create/update content with quizId
+  if (req.body.lesson) {
+    const Content = require('../models/Content');
+    
+    // Check if quiz content already exists for this lesson
+    let content = await Content.findOne({
+      lesson: req.body.lesson,
+      type: 'quiz'
+    });
+
+    if (content) {
+      // Update existing content with new quizId
+      content.data = { quizId: quiz._id };
+      content.title = req.body.title || 'Quiz';
+      await content.save();
+    } else {
+      // Create new content
+      await Content.create({
+        lesson: req.body.lesson,
+        type: 'quiz',
+        title: req.body.title || 'Quiz',
+        order: await Content.getNextOrder(req.body.lesson),
+        data: { quizId: quiz._id },
+        createdBy: req.user.id,
+        isPublished: false
+      });
+    }
+  }
 
   res.status(201).json({
     status: 'success',
@@ -441,9 +484,46 @@ const getQuizResults = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get quiz by lesson ID
+const getQuizByLesson = catchAsync(async (req, res, next) => {
+  const Content = require('../models/Content');
+  
+  const content = await Content.findOne({
+    lesson: req.params.lessonId,
+    type: 'quiz'
+  });
+
+  if (!content || !content.data?.quizId) {
+    return next(new AppError('No quiz found for this lesson', 404));
+  }
+
+  const quiz = await Quiz.findById(content.data.quizId)
+    .populate('course', 'title')
+    .populate('createdBy', 'name email')
+    .populate({
+      path: 'questions',
+      populate: {
+        path: 'questionBank',
+        select: 'name'
+      }
+    });
+
+  if (!quiz) {
+    return next(new AppError('Quiz not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      quiz
+    }
+  });
+});
+
 module.exports = {
   getAllQuizzes,
   getQuiz,
+  getQuizByLesson,
   createQuiz,
   updateQuiz,
   deleteQuiz,

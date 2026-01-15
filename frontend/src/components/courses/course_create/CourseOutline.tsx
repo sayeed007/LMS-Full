@@ -1,6 +1,6 @@
 "use client";
 
-import { CourseHeaderContext } from "@/app/courses/create/[course_id]/layout";
+import { CourseHeaderContext } from "@/app/courses/create/[course_id]/CourseHeaderContext";
 import { Button } from "@/components/ui/button";
 import { showErrorToast, showSuccessToast } from "@/lib/toast-utils";
 import {
@@ -24,7 +24,15 @@ import {
   CourseLesson,
   LessonContent,
 } from "@/types/backend-models";
-import { Edit, List, Plus, Settings, Trash2 } from "lucide-react";
+import {
+  Edit,
+  List,
+  Plus,
+  Settings,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ChapterEditDrawer } from "./ChapterEditDrawer";
@@ -73,6 +81,9 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     useState<CourseLesson | null>(null);
   const [editingChapterDetails, setEditingChapterDetails] =
     useState<CourseChapter | null>(null);
+  const [collapsedChapters, setCollapsedChapters] = useState<Set<string>>(
+    new Set() // All chapters expanded by default
+  );
 
   const { setShowHeaderActions } = useContext(CourseHeaderContext);
   const router = useRouter();
@@ -140,6 +151,13 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   useEffect(() => {
     setShowHeaderActions(lessons.length > 0 || chapters.length > 0);
   }, [lessons.length, chapters.length, setShowHeaderActions]);
+
+  // Initialize all chapters as collapsed on first load
+  useEffect(() => {
+    if (chapters.length > 0) {
+      setCollapsedChapters(new Set(chapters.map((ch) => ch._id)));
+    }
+  }, [chapters.length]); // Only run when chapters are first loaded
 
   const handleCreateLesson = useCallback(
     async (chapterId?: string) => {
@@ -351,6 +369,18 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         newSet.delete(lessonId);
       } else {
         newSet.add(lessonId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleChapterCollapse = (chapterId: string) => {
+    setCollapsedChapters((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(chapterId)) {
+        newSet.delete(chapterId);
+      } else {
+        newSet.add(chapterId);
       }
       return newSet;
     });
@@ -699,6 +729,22 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                         /* Display Mode */
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
+                            {/* Collapse/Expand Chevron */}
+                            <button
+                              onClick={() => toggleChapterCollapse(chapter._id)}
+                              className="p-1 hover:bg-blue-50 rounded transition-colors"
+                              title={
+                                collapsedChapters.has(chapter._id)
+                                  ? "Expand chapter"
+                                  : "Collapse chapter"
+                              }
+                            >
+                              {collapsedChapters.has(chapter._id) ? (
+                                <ChevronRight className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-blue-600" />
+                              )}
+                            </button>
                             <List className="w-4 h-4 text-blue-600" />
                             <span className="font-semibold text-blue-800">
                               {chapter.title}
@@ -770,46 +816,54 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                       </div>
                     )}
 
-                    {/* Chapter Lessons */}
-                    {chapter.lessons && chapter.lessons.length > 0 && (
-                      <SortableContainer
-                        id={`chapter-${chapter._id}-lessons`}
-                        items={chapter.lessons.map((l) => l._id)}
-                        type="lesson"
-                        className="ml-6 space-y-2"
-                      >
-                        {chapter.lessons.map((lesson) => (
-                          <SortableItem
-                            key={lesson._id}
-                            id={lesson._id}
+                    {/* Chapter Lessons - Only show when not collapsed */}
+                    {!collapsedChapters.has(chapter._id) && (
+                      <>
+                        {chapter.lessons && chapter.lessons.length > 0 && (
+                          <SortableContainer
+                            id={`chapter-${chapter._id}-lessons`}
+                            items={chapter.lessons.map((l) => l._id)}
                             type="lesson"
-                            data={lesson as unknown as Record<string, unknown>}
+                            className="ml-6 space-y-2"
                           >
-                            <LessonItem
-                              lesson={lesson}
-                              courseId={course?._id || ""}
-                              isInChapter={true}
-                              expandedLessons={expandedLessons}
-                              showContentPopup={showContentPopup}
-                              editingLesson={editingLesson}
-                              editingLessonName={editingLessonName}
-                              isDeletingLesson={isDeletingLesson}
-                              isDeletingContent={isDeletingContent}
-                              isUpdatingLesson={isUpdatingLesson}
-                              onToggleLessonExpansion={toggleLessonExpansion}
-                              onSetShowContentPopup={setShowContentPopup}
-                              onStartEditingLesson={startEditingLesson}
-                              onUpdateLesson={handleUpdateLesson}
-                              onCancelEditingLesson={cancelEditingLesson}
-                              onSetEditingLessonName={setEditingLessonName}
-                              onDeleteLesson={handleDeleteLesson}
-                              onAddContent={handleAddContent}
-                              onDeleteContent={handleDeleteContent}
-                              onOpenLessonDrawer={handleOpenLessonDrawer}
-                            />
-                          </SortableItem>
-                        ))}
-                      </SortableContainer>
+                            {chapter.lessons.map((lesson) => (
+                              <SortableItem
+                                key={lesson._id}
+                                id={lesson._id}
+                                type="lesson"
+                                data={
+                                  lesson as unknown as Record<string, unknown>
+                                }
+                              >
+                                <LessonItem
+                                  lesson={lesson}
+                                  courseId={course?._id || ""}
+                                  isInChapter={true}
+                                  expandedLessons={expandedLessons}
+                                  showContentPopup={showContentPopup}
+                                  editingLesson={editingLesson}
+                                  editingLessonName={editingLessonName}
+                                  isDeletingLesson={isDeletingLesson}
+                                  isDeletingContent={isDeletingContent}
+                                  isUpdatingLesson={isUpdatingLesson}
+                                  onToggleLessonExpansion={
+                                    toggleLessonExpansion
+                                  }
+                                  onSetShowContentPopup={setShowContentPopup}
+                                  onStartEditingLesson={startEditingLesson}
+                                  onUpdateLesson={handleUpdateLesson}
+                                  onCancelEditingLesson={cancelEditingLesson}
+                                  onSetEditingLessonName={setEditingLessonName}
+                                  onDeleteLesson={handleDeleteLesson}
+                                  onAddContent={handleAddContent}
+                                  onDeleteContent={handleDeleteContent}
+                                  onOpenLessonDrawer={handleOpenLessonDrawer}
+                                />
+                              </SortableItem>
+                            ))}
+                          </SortableContainer>
+                        )}
+                      </>
                     )}
                   </div>
                 </SortableItem>

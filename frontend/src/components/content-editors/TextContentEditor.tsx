@@ -5,11 +5,12 @@ import { Paperclip } from "lucide-react";
 import RichTextEditor from "@/components/RichTextEditor";
 
 interface LessonContent {
-  type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
-  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
+  type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
+  blocks?: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;
+  data?: { quizId?: string };
 }
 
 interface TextContentEditorProps {
@@ -19,7 +20,7 @@ interface TextContentEditorProps {
 
 export default function TextContentEditor({
   content,
-  onChange
+  onChange,
 }: TextContentEditorProps) {
   return (
     <div className="bg-white rounded-lg border border-gray-200">
@@ -27,10 +28,12 @@ export default function TextContentEditor({
       <div className="p-6">
         <RichTextEditor
           value={content.textContent || ""}
-          onChange={(value) => onChange({
-            ...content,
-            textContent: value
-          })}
+          onChange={(value) =>
+            onChange({
+              ...content,
+              textContent: value,
+            })
+          }
           placeholder="Type here"
         />
       </div>

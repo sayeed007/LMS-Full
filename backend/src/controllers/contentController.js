@@ -205,9 +205,10 @@ const createContent = catchAsync(async (req, res, next) => {
       } else {
         req.body.data = { blocks: [] };
       }
-      // Clean up - only keep blocks array
+      // Clean up - keep blocks array and title
       req.body.data = {
-        blocks: req.body.data.blocks
+        blocks: req.body.data.blocks,
+        title: req.body.data.title
       };
       break;
 
@@ -251,12 +252,15 @@ const createContent = catchAsync(async (req, res, next) => {
       break;
 
     case 'quiz':
-      if (!req.body.data || !req.body.data.quiz || !req.body.data.quiz.questions) {
-        return next(new AppError('Quiz questions are required for quiz type', 400));
+      // Support both quizId (reference) and quiz (embedded object)
+      if (!req.body.data || (!req.body.data.quizId && !req.body.data.quiz)) {
+        return next(new AppError('Quiz ID or quiz data is required for quiz type', 400));
       }
-      // Clean up - only keep quiz field
+      // Clean up - preserve quizId if provided, otherwise keep quiz object
       req.body.data = {
-        quiz: req.body.data.quiz
+        quizId: req.body.data.quizId,
+        quiz: req.body.data.quiz,
+        title: req.body.data.title
       };
       break;
 
@@ -322,9 +326,10 @@ const updateContent = catchAsync(async (req, res, next) => {
         if (!req.body.data.blocks || !Array.isArray(req.body.data.blocks)) {
           req.body.data.blocks = [];
         }
-        // Clean up - only keep blocks array
+        // Clean up - keep blocks array and title
         req.body.data = {
-          blocks: req.body.data.blocks
+          blocks: req.body.data.blocks,
+          title: req.body.data.title
         };
         break;
 
@@ -361,9 +366,10 @@ const updateContent = catchAsync(async (req, res, next) => {
         break;
 
       case 'quiz':
-        // Clean up - only keep quiz field
+        // Clean up - preserve quizId reference
         req.body.data = {
-          quiz: req.body.data.quiz
+          quizId: req.body.data.quizId || req.body.data.quiz?.id, // Support both quizId and legacy quiz.id
+          title: req.body.data.title
         };
         break;
     }

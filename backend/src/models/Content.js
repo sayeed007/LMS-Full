@@ -233,6 +233,12 @@ const contentSchema = new mongoose.Schema({
       questions: [quizQuestionSchema]
     },
 
+    // For quiz content - reference to separate Quiz document
+    quizId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Quiz'
+    },
+
     // For assignment content
     assignment: assignmentSchema
   },

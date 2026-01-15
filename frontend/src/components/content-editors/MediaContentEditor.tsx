@@ -6,7 +6,7 @@ import { X, FileText, Download } from "lucide-react";
 
 interface LessonContent {
   type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
-  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
+  blocks?: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;
@@ -16,6 +16,7 @@ interface LessonContent {
   fileType?: string;
   publicId?: string;
   resourceType?: string;
+  data?: { quizId?: string };
 }
 
 interface MediaContentEditorProps {

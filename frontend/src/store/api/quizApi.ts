@@ -80,6 +80,7 @@ export interface CreateQuizRequest {
   description?: string;
   instructions?: string;
   course: string;
+  lesson?: string; // For automatic content linking
   questions: string[];
   timeLimit?: number;
   passingScore?: number;

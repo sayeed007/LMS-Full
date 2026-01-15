@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { X, FileText, Download } from "lucide-react";
 
 interface LessonContent {
-  type: 'text' | 'blocks' | 'video' | 'document' | 'quiz' | 'assignment';
-  blocks: Array<{ id: string; type: string; content: unknown; order: number }>;
+  type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
+  blocks?: Array<{ id: string; type: string; content: unknown; order: number }>;
   textContent?: string;
   title?: string;
   description?: string;
@@ -16,6 +16,7 @@ interface LessonContent {
   fileType?: string;
   publicId?: string;
   resourceType?: string;
+  data?: { quizId?: string };
 }
 
 interface AssignmentContentEditorProps {
@@ -33,18 +34,18 @@ export default function AssignmentContentEditor({
   selectedFile,
   onFileSelect,
   onFileRemove,
-  isUploading
+  isUploading,
 }: AssignmentContentEditorProps) {
   const getAcceptedFileTypes = () => {
-    return '.pdf,.doc,.docx,.ppt,.pptx,.txt,.xls,.xlsx';
+    return ".pdf,.doc,.docx,.ppt,.pptx,.txt,.xls,.xlsx";
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +55,7 @@ export default function AssignmentContentEditor({
     onFileSelect(file);
 
     // Clear the input value so the same file can be selected again if needed
-    e.target.value = '';
+    e.target.value = "";
   };
 
   return (
@@ -62,10 +63,12 @@ export default function AssignmentContentEditor({
       <div>
         <Input
           value={content.title || ""}
-          onChange={(e) => onChange({
-            ...content,
-            title: e.target.value
-          })}
+          onChange={(e) =>
+            onChange({
+              ...content,
+              title: e.target.value,
+            })
+          }
           placeholder="Add Assignment Title"
           className="text-lg"
         />
@@ -74,10 +77,12 @@ export default function AssignmentContentEditor({
       <div>
         <textarea
           value={content.description || ""}
-          onChange={(e) => onChange({
-            ...content,
-            description: e.target.value
-          })}
+          onChange={(e) =>
+            onChange({
+              ...content,
+              description: e.target.value,
+            })
+          }
           placeholder="Add Assignment Description and Instructions"
           className="w-full border border-gray-300 rounded-lg p-4 min-h-[200px] resize-none"
         />
@@ -86,9 +91,7 @@ export default function AssignmentContentEditor({
       {/* File Upload/Preview Area */}
       {!content.fileUrl && !selectedFile ? (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <div className="text-blue-600 mb-4 text-4xl">
-            📄
-          </div>
+          <div className="text-blue-600 mb-4 text-4xl">📄</div>
           <h3 className="font-semibold mb-2">Upload Assignment File</h3>
           <p className="text-gray-600 text-sm mb-4">
             Choose a document file from your device (PDF, DOC, PPT, TXT, XLS).
@@ -105,11 +108,11 @@ export default function AssignmentContentEditor({
             htmlFor="assignment-upload"
             className={`inline-block px-6 py-2 rounded-lg cursor-pointer transition-colors ${
               isUploading
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
             }`}
           >
-            {isUploading ? 'Processing...' : 'Select Assignment File'}
+            {isUploading ? "Processing..." : "Select Assignment File"}
           </label>
           <p className="text-gray-500 text-xs mt-2">
             Maximum file upload size: 150 MB
@@ -120,15 +123,17 @@ export default function AssignmentContentEditor({
         <div className="border border-amber-200 bg-amber-50 rounded-lg p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="text-amber-600 text-2xl">
-                📄
-              </div>
+              <div className="text-amber-600 text-2xl">📄</div>
               <div>
-                <h4 className="font-medium text-gray-900">{content.fileName}</h4>
+                <h4 className="font-medium text-gray-900">
+                  {content.fileName}
+                </h4>
                 <p className="text-sm text-gray-500">
                   {formatFileSize(content.fileSize || 0)} • {content.fileType}
                 </p>
-                <p className="text-sm text-amber-600 font-medium">File selected - will upload when saved</p>
+                <p className="text-sm text-amber-600 font-medium">
+                  File selected - will upload when saved
+                </p>
               </div>
             </div>
             <Button
@@ -146,8 +151,12 @@ export default function AssignmentContentEditor({
             <div className="flex items-center justify-center py-8 space-x-4">
               <FileText className="w-8 h-8 text-gray-400" />
               <div className="text-center">
-                <p className="text-gray-600 mb-2">Assignment File Ready for Upload</p>
-                <p className="text-sm text-gray-500">Preview will be available after saving</p>
+                <p className="text-gray-600 mb-2">
+                  Assignment File Ready for Upload
+                </p>
+                <p className="text-sm text-gray-500">
+                  Preview will be available after saving
+                </p>
               </div>
             </div>
           </div>
@@ -166,11 +175,11 @@ export default function AssignmentContentEditor({
               htmlFor="assignment-replace-selected"
               className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
                 isUploading
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-gray-600 text-white hover:bg-gray-700'
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
               }`}
             >
-              {isUploading ? 'Processing...' : 'Replace File'}
+              {isUploading ? "Processing..." : "Replace File"}
             </label>
           </div>
         </div>
@@ -178,11 +187,11 @@ export default function AssignmentContentEditor({
         <div className="border border-gray-200 rounded-lg p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="text-blue-600 text-2xl">
-                📄
-              </div>
+              <div className="text-blue-600 text-2xl">📄</div>
               <div>
-                <h4 className="font-medium text-gray-900">{content.fileName}</h4>
+                <h4 className="font-medium text-gray-900">
+                  {content.fileName}
+                </h4>
                 <p className="text-sm text-gray-500">
                   {formatFileSize(content.fileSize || 0)} • {content.fileType}
                 </p>
@@ -207,7 +216,7 @@ export default function AssignmentContentEditor({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(content.fileUrl, '_blank')}
+                  onClick={() => window.open(content.fileUrl, "_blank")}
                   className="flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
@@ -231,11 +240,11 @@ export default function AssignmentContentEditor({
               htmlFor="assignment-replace"
               className={`inline-block px-4 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
                 isUploading
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-gray-600 text-white hover:bg-gray-700'
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-gray-600 text-white hover:bg-gray-700"
               }`}
             >
-              {isUploading ? 'Processing...' : 'Replace File'}
+              {isUploading ? "Processing..." : "Replace File"}
             </label>
           </div>
         </div>
