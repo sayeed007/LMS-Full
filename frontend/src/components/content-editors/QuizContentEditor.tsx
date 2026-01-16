@@ -132,13 +132,15 @@ export default function QuizContentEditor({
       const quiz = quizData.data.quiz;
       setQuizTitle(quiz.title || "");
       setQuizInstructions(quiz.instructions || "");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+      // Correctly map backend settings structure to local state
+      // Backend settings are inside quiz.settings object
       const settings = quiz.settings as any;
       setQuizSettings({
-        passingScore: settings?.passingScore || 70,
-        attempts: settings?.maxAttempts || 3,
-        shuffleQuestions: settings?.randomizeQuestions || false,
-        showFeedback: settings?.showCorrectAnswers || true,
+        passingScore: settings?.passingScore ?? 70,
+        attempts: settings?.maxAttempts ?? 3,
+        shuffleQuestions: settings?.randomizeQuestions ?? false,
+        showFeedback: settings?.showCorrectAnswers ?? true,
       });
 
       // Transform questions to QuestionPopulated format
@@ -167,7 +169,7 @@ export default function QuizContentEditor({
     // Priority 2: Embedded data from content (if no quizId but data exists)
     else if (!quizId && content.data?.quiz) {
       const quiz = content.data.quiz;
-      setQuizTitle(quiz.title || ""); // Title might be in quiz object or content title
+      setQuizTitle(quiz.title || "");
       setQuizInstructions(quiz.instructions || "");
 
       // Map embedded settings
@@ -191,7 +193,6 @@ export default function QuizContentEditor({
           return typeMap[type] || (type as Question["type"]);
         };
 
-        // Embedded questions might simpler, map them to QuestionPopulated best effort
         const transformedQuestions = quiz.questions.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (q: any, index: number) =>
@@ -231,10 +232,15 @@ export default function QuizContentEditor({
       const result = await createQuiz({
         title: title,
         course: courseId,
-        lesson: lessonId, // Pass lessonId for content linking
+        lesson: lessonId,
         questions: [],
-        passingScore: 70,
-        maxAttempts: 3,
+        settings: {
+          // Important: Send logic here to initial creation too
+          passingScore: 70,
+          maxAttempts: 3,
+          randomizeQuestions: false,
+          showCorrectAnswers: true,
+        },
       }).unwrap();
 
       if (!result.data?.quiz?._id) {
@@ -247,25 +253,74 @@ export default function QuizContentEditor({
       // Update content with quiz reference
       onChange({
         ...content,
+        title: title,
         data: { quizId: newQuizId },
       });
 
       showSuccessToast("Quiz created and linked successfully!");
     } catch (error: any) {
-      showErrorToast(error?.data?.message || "Failed to create quiz");
+      showErrorToast(
+        error?.data?.message || error?.message || "Failed to create quiz"
+      );
     }
   };
 
   const handleAddQuestion = async (type?: string) => {
-    // Embedded Quiz Mode
+    // Linked Quiz Mode
+    let bankId = selectedBankId;
+    let sectionId = selectedSectionId;
+
+    if (!bankId || !sectionId) {
+      try {
+        if (!bankId) {
+          const bankResult = await createBank({
+            name: "Course Quizzes",
+            description: "Default question bank for course quizzes",
+            course: courseId,
+          }).unwrap();
+
+          bankId = bankResult.data.questionBank._id;
+          setSelectedBankId(bankId);
+        }
+
+        if (!sectionId && bankId) {
+          const sectionResult = await addSection({
+            id: bankId,
+            data: {
+              name: "General",
+              description: "General questions",
+            },
+          }).unwrap();
+
+          if (sectionResult.data?.questionBank?.sections) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newSection = sectionResult.data.questionBank.sections.find(
+              (s: any) => s.name === "General"
+            );
+            if (newSection) {
+              sectionId = newSection._id;
+              setSelectedSectionId(sectionId);
+            }
+          }
+        }
+      } catch (error: any) {
+        showErrorToast(
+          error?.data?.message || "Failed to create default bank/section"
+        );
+        return;
+      }
+    }
+
     if (!quizId) {
+      // Fallback for Embedded Mode
       const questionType = (type as Question["type"]) || "single-choice";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const newQuestion: any = {
         _id: `temp-${Date.now()}`,
         text: "New Question",
         type: questionType,
         choices:
-          type === "true-false"
+          questionType === "true-false"
             ? [
                 { text: "True", isCorrect: true, _id: `opt-${Date.now()}-1` },
                 { text: "False", isCorrect: false, _id: `opt-${Date.now()}-2` },
@@ -281,16 +336,6 @@ export default function QuizContentEditor({
                   isCorrect: false,
                   _id: `opt-${Date.now()}-2`,
                 },
-                {
-                  text: "Option C",
-                  isCorrect: false,
-                  _id: `opt-${Date.now()}-3`,
-                },
-                {
-                  text: "Option D",
-                  isCorrect: false,
-                  _id: `opt-${Date.now()}-4`,
-                },
               ],
         points: 1,
         timeLimit: 60,
@@ -302,9 +347,9 @@ export default function QuizContentEditor({
       const newQuestions = [...questions, newQuestion];
       setQuestions(newQuestions);
 
-      // Propagate to parent with improved mapping
       onChange({
         ...content,
+        title: quizTitle || content.title,
         data: {
           ...content.data,
           quiz: {
@@ -312,63 +357,14 @@ export default function QuizContentEditor({
             questions: newQuestions.map((q: any, index: number) => ({
               ...q,
               question: q.text,
-              type: q.type.replace(/-/g, "_"), // Fix enum (single-choice -> single_choice)
+              type: q.type.replace(/-/g, "_"),
               order: index + 1,
               options: q.choices,
             })),
           },
         },
       });
-
-      showSuccessToast("Question added");
       return;
-    }
-
-    // Linked Quiz Mode
-
-    // Auto-create default bank and section if not selected
-    let bankId = selectedBankId;
-    let sectionId = selectedSectionId;
-
-    if (!bankId || !sectionId) {
-      try {
-        // Create default bank if needed
-        if (!bankId) {
-          const bankResult = await createBank({
-            name: "Course Quizzes",
-            description: "Default question bank for course quizzes",
-            course: courseId,
-          }).unwrap();
-
-          bankId = bankResult.data.questionBank._id;
-          setSelectedBankId(bankId);
-        }
-
-        // Create default section if needed
-        if (!sectionId && bankId) {
-          const sectionResult = await addSection({
-            id: bankId,
-            data: {
-              name: "General",
-              description: "General questions",
-            },
-          }).unwrap();
-
-          const newSection = sectionResult.data.questionBank.sections.find(
-            (s: any) => s.name === "General"
-          );
-
-          if (newSection) {
-            sectionId = newSection._id;
-            setSelectedSectionId(sectionId);
-          }
-        }
-      } catch (error: any) {
-        showErrorToast(
-          error?.data?.message || "Failed to create default bank/section"
-        );
-        return;
-      }
     }
 
     try {
@@ -377,7 +373,7 @@ export default function QuizContentEditor({
         text: "New Question",
         type: questionType,
         choices:
-          type === "true-false"
+          questionType === "true-false"
             ? [
                 { text: "True", isCorrect: true },
                 { text: "False", isCorrect: false },
@@ -385,11 +381,9 @@ export default function QuizContentEditor({
             : [
                 { text: "Option A", isCorrect: true },
                 { text: "Option B", isCorrect: false },
-                { text: "Option C", isCorrect: false },
-                { text: "Option D", isCorrect: false },
               ],
         points: 1,
-        timeLimit: 60, // Default 1 minute
+        timeLimit: 60,
         tags: [],
         difficulty: "medium",
         questionBank: bankId!,
@@ -406,7 +400,19 @@ export default function QuizContentEditor({
         },
       }).unwrap();
 
-      setQuestions([...questions, newQuestion]);
+      // Ensure type alignment for local state
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const populatedQuestion: QuestionPopulated = {
+        ...newQuestion,
+        questionBank: newQuestion.questionBank || {
+          _id: bankId!,
+          name: "Question Bank",
+        },
+        // createdBy is already populated by API
+        attachments: newQuestion.attachments || [],
+      } as QuestionPopulated;
+
+      setQuestions([...questions, populatedQuestion]);
       showSuccessToast("Question added");
     } catch (error: any) {
       showErrorToast(error?.data?.message || "Failed to add question");
@@ -420,7 +426,7 @@ export default function QuizContentEditor({
     );
     setQuestions(newQuestions);
 
-    // Propagate to parent (Embedded & Freshness)
+    // Propagate to parent (ensure compatibility with embedded format)
     onChange({
       ...content,
       data: {
@@ -430,9 +436,10 @@ export default function QuizContentEditor({
           questions: newQuestions.map((q: any, index: number) => ({
             ...q,
             question: q.text,
-            type: q.type.replace(/-/g, "_"), // Fix enum
+            type: q.type.replace(/-/g, "_"),
             order: index + 1,
             options: q.choices,
+            points: q.points,
           })),
         },
       },
@@ -452,11 +459,11 @@ export default function QuizContentEditor({
           explanation: updatedQuestion.explanation,
           tags: updatedQuestion.tags,
           difficulty: updatedQuestion.difficulty,
+          correctAnswer: updatedQuestion.correctAnswer,
         },
       }).unwrap();
     } catch (error: any) {
-      showErrorToast(error?.data?.message || "Failed to update question");
-      // Revert if failed (optional, but good UX)
+      console.error("Failed to update question", error);
     }
   };
 
@@ -475,7 +482,7 @@ export default function QuizContentEditor({
           questions: newQuestions.map((q: any, index: number) => ({
             ...q,
             question: q.text,
-            type: q.type.replace(/-/g, "_"), // Fix enum
+            type: q.type.replace(/-/g, "_"),
             order: index + 1,
             options: q.choices,
           })),
@@ -497,9 +504,6 @@ export default function QuizContentEditor({
         },
       }).unwrap();
 
-      // Optionally delete the question (or just unlink)
-      // await deleteQuestion(id).unwrap();
-
       showSuccessToast("Question removed");
     } catch (error: any) {
       showErrorToast(error?.data?.message || "Failed to remove question");
@@ -517,38 +521,45 @@ export default function QuizContentEditor({
   const handleSaveSettings = async (updates?: {
     title: string;
     instructions: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     settings: any;
   }) => {
-    // Use passed updates or fallback to state (though state might be stale if just updated)
+    // Use passed updates or fallback to state
     const title = updates?.title ?? quizTitle;
     const instructions = updates?.instructions ?? quizInstructions;
     const settings = updates?.settings ?? quizSettings;
 
-    // Sync local state
+    // Update local state
     if (updates) {
       setQuizTitle(title);
       setQuizInstructions(instructions);
       setQuizSettings(settings);
     }
 
-    const updatedSettings = {
-      title,
-      instructions,
-      ...settings,
+    const finalSettings = {
+      passingScore: settings.passingScore,
+      maxAttempts: settings.attempts,
+      randomizeQuestions: settings.shuffleQuestions,
+      showCorrectAnswers: settings.showFeedback,
     };
 
     // Propagate to parent (Embedded & Freshness)
     onChange({
       ...content,
+      title: title,
       data: {
         ...content.data,
         quiz: {
           ...content.data?.quiz,
-          ...updatedSettings,
+          passingScore: settings.passingScore,
+          attempts: settings.attempts,
+          shuffleQuestions: settings.shuffleQuestions,
+          showFeedback: settings.showFeedback,
+          // Sync questions too to be safe
           questions: questions.map((q: any, index: number) => ({
             ...q,
             question: q.text,
-            type: q.type.replace(/-/g, "_"), // Fix enum
+            type: q.type.replace(/-/g, "_"),
             order: index + 1,
             options: q.choices,
           })),
@@ -565,9 +576,9 @@ export default function QuizContentEditor({
       await updateQuiz({
         id: quizId,
         data: {
-          title,
-          instructions,
-          // Add other settings if backend supports them directly at root
+          title: title,
+          instructions: instructions,
+          settings: finalSettings, // IMPORTANT: Send nested settings object to backend
         },
       }).unwrap();
 
@@ -586,7 +597,10 @@ export default function QuizContentEditor({
         onTitleChange={setQuizTitle}
         onInstructionsChange={setQuizInstructions}
         onSettingChange={handleSettingChange}
-        onSave={handleSaveSettings}
+        onSave={(data) => {
+          handleSaveSettings(data);
+          closeModal(modalId);
+        }}
         onClose={() => closeModal(modalId)}
       />,
       {
@@ -792,7 +806,7 @@ function QuizSettingsModal({
       instructions: localInstructions,
       settings: localSettings,
     });
-    onClose?.();
+    // onClose handled by parent inside onSave wrapper or passed down
   };
 
   return (

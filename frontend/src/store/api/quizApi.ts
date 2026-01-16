@@ -88,6 +88,7 @@ export interface CreateQuizRequest {
   showResults?: boolean;
   showCorrectAnswers?: boolean;
   randomizeQuestions?: boolean;
+  settings?: Partial<QuizSettings>; // Added settings field
 }
 
 export interface UpdateQuizRequest {
@@ -102,6 +103,7 @@ export interface UpdateQuizRequest {
   showCorrectAnswers?: boolean;
   randomizeQuestions?: boolean;
   isActive?: boolean;
+  settings?: Partial<QuizSettings>; // Added settings field
 }
 
 export interface StartQuizAttemptResponse {
