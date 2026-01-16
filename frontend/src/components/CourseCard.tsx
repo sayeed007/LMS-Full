@@ -25,7 +25,7 @@ export function CourseCard({
       showErrorToast("Navigation Error", "Failed to navigate to page");
     }
   };
-  console.log(course);
+
   return (
     <div
       className="bg-white rounded-2xl border-off-white-2 shadow-1 border p-2 cursor-pointer flex flex-col justify-between hover:shadow-md transition-shadow "

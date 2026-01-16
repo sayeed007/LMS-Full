@@ -40,11 +40,13 @@ export default function LoginPage() {
         email,
         password,
         callbackUrl,
-        redirect: true,
+        redirect: false,
       });
 
       if (result?.error) {
         showAuthErrorToast("Invalid credentials. Please try again.");
+      } else if (result?.ok) {
+        window.location.href = callbackUrl;
       }
     } catch (error) {
       console.error("Credentials sign in error:", error);

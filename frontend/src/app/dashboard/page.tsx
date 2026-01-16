@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import Image from "next/image";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -12,8 +12,19 @@ import {
   useGetCompletionRateDataQuery,
   useGetDashboardCategoriesQuery,
 } from "@/store/api/dashboardApi";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { toast } from 'sonner';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import { toast } from "sonner";
 import { EnhancedSelect } from "@/components/ui/SearchableSelect";
 
 export default function DashboardPage() {
@@ -23,32 +34,38 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const user = useAppSelector((state) => state.auth.user);
-  console.log(user)
-  const isInstructor = user?.role === 'instructor' || user?.role === 'org_admin' || user?.role === 'super_admin';
+  const isInstructor =
+    user?.role === "instructor" ||
+    user?.role === "org_admin" ||
+    user?.role === "super_admin";
 
   // Handle error messages from middleware redirects
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'forbidden') {
-      toast.error('Access Denied', {
-        description: 'You do not have permission to access admin pages.',
+    const error = searchParams.get("error");
+    if (error === "forbidden") {
+      toast.error("Access Denied", {
+        description: "You do not have permission to access admin pages.",
       });
     }
   }, [searchParams]);
 
   // Fetch dashboard data
-  const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
-  const { data: ongoingCoursesData, isLoading: coursesLoading } = useGetOngoingCoursesQuery({ limit: 10 });
-  const { data: analyticsData, isLoading: analyticsLoading } = useGetCourseAnalyticsQuery(undefined, {
-    skip: !isInstructor,
-  });
+  const { data: statsData, isLoading: statsLoading } =
+    useGetDashboardStatsQuery();
+  const { data: ongoingCoursesData, isLoading: coursesLoading } =
+    useGetOngoingCoursesQuery({ limit: 10 });
+  const { data: analyticsData, isLoading: analyticsLoading } =
+    useGetCourseAnalyticsQuery(undefined, {
+      skip: !isInstructor,
+    });
   const { data: categoriesData } = useGetDashboardCategoriesQuery(undefined, {
     skip: !isInstructor,
   });
-  const { data: completionData, isLoading: completionLoading } = useGetCompletionRateDataQuery(
-    { category: selectedCategory || undefined },
-    { skip: !isInstructor }
-  );
+  const { data: completionData, isLoading: completionLoading } =
+    useGetCompletionRateDataQuery(
+      { category: selectedCategory || undefined },
+      { skip: !isInstructor }
+    );
 
   // Extract data
   const stats = statsData?.data;
@@ -61,19 +78,51 @@ export default function DashboardPage() {
   const statsCards = useMemo(() => {
     if (!stats) return [];
 
-    if (isInstructor && 'totalCourseCreated' in stats) {
+    if (isInstructor && "totalCourseCreated" in stats) {
       return [
-        { label: "Total Learner", value: stats.totalLearner, icon: "/icons/TotalLearner.png" },
-        { label: "Total Course Created", value: stats.totalCourseCreated, icon: "/icons/TotalCourseCreated.png" },
-        { label: "Total Article", value: stats.totalArticle, icon: "/icons/TotalArticle.png" },
-        { label: "Total Question Bank", value: stats.totalQuestionBank, icon: "/icons/TotalQuestionBank.png" },
+        {
+          label: "Total Learner",
+          value: stats.totalLearner,
+          icon: "/icons/TotalLearner.png",
+        },
+        {
+          label: "Total Course Created",
+          value: stats.totalCourseCreated,
+          icon: "/icons/TotalCourseCreated.png",
+        },
+        {
+          label: "Total Article",
+          value: stats.totalArticle,
+          icon: "/icons/TotalArticle.png",
+        },
+        {
+          label: "Total Question Bank",
+          value: stats.totalQuestionBank,
+          icon: "/icons/TotalQuestionBank.png",
+        },
       ];
-    } else if ('totalEnrolledCourses' in stats) {
+    } else if ("totalEnrolledCourses" in stats) {
       return [
-        { label: "Enrolled Courses", value: stats.totalEnrolledCourses, icon: "/icons/TotalCourseCreated.png" },
-        { label: "Completed Courses", value: stats.totalCompletedCourses, icon: "/icons/TotalLearner.png" },
-        { label: "In Progress", value: stats.totalInProgressCourses, icon: "/icons/TotalArticle.png" },
-        { label: "Completion Rate", value: `${stats.completionRate}%`, icon: "/icons/TotalQuestionBank.png" },
+        {
+          label: "Enrolled Courses",
+          value: stats.totalEnrolledCourses,
+          icon: "/icons/TotalCourseCreated.png",
+        },
+        {
+          label: "Completed Courses",
+          value: stats.totalCompletedCourses,
+          icon: "/icons/TotalLearner.png",
+        },
+        {
+          label: "In Progress",
+          value: stats.totalInProgressCourses,
+          icon: "/icons/TotalArticle.png",
+        },
+        {
+          label: "Completion Rate",
+          value: `${stats.completionRate}%`,
+          icon: "/icons/TotalQuestionBank.png",
+        },
       ];
     }
     return [];
@@ -84,9 +133,17 @@ export default function DashboardPage() {
     if (!analytics) return [];
 
     return [
-      { label: "Published", value: analytics.published.percentage, color: "#40A578" },
+      {
+        label: "Published",
+        value: analytics.published.percentage,
+        color: "#40A578",
+      },
       { label: "Drafts", value: analytics.draft.percentage, color: "#F29C4C" },
-      { label: "In Progress", value: analytics.inProgress.percentage, color: "#4378FF" },
+      {
+        label: "In Progress",
+        value: analytics.inProgress.percentage,
+        color: "#4378FF",
+      },
     ];
   }, [analytics]);
 
@@ -127,7 +184,9 @@ export default function DashboardPage() {
                   height={46}
                 />
                 <div>
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                  </div>
                   <div className="text-gray-600 text-sm">{stat.label}</div>
                 </div>
               </div>
@@ -154,7 +213,9 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   <button
                     className="p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                    onClick={() => setCarouselIndex(Math.max(carouselIndex - 1, 0))}
+                    onClick={() =>
+                      setCarouselIndex(Math.max(carouselIndex - 1, 0))
+                    }
                     disabled={!canGoBack}
                   >
                     ◀
@@ -168,7 +229,9 @@ export default function DashboardPage() {
                         className="bg-white rounded-xl shadow-sm w-68 min-w-[272px] flex-shrink-0 hover:shadow-md transition-shadow cursor-pointer"
                       >
                         <Image
-                          src={course.thumbnail || "/default-course-thumbnail.png"}
+                          src={
+                            course.thumbnail || "/default-course-thumbnail.png"
+                          }
                           alt={course.title}
                           width={1400}
                           height={128}
@@ -202,7 +265,8 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex gap-2 text-xs text-gray-500">
                                 <span className="bg-gray-100 px-2 py-1 rounded">
-                                  {course.completedLessons}/{course.totalLessons} Lessons
+                                  {course.completedLessons}/
+                                  {course.totalLessons} Lessons
                                 </span>
                                 <span className="bg-gray-100 px-2 py-1 rounded">
                                   ⭐ {course.rating.toFixed(1)}
@@ -220,12 +284,17 @@ export default function DashboardPage() {
                               <span className="bg-green-50 text-green-700 px-2 py-1 rounded">
                                 {course.activeEnrollments || 0} Active
                               </span>
-                              <span className={`px-2 py-1 rounded ${course.isPublished ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                {course.isPublished ? 'Published' : 'Draft'}
+                              <span
+                                className={`px-2 py-1 rounded ${
+                                  course.isPublished
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}
+                              >
+                                {course.isPublished ? "Published" : "Draft"}
                               </span>
                             </div>
                           )}
-
                         </div>
                       </div>
                     ))}
@@ -245,7 +314,9 @@ export default function DashboardPage() {
             {/* Analytics - Only for instructors */}
             {isInstructor && (
               <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col items-center">
-                <h2 className="text-xl font-semibold mb-6 text-gray-900">Course Analytics</h2>
+                <h2 className="text-xl font-semibold mb-6 text-gray-900">
+                  Course Analytics
+                </h2>
                 {analyticsLoading ? (
                   <div className="flex items-center justify-center flex-1">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
@@ -269,18 +340,27 @@ export default function DashboardPage() {
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
+                        <Tooltip
+                          formatter={(value) => `${Number(value).toFixed(2)}%`}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                     <ul className="w-full space-y-2 mt-4">
                       {analyticsChartData.map((item) => (
-                        <li key={item.label} className="flex items-center gap-3">
+                        <li
+                          key={item.label}
+                          className="flex items-center gap-3"
+                        >
                           <span
                             className="inline-block w-3 h-3 rounded-full"
                             style={{ background: item.color }}
                           ></span>
-                          <span className="text-sm text-gray-900 flex-1">{item.label}</span>
-                          <span className="text-sm font-semibold text-gray-900">{item.value.toFixed(2)}%</span>
+                          <span className="text-sm text-gray-900 flex-1">
+                            {item.label}
+                          </span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {item.value.toFixed(2)}%
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -294,16 +374,18 @@ export default function DashboardPage() {
           {isInstructor && (
             <section className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Course Completion Rate</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Course Completion Rate
+                </h2>
                 {categories.length > 0 && (
                   <EnhancedSelect
                     value={selectedCategory || undefined}
-                    onValueChange={(value) => setSelectedCategory(value || '')}
+                    onValueChange={(value) => setSelectedCategory(value || "")}
                     placeholder="All Categories"
                     clearable={true}
-                    options={categories.map(cat => ({
+                    options={categories.map((cat) => ({
                       value: cat,
-                      label: cat
+                      label: cat,
                     }))}
                     className="w-64"
                     size="sm"
@@ -323,11 +405,14 @@ export default function DashboardPage() {
                 <div className="w-full">
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
-                      data={completionRateData.map(d => ({
-                        name: d.courseTitle.length > 20 ? d.courseTitle.slice(0, 20) + "..." : d.courseTitle,
+                      data={completionRateData.map((d) => ({
+                        name:
+                          d.courseTitle.length > 20
+                            ? d.courseTitle.slice(0, 20) + "..."
+                            : d.courseTitle,
                         enrollments: d.totalEnrollments,
                         completionRate: d.completionRate,
-                        fullName: d.courseTitle
+                        fullName: d.courseTitle,
                       }))}
                       margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
                     >
@@ -338,34 +423,44 @@ export default function DashboardPage() {
                         textAnchor="end"
                         height={100}
                         interval={0}
-                        style={{ fontSize: '12px' }}
+                        style={{ fontSize: "12px" }}
                       />
                       <YAxis
-                        label={{ value: 'Total Enrollments', angle: -90, position: 'insideLeft' }}
-                        style={{ fontSize: '12px' }}
+                        label={{
+                          value: "Total Enrollments",
+                          angle: -90,
+                          position: "insideLeft",
+                        }}
+                        style={{ fontSize: "12px" }}
                       />
                       <Tooltip
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             return (
                               <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                                <p className="font-semibold text-sm mb-1">{payload[0].payload.fullName}</p>
-                                <p className="text-sm text-blue-600">Enrollments: {payload[0].value}</p>
-                                <p className="text-sm text-green-600">Completion Rate: {payload[0].payload.completionRate}%</p>
+                                <p className="font-semibold text-sm mb-1">
+                                  {payload[0].payload.fullName}
+                                </p>
+                                <p className="text-sm text-blue-600">
+                                  Enrollments: {payload[0].value}
+                                </p>
+                                <p className="text-sm text-green-600">
+                                  Completion Rate:{" "}
+                                  {payload[0].payload.completionRate}%
+                                </p>
                               </div>
                             );
                           }
                           return null;
                         }}
                       />
-                      <Bar
-                        dataKey="enrollments"
-                        radius={[8, 8, 0, 0]}
-                      >
+                      <Bar dataKey="enrollments" radius={[8, 8, 0, 0]}>
                         {completionRateData.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={entry.completionRate > 50 ? "#40A578" : "#4378FF"}
+                            fill={
+                              entry.completionRate > 50 ? "#40A578" : "#4378FF"
+                            }
                           />
                         ))}
                       </Bar>

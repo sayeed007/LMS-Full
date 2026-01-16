@@ -28,6 +28,9 @@ const blockItemSchema = new mongoose.Schema({
     alt: String, // for images
     duration: Number, // for audio/video in seconds
 
+    // For embed videos (YouTube, Vimeo, etc.)
+    embedUrl: String,
+
     // Additional properties can be added as needed
     metadata: mongoose.Schema.Types.Mixed
   },

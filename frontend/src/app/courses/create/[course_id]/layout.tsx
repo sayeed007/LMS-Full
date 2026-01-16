@@ -20,7 +20,7 @@ export default function CourseLayout({
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const courseId = params.course_id as string;
+  const courseId = (params?.course_id as string) || "";
 
   // Get current user from auth state
   const user = useAppSelector((state) => state.auth.user);

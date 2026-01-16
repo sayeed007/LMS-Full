@@ -54,7 +54,6 @@ export const ContentItem = ({
   };
 
   const { ContentIcon, ContentIconName } = getContentIcon(content.type);
-  console.log(content);
 
   return (
     <div className="bg-gray-50 border border-gray-100 rounded-md p-3 ml-8 my-1">

@@ -33,8 +33,6 @@ export function QuestionBankActionMenu({
 }: QuestionBankActionMenuProps) {
   if (!isOpen) return null;
 
-  console.log(questionBank);
-
   const actions: ActionItem[] = [
     {
       key: "edit",

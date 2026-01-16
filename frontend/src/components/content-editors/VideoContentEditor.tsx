@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, Upload, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface LessonContent {
   type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
@@ -41,9 +41,38 @@ export default function VideoContentEditor({
   onFileRemove,
   isUploading,
 }: VideoContentEditorProps) {
+  // Detect if URL is an embed URL (YouTube, Vimeo)
+  const isEmbedUrl = (url: string | undefined) => {
+    if (!url) return false;
+    return (
+      url.includes("youtube.com/embed") ||
+      url.includes("youtu.be") ||
+      url.includes("youtube.com/watch") ||
+      url.includes("vimeo.com") ||
+      url.includes("player.vimeo.com")
+    );
+  };
+
   const [videoType, setVideoType] = useState<"upload" | "embed">(
-    content.videoType || "upload"
+    content.videoType ||
+      (content.embedUrl
+        ? "embed"
+        : isEmbedUrl(content.fileUrl)
+        ? "embed"
+        : "upload")
   );
+
+  // Sync videoType when content prop changes (e.g., after async load)
+  useEffect(() => {
+    const detectedType =
+      content.videoType ||
+      (content.embedUrl
+        ? "embed"
+        : isEmbedUrl(content.fileUrl)
+        ? "embed"
+        : "upload");
+    setVideoType(detectedType);
+  }, [content.videoType, content.embedUrl, content.fileUrl]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -156,7 +185,11 @@ export default function VideoContentEditor({
         <Button
           variant={videoType === "upload" ? "default" : "outline"}
           onClick={() => handleVideoTypeChange("upload")}
-          className="flex items-center gap-2"
+          className={`flex items-center gap-2 ${
+            videoType === "upload"
+              ? "bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2"
+              : "hover:bg-gray-100"
+          }`}
         >
           <Upload className="w-4 h-4" />
           Upload Video
@@ -164,7 +197,11 @@ export default function VideoContentEditor({
         <Button
           variant={videoType === "embed" ? "default" : "outline"}
           onClick={() => handleVideoTypeChange("embed")}
-          className="flex items-center gap-2"
+          className={`flex items-center gap-2 ${
+            videoType === "embed"
+              ? "bg-blue-600 text-white ring-2 ring-blue-600 ring-offset-2"
+              : "hover:bg-gray-100"
+          }`}
         >
           <Link className="w-4 h-4" />
           Embed Video
@@ -336,11 +373,17 @@ export default function VideoContentEditor({
         <div className="space-y-4">
           <div>
             <Input
-              value={content.embedUrl || ""}
+              value={
+                content.embedUrl ||
+                (isEmbedUrl(content.fileUrl) ? content.fileUrl : "") ||
+                ""
+              }
               onChange={(e) =>
                 onChange({
                   ...content,
                   embedUrl: e.target.value,
+                  // Clear fileUrl when using embed
+                  fileUrl: undefined,
                 })
               }
               placeholder="Enter video URL (YouTube, Vimeo, or direct video link)"
@@ -352,28 +395,31 @@ export default function VideoContentEditor({
           </div>
 
           {/* Embed Preview */}
-          {content.embedUrl && (
+          {(content.embedUrl || isEmbedUrl(content.fileUrl)) && (
             <div className="border border-gray-200 rounded-lg p-4">
               <h4 className="font-medium text-gray-900 mb-3">Video Preview</h4>
               <div className="bg-gray-50 rounded-lg p-4">
-                {extractVideoId(content.embedUrl) ? (
-                  <iframe
-                    src={getEmbedUrl(content.embedUrl)}
-                    className="w-full h-64 rounded"
-                    frameBorder="0"
-                    allowFullScreen
-                    title="Video Preview"
-                  />
-                ) : (
-                  <video
-                    src={content.embedUrl}
-                    controls
-                    className="w-full max-h-64 rounded"
-                    preload="metadata"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                )}
+                {(() => {
+                  const videoUrl = content.embedUrl || content.fileUrl || "";
+                  return extractVideoId(videoUrl) ? (
+                    <iframe
+                      src={getEmbedUrl(videoUrl)}
+                      className="w-full h-64 rounded"
+                      frameBorder="0"
+                      allowFullScreen
+                      title="Video Preview"
+                    />
+                  ) : (
+                    <video
+                      src={videoUrl}
+                      controls
+                      className="w-full max-h-64 rounded"
+                      preload="metadata"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  );
+                })()}
               </div>
             </div>
           )}

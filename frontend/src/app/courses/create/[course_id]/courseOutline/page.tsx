@@ -2,15 +2,17 @@
 
 import CourseOutline from "@/components/courses/course_create/CourseOutline";
 import { useGetCourseByIdQuery } from "@/store/api/courseApi";
+import { use } from "react";
 
 export default function CourseOutlinePage({
   params,
 }: {
-  params: { course_id: string };
+  params: Promise<{ course_id: string }>;
 }) {
-  const { data: courseData, isLoading } = useGetCourseByIdQuery(
-    params.course_id
-  );
+  // Unwrap params Promise for Next.js 15 compatibility
+  const { course_id } = use(params);
+
+  const { data: courseData, isLoading } = useGetCourseByIdQuery(course_id);
   const course = courseData?.data?.course;
 
   if (isLoading) {

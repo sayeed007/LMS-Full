@@ -367,6 +367,42 @@ router.use(protect);
 
 /**
  * @swagger
+ * /api/v1/courses/admin/all:
+ *   get:
+ *     summary: Get all courses for admin management (Super Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [published, draft, all]
+ *     responses:
+ *       200:
+ *         description: List of all courses for admin management
+ *       403:
+ *         description: Insufficient permissions (Super Admin only)
+ */
+router.get('/admin/all', restrictTo('super_admin'), courseController.getAllCoursesAdmin);
+
+/**
+ * @swagger
  * /api/v1/courses/pending:
  *   get:
  *     summary: Get all pending courses (Admin only)

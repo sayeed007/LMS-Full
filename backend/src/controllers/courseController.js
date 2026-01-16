@@ -259,18 +259,84 @@ const updateProgress = catchAsync(async (req, res, next) => {
 });
 
 const getMyCourses = catchAsync(async (req, res, next) => {
-  let query;
+  let courses;
   
-  if (req.user.role === 'instructor' || req.user.role === 'org_admin' || req.user.role === 'super_admin') {
+  if (req.user.role === 'super_admin') {
+    // For super_admin, include:
+    // 1. Courses created by this admin
+    // 2. Courses with null/missing instructor
+    // 3. Courses with instructor that doesn't exist in User collection
+    courses = await Course.aggregate([
+      {
+        $match: {
+          isDeleted: { $ne: true }
+        }
+      },
+      {
+        // Look up the instructor in User collection
+        $lookup: {
+          from: 'users',
+          localField: 'instructor',
+          foreignField: '_id',
+          as: 'instructorUser'
+        }
+      },
+      {
+        $match: {
+          $or: [
+            // Courses created by this admin
+            { instructor: req.user._id },
+            // Courses with null/missing instructor
+            { instructor: null },
+            { instructor: { $exists: false } },
+            // Courses where instructor doesn't exist in User collection
+            { instructorUser: { $size: 0 } }
+          ]
+        }
+      },
+      {
+        // Re-lookup instructor for population (only if exists)
+        $lookup: {
+          from: 'users',
+          localField: 'instructor',
+          foreignField: '_id',
+          as: 'instructorData',
+          pipeline: [
+            { $project: { name: 1, avatar: 1 } }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          instructor: { $arrayElemAt: ['$instructorData', 0] },
+          isOrphaned: {
+            $or: [
+              { $eq: [{ $size: '$instructorData' }, 0] },
+              { $eq: ['$instructor', null] }
+            ]
+          }
+        }
+      },
+      {
+        $project: {
+          instructorData: 0,
+          instructorUser: 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
+  } else if (req.user.role === 'instructor' || req.user.role === 'org_admin') {
     // Get courses created by this instructor
     // Use $ne: true to include documents where isDeleted is false, undefined, or doesn't exist
-    query = Course.find({ instructor: req.user._id, isDeleted: { $ne: true } });
+    courses = await Course.find({ instructor: req.user._id, isDeleted: { $ne: true } })
+      .populate('instructor', 'name avatar');
   } else {
     // Get enrolled courses for students
-    query = Course.find({ 'enrollments.student': req.user._id, isDeleted: { $ne: true } });
+    courses = await Course.find({ 'enrollments.student': req.user._id, isDeleted: { $ne: true } })
+      .populate('instructor', 'name avatar');
   }
-
-  const courses = await query.populate('instructor', 'name avatar');
 
   res.status(200).json({
     status: 'success',
@@ -690,6 +756,93 @@ const revokeApproval = catchAsync(async (req, res, next) => {
   // TODO: Send email notification to instructor (implement in Phase 1.3)
 });
 
+/**
+ * @desc    Get all courses for admin management
+ * @route   GET /api/v1/courses/admin/all
+ * @access  Private (Super Admin only)
+ */
+const getAllCoursesAdmin = catchAsync(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+  const search = req.query.search || '';
+  const status = req.query.status; // 'published', 'draft', 'all'
+
+  // Build match stage
+  const matchStage = {
+    isDeleted: { $ne: true }
+  };
+
+  // Add status filter
+  if (status === 'published') {
+    matchStage.isPublished = true;
+  } else if (status === 'draft') {
+    matchStage.isPublished = { $ne: true };
+  }
+
+  // Add search filter
+  if (search) {
+    matchStage.$or = [
+      { title: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  const courses = await Course.aggregate([
+    { $match: matchStage },
+    {
+      // Look up the instructor in User collection
+      $lookup: {
+        from: 'users',
+        localField: 'instructor',
+        foreignField: '_id',
+        as: 'instructorData',
+        pipeline: [
+          { $project: { name: 1, email: 1, avatar: 1 } }
+        ]
+      }
+    },
+    {
+      $addFields: {
+        instructor: { $arrayElemAt: ['$instructorData', 0] },
+        isOrphaned: {
+          $or: [
+            { $eq: [{ $size: '$instructorData' }, 0] },
+            { $eq: ['$instructor', null] }
+          ]
+        }
+      }
+    },
+    {
+      $project: {
+        instructorData: 0
+      }
+    },
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit }
+  ]);
+
+  // Get total count
+  const totalResult = await Course.aggregate([
+    { $match: matchStage },
+    { $count: 'total' }
+  ]);
+  const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+  res.status(200).json({
+    status: 'success',
+    results: courses.length,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    },
+    data: courses
+  });
+});
+
 module.exports = {
   getAllCourses,
   getCourse,
@@ -710,4 +863,5 @@ module.exports = {
   approveCourse,
   rejectCourse,
   revokeApproval,
+  getAllCoursesAdmin,
 };

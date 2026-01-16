@@ -645,6 +645,15 @@ export const courseApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Course', id }, 'Course'],
     }),
+
+    // Admin course management
+    getAllCoursesAdmin: builder.query<BaseApiResponse<CoursePopulated[]> & { pagination: { page: number; limit: number; total: number; pages: number } }, { page?: number; limit?: number; search?: string; status?: 'published' | 'draft' | 'all' } | void>({
+      query: (params) => ({
+        url: '/courses/admin/all',
+        params: params || {},
+      }),
+      providesTags: ['Course'],
+    }),
   }),
 });
 
@@ -689,4 +698,6 @@ export const {
   useApproveCourseMutation,
   useRejectCourseMutation,
   useRevokeApprovalMutation,
+  // Admin course management
+  useGetAllCoursesAdminQuery,
 } = courseApi;
