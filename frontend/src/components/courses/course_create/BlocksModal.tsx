@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ArrowLeft } from "lucide-react";
 interface ContentBlock {
   id: string;
-  type: 'text' | 'image' | 'video' | 'audio' | 'document';
+  type: "text" | "image" | "video" | "audio" | "document";
   content: string | { url?: string; text?: string; [key: string]: unknown };
   order: number;
 }

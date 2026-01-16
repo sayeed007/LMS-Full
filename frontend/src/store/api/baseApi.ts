@@ -59,7 +59,7 @@ const baseQueryWithReauth: BaseQueryFn<
         // Dynamically import signOut to avoid SSR issues
         import('next-auth/react').then(({ signOut }) => {
           signOut({
-            callbackUrl: '/login',
+            callbackUrl: '/auth/login',
             redirect: true
           });
         });
@@ -121,7 +121,7 @@ const baseQueryWithReauth: BaseQueryFn<
         api.dispatch(logout());
         if (typeof window !== 'undefined') {
           import('next-auth/react').then(({ signOut }) => {
-            signOut({ callbackUrl: '/login', redirect: true });
+            signOut({ callbackUrl: '/auth/login', redirect: true });
           });
         }
       }
@@ -130,7 +130,7 @@ const baseQueryWithReauth: BaseQueryFn<
       api.dispatch(logout());
       if (typeof window !== 'undefined') {
         import('next-auth/react').then(({ signOut }) => {
-          signOut({ callbackUrl: '/login', redirect: true });
+          signOut({ callbackUrl: '/auth/login', redirect: true });
         });
       }
     }

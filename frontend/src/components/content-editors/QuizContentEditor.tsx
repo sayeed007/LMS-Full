@@ -27,24 +27,7 @@ import {
 } from "@/store/api/questionApi";
 import { showSuccessToast, showErrorToast } from "@/lib/toast-utils";
 import { Question } from "@/types/backend-models";
-
-interface LessonContent {
-  type: "text" | "blocks" | "video" | "document" | "quiz" | "assignment";
-  data?: {
-    quizId?: string;
-    quiz?: any; // Populated quiz data
-  };
-  blocks?: any[];
-  textContent?: string;
-  title?: string;
-  description?: string;
-  fileUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  fileType?: string;
-  publicId?: string;
-  resourceType?: string;
-}
+import { LessonContent } from "@/types/content-editor";
 
 interface QuizContentEditorProps {
   content: LessonContent;
@@ -120,6 +103,7 @@ export default function QuizContentEditor({
     if (quizId && banksData?.data?.questionBanks && !selectedBankId) {
       const banks = banksData.data.questionBanks;
       // Find default bank or use first one
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const defaultBank =
         banks.find((b: any) => b.name.includes("Course Quizzes")) || banks[0];
 
@@ -139,14 +123,16 @@ export default function QuizContentEditor({
     if (content.data?.quizId && content.data.quizId !== quizId) {
       setQuizId(content.data.quizId);
     }
-  }, [content.data?.quizId]);
+  }, [content.data?.quizId, quizId]);
 
-  // Load quiz data when available
+  // Load quiz data when available (either from API or embedded content)
   useEffect(() => {
+    // Priority 1: Data from API (if quizId exists)
     if (quizData?.data?.quiz) {
       const quiz = quizData.data.quiz;
       setQuizTitle(quiz.title || "");
       setQuizInstructions(quiz.instructions || "");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const settings = quiz.settings as any;
       setQuizSettings({
         passingScore: settings?.passingScore || 70,
@@ -158,6 +144,7 @@ export default function QuizContentEditor({
       // Transform questions to QuestionPopulated format
       if (quiz.questions) {
         const transformedQuestions = quiz.questions.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (q: any) =>
             ({
               ...q,
@@ -177,7 +164,65 @@ export default function QuizContentEditor({
         setQuestions(transformedQuestions);
       }
     }
-  }, [quizData]);
+    // Priority 2: Embedded data from content (if no quizId but data exists)
+    else if (!quizId && content.data?.quiz) {
+      const quiz = content.data.quiz;
+      setQuizTitle(quiz.title || ""); // Title might be in quiz object or content title
+      setQuizInstructions(quiz.instructions || "");
+
+      // Map embedded settings
+      setQuizSettings({
+        passingScore: quiz.passingScore || 70,
+        attempts: quiz.attempts || 3,
+        shuffleQuestions: quiz.shuffleQuestions || false,
+        showFeedback: quiz.showFeedback || true,
+      });
+
+      // Map embedded questions
+      if (quiz.questions) {
+        // Map type from underscore format to hyphen format (e.g., single_choice -> single-choice)
+        const mapQuestionType = (type: string): Question["type"] => {
+          const typeMap: Record<string, Question["type"]> = {
+            single_choice: "single-choice",
+            multiple_choice: "multiple-choice",
+            true_false: "true-false",
+            fill_blank: "fill-blank",
+          };
+          return typeMap[type] || (type as Question["type"]);
+        };
+
+        // Embedded questions might simpler, map them to QuestionPopulated best effort
+        const transformedQuestions = quiz.questions.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (q: any, index: number) =>
+            ({
+              _id: q._id || `temp-q-${index}`,
+              text: q.question || "", // embedded uses 'question', backend uses 'text'
+              type: mapQuestionType(q.type || "single_choice"),
+              choices: q.options || [],
+              points: q.points || 1,
+              timeLimit: q.timeLimit || 60,
+              explanation: q.explanation || "",
+              tags: [],
+              difficulty: "medium",
+              questionBank: { _id: "temp", name: "Embedded Quiz" },
+              createdBy: {
+                _id: "temp",
+                name: "User",
+                email: "user@example.com",
+              },
+              attachments: [],
+              isPublic: false,
+              timesUsed: 0,
+              averageScore: 0,
+              isActive: true,
+              answers: [], // Missing in embedded usually
+            } as unknown as QuestionPopulated)
+        );
+        setQuestions(transformedQuestions);
+      }
+    }
+  }, [quizData, quizId, content.data?.quiz]);
 
   const handleCreateQuizWithTitle = async (title: string) => {
     try {
@@ -212,7 +257,74 @@ export default function QuizContentEditor({
   };
 
   const handleAddQuestion = async (type?: string) => {
-    if (!quizId) return;
+    // Embedded Quiz Mode
+    if (!quizId) {
+      const questionType = (type as Question["type"]) || "single-choice";
+      const newQuestion: any = {
+        _id: `temp-${Date.now()}`,
+        text: "New Question",
+        type: questionType,
+        choices:
+          type === "true-false"
+            ? [
+                { text: "True", isCorrect: true, _id: `opt-${Date.now()}-1` },
+                { text: "False", isCorrect: false, _id: `opt-${Date.now()}-2` },
+              ]
+            : [
+                {
+                  text: "Option A",
+                  isCorrect: true,
+                  _id: `opt-${Date.now()}-1`,
+                },
+                {
+                  text: "Option B",
+                  isCorrect: false,
+                  _id: `opt-${Date.now()}-2`,
+                },
+                {
+                  text: "Option C",
+                  isCorrect: false,
+                  _id: `opt-${Date.now()}-3`,
+                },
+                {
+                  text: "Option D",
+                  isCorrect: false,
+                  _id: `opt-${Date.now()}-4`,
+                },
+              ],
+        points: 1,
+        timeLimit: 60,
+        tags: [],
+        difficulty: "medium",
+        isRequired: true,
+      };
+
+      const newQuestions = [...questions, newQuestion];
+      setQuestions(newQuestions);
+
+      // Propagate to parent with improved mapping
+      onChange({
+        ...content,
+        data: {
+          ...content.data,
+          quiz: {
+            ...content.data?.quiz,
+            questions: newQuestions.map((q: any, index: number) => ({
+              ...q,
+              question: q.text,
+              type: q.type.replace(/-/g, "_"), // Fix enum (single-choice -> single_choice)
+              order: index + 1,
+              options: q.choices,
+            })),
+          },
+        },
+      });
+
+      showSuccessToast("Question added");
+      return;
+    }
+
+    // Linked Quiz Mode
 
     // Auto-create default bank and section if not selected
     let bankId = selectedBankId;
@@ -302,6 +414,32 @@ export default function QuizContentEditor({
   };
 
   const handleUpdateQuestion = async (updatedQuestion: QuestionPopulated) => {
+    // Update local state first
+    const newQuestions = questions.map((q) =>
+      q._id === updatedQuestion._id ? updatedQuestion : q
+    );
+    setQuestions(newQuestions);
+
+    // Propagate to parent (Embedded & Freshness)
+    onChange({
+      ...content,
+      data: {
+        ...content.data,
+        quiz: {
+          ...content.data?.quiz,
+          questions: newQuestions.map((q: any, index: number) => ({
+            ...q,
+            question: q.text,
+            type: q.type.replace(/-/g, "_"), // Fix enum
+            order: index + 1,
+            options: q.choices,
+          })),
+        },
+      },
+    });
+
+    if (!quizId) return;
+
     try {
       await updateQuestion({
         id: updatedQuestion._id,
@@ -316,31 +454,52 @@ export default function QuizContentEditor({
           difficulty: updatedQuestion.difficulty,
         },
       }).unwrap();
-
-      setQuestions((prev) =>
-        prev.map((q) => (q._id === updatedQuestion._id ? updatedQuestion : q))
-      );
     } catch (error: any) {
       showErrorToast(error?.data?.message || "Failed to update question");
+      // Revert if failed (optional, but good UX)
     }
   };
 
   const handleDeleteQuestion = async (id: string) => {
-    if (!quizId) return;
+    // Update local state
+    const newQuestions = questions.filter((q) => q._id !== id);
+    setQuestions(newQuestions);
+
+    // Propagate to parent
+    onChange({
+      ...content,
+      data: {
+        ...content.data,
+        quiz: {
+          ...content.data?.quiz,
+          questions: newQuestions.map((q: any, index: number) => ({
+            ...q,
+            question: q.text,
+            type: q.type.replace(/-/g, "_"), // Fix enum
+            order: index + 1,
+            options: q.choices,
+          })),
+        },
+      },
+    });
+
+    if (!quizId) {
+      showSuccessToast("Question removed");
+      return;
+    }
 
     try {
       // Remove from quiz first
       await updateQuiz({
         id: quizId,
         data: {
-          questions: questions.filter((q) => q._id !== id).map((q) => q._id),
+          questions: newQuestions.map((q) => q._id),
         },
       }).unwrap();
 
       // Optionally delete the question (or just unlink)
       // await deleteQuestion(id).unwrap();
 
-      setQuestions((prev) => prev.filter((q) => q._id !== id));
       showSuccessToast("Question removed");
     } catch (error: any) {
       showErrorToast(error?.data?.message || "Failed to remove question");
@@ -354,17 +513,61 @@ export default function QuizContentEditor({
     }));
   };
 
-  const handleSaveSettings = async () => {
-    if (!quizId) return;
+  // Modified to accept updated values directly to avoid state race conditions
+  const handleSaveSettings = async (updates?: {
+    title: string;
+    instructions: string;
+    settings: any;
+  }) => {
+    // Use passed updates or fallback to state (though state might be stale if just updated)
+    const title = updates?.title ?? quizTitle;
+    const instructions = updates?.instructions ?? quizInstructions;
+    const settings = updates?.settings ?? quizSettings;
+
+    // Sync local state
+    if (updates) {
+      setQuizTitle(title);
+      setQuizInstructions(instructions);
+      setQuizSettings(settings);
+    }
+
+    const updatedSettings = {
+      title,
+      instructions,
+      ...settings,
+    };
+
+    // Propagate to parent (Embedded & Freshness)
+    onChange({
+      ...content,
+      data: {
+        ...content.data,
+        quiz: {
+          ...content.data?.quiz,
+          ...updatedSettings,
+          questions: questions.map((q: any, index: number) => ({
+            ...q,
+            question: q.text,
+            type: q.type.replace(/-/g, "_"), // Fix enum
+            order: index + 1,
+            options: q.choices,
+          })),
+        },
+      },
+    });
+
+    if (!quizId) {
+      showSuccessToast("Quiz settings saved locally");
+      return;
+    }
 
     try {
       await updateQuiz({
         id: quizId,
         data: {
-          title: quizTitle,
-          instructions: quizInstructions,
-          // Map to backend settings structure
-          // Note: You may need to adjust this based on your actual Quiz model
+          title,
+          instructions,
+          // Add other settings if backend supports them directly at root
         },
       }).unwrap();
 
@@ -397,7 +600,7 @@ export default function QuizContentEditor({
     const modalId = openModal(
       <CreateBankModal
         courseId={courseId}
-        onSuccess={(bankId, bankName) => {
+        onSuccess={(bankId) => {
           setSelectedBankId(bankId);
           closeModal(modalId);
         }}
@@ -418,7 +621,7 @@ export default function QuizContentEditor({
     const modalId = openModal(
       <CreateSectionModal
         questionBankId={selectedBankId}
-        onSuccess={(sectionId, sectionName) => {
+        onSuccess={(sectionId) => {
           setSelectedSectionId(sectionId);
           closeModal(modalId);
         }}
@@ -438,8 +641,8 @@ export default function QuizContentEditor({
     );
   }
 
-  // Empty state - no quiz created yet
-  if (!quizId) {
+  // Empty state - no quiz created yet AND no embedded data
+  if (!quizId && !content.data?.quiz) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4">
         <div className="max-w-md text-center space-y-4">
@@ -450,8 +653,9 @@ export default function QuizContentEditor({
             Create Your Quiz
           </h3>
           <p className="text-gray-600">
-            Get started by creating a quiz. You'll be able to add questions,
-            configure settings, and organize questions using question banks.
+            Get started by creating a quiz. You&apos;ll be able to add
+            questions, configure settings, and organize questions using question
+            banks.
           </p>
           <Button
             onClick={() => {
@@ -506,7 +710,7 @@ export default function QuizContentEditor({
         <QuestionBankSelector
           courseId={courseId}
           value={selectedBankId}
-          onChange={(bankId, bankName) => {
+          onChange={(bankId) => {
             setSelectedBankId(bankId);
             setSelectedSectionId(null); // Reset section when bank changes
           }}
@@ -516,7 +720,7 @@ export default function QuizContentEditor({
         <SectionSelector
           sections={sections}
           value={selectedSectionId}
-          onChange={(sectionId, sectionName) => setSelectedSectionId(sectionId)}
+          onChange={(sectionId) => setSelectedSectionId(sectionId)}
           onCreateNew={handleCreateSection}
           disabled={!selectedBankId}
         />
@@ -547,7 +751,16 @@ interface QuizSettingsModalProps {
   onTitleChange: (title: string) => void;
   onInstructionsChange: (instructions: string) => void;
   onSettingChange: (key: string, value: number | boolean) => void;
-  onSave: () => void;
+  onSave: (data: {
+    title: string;
+    instructions: string;
+    settings: {
+      passingScore: number;
+      attempts: number;
+      shuffleQuestions: boolean;
+      showFeedback: boolean;
+    };
+  }) => void;
   onClose?: () => void;
 }
 
@@ -573,12 +786,12 @@ function QuizSettingsModal({
   };
 
   const handleSave = () => {
-    onTitleChange(localTitle);
-    onInstructionsChange(localInstructions);
-    Object.entries(localSettings).forEach(([key, value]) => {
-      onSettingChange(key, value);
+    // Pass values directly to avoid state race condition in parent
+    onSave({
+      title: localTitle,
+      instructions: localInstructions,
+      settings: localSettings,
     });
-    onSave();
     onClose?.();
   };
 

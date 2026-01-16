@@ -7,10 +7,16 @@ import { PageLayout, TabNav } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { useModalActions } from "@/lib/modal-utils";
 import { showErrorToast, getErrorMessage } from "@/lib/toast-utils";
-import { useGetCoursesQuery, useGetEnrolledCoursesQuery, useGetMyCoursesQuery } from "@/store/api/courseApi";
+import {
+  useGetCoursesQuery,
+  useGetEnrolledCoursesQuery,
+  useGetMyCoursesQuery,
+} from "@/store/api/courseApi";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import CourseFiltersModal, { CourseFiltersType } from "@/components/courses/CourseFiltersModal";
+import CourseFiltersModal, {
+  CourseFiltersType,
+} from "@/components/courses/CourseFiltersModal";
 import { useAppSelector } from "@/store/hooks";
 import { SlidersHorizontal } from "lucide-react";
 
@@ -18,7 +24,10 @@ import { SlidersHorizontal } from "lucide-react";
 const CoursesSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
     {Array.from({ length: 10 }).map((_, i) => (
-      <div key={i} className="bg-white rounded-lg shadow-sm border p-4 space-y-4 animate-pulse">
+      <div
+        key={i}
+        className="bg-white rounded-lg shadow-sm border p-4 space-y-4 animate-pulse"
+      >
         <div className="h-40 w-full bg-gray-200 rounded-md"></div>
         <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
         <div className="h-3 w-full bg-gray-200 rounded"></div>
@@ -65,18 +74,18 @@ export default function CoursesPage() {
   const tabs = useMemo(() => {
     return isAuthenticated
       ? allTabs
-      : allTabs.filter(tab => !tab.requiresAuth);
+      : allTabs.filter((tab) => !tab.requiresAuth);
   }, [isAuthenticated]);
 
   // Filter state for "All Courses" tab
   const [filters, setFilters] = useState({
-    search: searchParams.get('search') || '',
-    category: searchParams.get('category') || '',
-    level: searchParams.get('level') || '',
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    minRating: searchParams.get('minRating') || '',
-    sort: searchParams.get('sort') || 'newest',
+    search: searchParams.get("search") || "",
+    category: searchParams.get("category") || "",
+    level: searchParams.get("level") || "",
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
+    minRating: searchParams.get("minRating") || "",
+    sort: searchParams.get("sort") || "newest",
   });
 
   // Build query params for API
@@ -98,16 +107,13 @@ export default function CoursesPage() {
   const {
     data: allCoursesData,
     isLoading: isLoadingAll,
-    error: allCoursesError
-  } = useGetCoursesQuery(
-    buildQueryParams(),
-    { skip: activeTab !== "all" }
-  );
+    error: allCoursesError,
+  } = useGetCoursesQuery(buildQueryParams(), { skip: activeTab !== "all" });
 
   const {
     data: myCoursesData,
     isLoading: isLoadingMy,
-    error: myCoursesError
+    error: myCoursesError,
   } = useGetMyCoursesQuery(
     undefined,
     { skip: activeTab !== "my" || !isAuthenticated } // Skip if not authenticated
@@ -116,7 +122,7 @@ export default function CoursesPage() {
   const {
     data: enrolledCoursesData,
     isLoading: isLoadingEnrolled,
-    error: enrolledCoursesError
+    error: enrolledCoursesError,
   } = useGetEnrolledCoursesQuery(
     { page: 1, limit: 50 },
     { skip: activeTab !== "enrolled" || !isAuthenticated } // Skip if not authenticated
@@ -131,7 +137,7 @@ export default function CoursesPage() {
           router.push(`/courses/create/${courseId}`);
         }}
       />,
-      { size: 'md', position: 'center' }
+      { size: "md", position: "center" }
     );
   };
 
@@ -153,9 +159,9 @@ export default function CoursesPage() {
         onClose={() => closeModal()}
       />,
       {
-        size: 'md',
-        position: 'right',
-        className: 'max-w-md'
+        size: "md",
+        position: "right",
+        className: "max-w-md",
       }
     );
   };
@@ -179,19 +185,19 @@ export default function CoursesPage() {
         return {
           courses: allCoursesData?.data || [],
           isLoading: isLoadingAll,
-          error: allCoursesError
+          error: allCoursesError,
         };
       case "my":
         return {
           courses: myCoursesData?.data || [],
           isLoading: isLoadingMy,
-          error: myCoursesError
+          error: myCoursesError,
         };
       case "enrolled":
         return {
           courses: enrolledCoursesData?.data || [],
           isLoading: isLoadingEnrolled,
-          error: enrolledCoursesError
+          error: enrolledCoursesError,
         };
       default:
         return { courses: [], isLoading: false, error: null };
@@ -201,12 +207,13 @@ export default function CoursesPage() {
   const { courses, isLoading, error } = getCurrentData();
 
   // Check if showing a personal tab without authentication
-  const showAuthRequired = !isAuthenticated && (activeTab === "my" || activeTab === "enrolled");
+  const showAuthRequired =
+    !isAuthenticated && (activeTab === "my" || activeTab === "enrolled");
 
   // Handle API errors with useEffect to prevent duplicate toasts
   useEffect(() => {
     if (error && !showAuthRequired) {
-      const errorMessage = getErrorMessage(error, 'Failed to load courses');
+      const errorMessage = getErrorMessage(error, "Failed to load courses");
       showErrorToast(
         `Failed to load ${activeTab === "my" ? "your" : activeTab} courses`,
         errorMessage
@@ -280,11 +287,15 @@ export default function CoursesPage() {
                   Authentication Required
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Please log in to {activeTab === "my" ? "view and manage your courses" : "view your enrolled courses"}.
+                  Please log in to{" "}
+                  {activeTab === "my"
+                    ? "view and manage your courses"
+                    : "view your enrolled courses"}
+                  .
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button
-                    onClick={() => router.push('/login')}
+                    onClick={() => router.push("/auth/login")}
                     className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
                   >
                     Log In
@@ -313,7 +324,13 @@ export default function CoursesPage() {
             </div>
           ) : (
             <EmptyStateWithCreate
-              message={`No ${activeTab === "my" ? "courses created" : activeTab === "enrolled" ? "enrolled courses" : "courses available"}`}
+              message={`No ${
+                activeTab === "my"
+                  ? "courses created"
+                  : activeTab === "enrolled"
+                  ? "enrolled courses"
+                  : "courses available"
+              }`}
               description={getEmptyStateDescription(activeTab)}
               buttonText={activeTab === "my" ? "Create Now" : "Browse Courses"}
               onClick={() => {

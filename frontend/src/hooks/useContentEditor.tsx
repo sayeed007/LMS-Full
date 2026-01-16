@@ -28,6 +28,7 @@ import type {
   LessonContent,
   ContentBlock,
   ParsedContentData,
+  EmbeddedQuiz,
 } from "@/types/content-editor";
 
 export function useContentEditor() {
@@ -167,9 +168,11 @@ export function useContentEditor() {
           : {};
 
         const textContent = parsedData.textContent || parsedData.text || "";
+        console.log("Raw textContent:", textContent);
         const decodedTextContent = textContent
           ? decodeHTMLEntities(textContent)
           : "";
+        console.log("Decoded textContent:", decodedTextContent);
 
         // Check for blocks in both 'blocks' and 'items' fields (backend may use either)
         // Use items if blocks is empty array (empty arrays are truthy in JS)
@@ -212,7 +215,10 @@ export function useContentEditor() {
             title: contentTitle,
             description: parsedData.description || "",
             blocks: [],
-            data: { quizId: parsedData.quizId },
+            data: {
+              quizId: parsedData.quizId,
+              quiz: parsedData.quiz,
+            },
           };
         } else if (
           ["video", "audio", "document", "assignment"].includes(contentType)
@@ -619,12 +625,16 @@ export function useContentEditor() {
 
       if (contentType === "quiz") {
         const typedContent = currentContent as {
-          data?: { quizId?: string };
+          data?: { quizId?: string; quiz?: EmbeddedQuiz };
           title?: string;
         };
         if (typedContent.data?.quizId) {
           saveData.quizId = typedContent.data.quizId;
+        } else if (typedContent.data?.quiz) {
+          // Include embedded quiz data for persistence
+          saveData.quiz = typedContent.data.quiz;
         }
+
         if (typedContent.title) {
           saveData.title = typedContent.title;
         }

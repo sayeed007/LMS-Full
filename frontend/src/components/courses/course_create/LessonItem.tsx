@@ -146,7 +146,7 @@ export const LessonItem = ({
         variant="outline"
         size="sm"
         onClick={() => onSetShowContentPopup(lesson._id)}
-        className="text-black font-bold bg-white border-grey-1 hover:bg-off-white-1 absolute bottom-[-15px] left-[45%] rounded-2xl "
+        className="text-black font-bold bg-white border-grey-1 hover:bg-off-white-1 absolute bottom-[-17px] left-[45%] rounded-2xl "
         aria-label="Add Content"
       >
         <Plus className="w-4 h-4 mr-1" />

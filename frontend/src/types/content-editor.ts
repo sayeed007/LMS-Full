@@ -33,7 +33,7 @@ export interface LessonContent {
     fileType?: string;
     publicId?: string;
     resourceType?: string;
-    data?: { quizId?: string };
+    data?: { quizId?: string; quiz?: EmbeddedQuiz };
     embedUrl?: string;
 }
 
@@ -114,7 +114,38 @@ export interface ParsedContentData {
     publicId?: string;
     resourceType?: string;
     quizId?: string;
+    quiz?: EmbeddedQuiz;
+}
+
+// Embedded quiz data structure (from seeder/legacy data)
+export interface EmbeddedQuiz {
+    title?: string;
+    instructions?: string;
+    timeLimit?: number;
+    attempts?: number;
+    shuffleQuestions?: boolean;
+    showFeedback?: boolean;
+    passingScore?: number;
+    questions?: EmbeddedQuizQuestion[];
+}
+
+export interface EmbeddedQuizQuestion {
+    _id?: string;
+    type: string;
+    order: number;
+    question: string;
+    options?: Array<{
+        text: string;
+        isCorrect: boolean;
+        explanation?: string;
+    }>;
+    points?: number;
+    explanation?: string;
+    hint?: string;
+    timeLimit?: number;
+    isRequired?: boolean;
 }
 
 // Content type options
 export type ContentType = "text" | "blocks" | "block" | "video" | "audio" | "document" | "quiz" | "assignment";
+
