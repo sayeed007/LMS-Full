@@ -369,6 +369,7 @@ const updateContent = catchAsync(async (req, res, next) => {
         // Clean up - preserve quizId reference
         req.body.data = {
           quizId: req.body.data.quizId || req.body.data.quiz?.id, // Support both quizId and legacy quiz.id
+          quiz: req.body.data.quiz, // Preserve embedded quiz data
           title: req.body.data.title
         };
         break;
