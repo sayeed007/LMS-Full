@@ -13,6 +13,7 @@ const MongoStore = require('connect-mongo');
 const passport = require('passport');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const mongooseToSwagger = require('mongoose-to-swagger');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const AppError = require('./utils/appError');
@@ -39,6 +40,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const docsRoutes = require('./routes/docsRoutes');
 
 // Initialize express app
 const app = express();
@@ -183,6 +185,27 @@ const swaggerOptions = {
   apis: ['./src/routes/*.js', './src/models/*.js'],
 };
 
+// Generate schemas from Mongoose models
+const schemas = {};
+if (mongoose.models) {
+  Object.keys(mongoose.models).forEach(modelName => {
+    try {
+      schemas[modelName] = mongooseToSwagger(mongoose.models[modelName]);
+    } catch (err) {
+      console.warn(`Failed to generate swagger schema for ${modelName}`, err);
+    }
+  });
+}
+
+// Merge generated schemas into swagger definition
+swaggerOptions.definition.components = {
+  ...swaggerOptions.definition.components,
+  schemas: {
+    ...swaggerOptions.definition.components?.schemas,
+    ...schemas
+  }
+};
+
 const specs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
@@ -223,6 +246,7 @@ app.use(`/api/${apiVersion}/dashboard`, dashboardRoutes);
 app.use(`/api/${apiVersion}/reports`, reportRoutes);
 app.use(`/api/${apiVersion}/analytics`, analyticsRoutes);
 app.use(`/api/${apiVersion}/contact`, contactRoutes);
+app.use(`/api/${apiVersion}/docs`, docsRoutes);
 
 // Handle undefined routes
 app.all('*', (req, res, next) => {
