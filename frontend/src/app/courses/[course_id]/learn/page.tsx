@@ -10,7 +10,10 @@ interface PageProps {
   }>;
 }
 
-export default async function CourseLearningPage({ params, searchParams }: PageProps) {
+export default async function CourseLearningPage({
+  params,
+  searchParams,
+}: PageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
@@ -19,12 +22,7 @@ export default async function CourseLearningPage({ params, searchParams }: PageP
   const chapterId = resolvedSearchParams.chapter;
 
   if (!courseId) {
-    return (
-      <CourseLearningClient
-        courseId={null}
-        error="Invalid course ID"
-      />
-    );
+    return <CourseLearningClient courseId={null} error="Invalid course ID" />;
   }
 
   return (

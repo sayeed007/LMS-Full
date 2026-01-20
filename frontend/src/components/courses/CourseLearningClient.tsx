@@ -2,13 +2,34 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGetChaptersQuery, useGetCourseByIdQuery, useGetLessonsQuery } from "@/store/api/courseApi";
+import {
+  useGetChaptersQuery,
+  useGetCourseByIdQuery,
+  useGetLessonsQuery,
+} from "@/store/api/courseApi";
 import { CourseLesson } from "@/types/backend-models";
-import { ArrowLeft, BookOpen, CheckCircle, ChevronRight, Circle, Clock, Download, FileText, Headphones, Menu, Video, X } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  CheckCircle,
+  ChevronRight,
+  Circle,
+  Clock,
+  Download,
+  FileText,
+  Headphones,
+  Menu,
+  Video,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CourseProgress } from "./learning/CourseProgress";
-import { LessonContentRenderer, useContentItems } from "./learning/LessonContentRenderer";
+import {
+  LessonContentRenderer,
+  useContentItems,
+} from "./learning/LessonContentRenderer";
+import { Container } from "../ui";
 
 interface CourseLearningClientProps {
   courseId: string | null;
@@ -21,53 +42,61 @@ export function CourseLearningClient({
   courseId,
   initialLessonId,
   initialChapterId,
-  error: propError
+  error: propError,
 }: CourseLearningClientProps) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentLessonId, setCurrentLessonId] = useState<string | null>(initialLessonId || null);
-  const [currentChapterId, setCurrentChapterId] = useState<string | null>(initialChapterId || null);
-  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const [currentLessonId, setCurrentLessonId] = useState<string | null>(
+    initialLessonId || null
+  );
+  const [currentChapterId, setCurrentChapterId] = useState<string | null>(
+    initialChapterId || null
+  );
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
+    new Set()
+  );
   const [currentContentIndex, setCurrentContentIndex] = useState(0);
-  const [completedContentItems, setCompletedContentItems] = useState<Set<string>>(new Set());
-
+  const [completedContentItems, setCompletedContentItems] = useState<
+    Set<string>
+  >(new Set());
 
   // Fetch course data
   const {
     data: courseData,
     isLoading: isCourseLoading,
-    error: courseError
+    error: courseError,
   } = useGetCourseByIdQuery(courseId!, {
     skip: !courseId,
   });
 
-  const {
-    data: chaptersData,
-    isLoading: isLoadingChapters,
-  } = useGetChaptersQuery(
-    { courseId: courseId || "" },
-    { skip: !courseId }
-  );
+  const { data: chaptersData, isLoading: isLoadingChapters } =
+    useGetChaptersQuery({ courseId: courseId || "" }, { skip: !courseId });
 
-  const {
-    data: lessonsData,
-    isLoading: isLoadingLessons,
-  } = useGetLessonsQuery(
+  const { data: lessonsData, isLoading: isLoadingLessons } = useGetLessonsQuery(
     { courseId: courseId || "" },
     { skip: !courseId }
   );
 
   const course = courseData?.data?.course;
-  const error = propError || (courseError ? 'Failed to fetch course data' : null);
+  const error =
+    propError || (courseError ? "Failed to fetch course data" : null);
 
   // Process chapters and lessons
   const chapters = useMemo(() => {
     const chapterList = chaptersData?.data?.chapters || [];
-    return [...chapterList].sort((a, b) => (a?.order || 0) - (b?.order || 0)).map(chapter => ({
-      ...chapter,
-      lessons: chapter.lessons ? [...chapter.lessons].sort((a, b) => (a?.order || 0) - (b?.order || 0)) : []
-    }));
+    return [...chapterList]
+      .sort((a, b) => (a?.order || 0) - (b?.order || 0))
+      .map((chapter) => ({
+        ...chapter,
+        lessons: chapter.lessons
+          ? [...chapter.lessons].sort(
+              (a, b) => (a?.order || 0) - (b?.order || 0)
+            )
+          : [],
+      }));
   }, [chaptersData?.data?.chapters]);
 
   const lessons = useMemo(() => {
@@ -77,27 +106,39 @@ export function CourseLearningClient({
 
   // Get all lessons in order (chapters first, then standalone)
   const allLessons = useMemo(() => {
-    const orderedLessons: (CourseLesson & { chapterTitle: string | null; chapterId: string | null })[] = [];
+    const orderedLessons: (CourseLesson & {
+      chapterTitle: string | null;
+      chapterId: string | null;
+    })[] = [];
 
     // Add lessons from chapters
-    chapters.forEach(chapter => {
+    chapters.forEach((chapter) => {
       if (chapter.lessons) {
-        chapter.lessons.forEach(lesson => {
-          orderedLessons.push({ ...lesson, chapterTitle: chapter.title, chapterId: chapter._id });
+        chapter.lessons.forEach((lesson) => {
+          orderedLessons.push({
+            ...lesson,
+            chapterTitle: chapter.title,
+            chapterId: chapter._id,
+          });
         });
       }
     });
 
     // Add standalone lessons
-    lessons.filter(lesson => !lesson.chapter).forEach(lesson => {
-      orderedLessons.push({ ...lesson, chapterTitle: null, chapterId: null });
-    });
+    lessons
+      .filter((lesson) => !lesson.chapter)
+      .forEach((lesson) => {
+        orderedLessons.push({ ...lesson, chapterTitle: null, chapterId: null });
+      });
 
     return orderedLessons;
   }, [chapters, lessons]);
 
   // Fetch content items for current lesson
-  const { contentItems } = useContentItems(courseId || '', currentLessonId || '');
+  const { contentItems } = useContentItems(
+    courseId || "",
+    currentLessonId || ""
+  );
 
   // Reset content index when lesson changes
   useEffect(() => {
@@ -107,15 +148,15 @@ export function CourseLearningClient({
   // Get icon for content type
   const getContentIcon = (type: string) => {
     switch (type) {
-      case 'video':
+      case "video":
         return <Video className="w-3 h-3" />;
-      case 'audio':
+      case "audio":
         return <Headphones className="w-3 h-3" />;
-      case 'text':
+      case "text":
         return <FileText className="w-3 h-3" />;
-      case 'document':
+      case "document":
         return <Download className="w-3 h-3" />;
-      case 'block':
+      case "block":
         return <BookOpen className="w-3 h-3" />;
       default:
         return <FileText className="w-3 h-3" />;
@@ -124,7 +165,7 @@ export function CourseLearningClient({
 
   // Toggle chapter expansion
   const toggleChapter = (chapterId: string) => {
-    setExpandedChapters(prev => {
+    setExpandedChapters((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(chapterId)) {
         newSet.delete(chapterId);
@@ -140,29 +181,39 @@ export function CourseLearningClient({
     setCurrentLessonId(lessonId);
     setCurrentChapterId(chapterId || null);
 
-    const url = `/courses/${courseId}/learn?lesson=${lessonId}${chapterId ? `&chapter=${chapterId}` : ''}`;
-    window.history.pushState({}, '', url);
+    const url = `/courses/${courseId}/learn?lesson=${lessonId}${
+      chapterId ? `&chapter=${chapterId}` : ""
+    }`;
+    window.history.pushState({}, "", url);
   };
 
   const goToNextLesson = useCallback(() => {
-    const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
+    const currentIndex = allLessons.findIndex(
+      (lesson) => lesson._id === currentLessonId
+    );
     if (currentIndex < allLessons.length - 1) {
       const nextLesson = allLessons[currentIndex + 1];
       setCurrentLessonId(nextLesson._id);
       setCurrentChapterId(nextLesson?.chapterId || null);
-      const url = `/courses/${courseId}/learn?lesson=${nextLesson._id}${nextLesson?.chapterId ? `&chapter=${nextLesson.chapterId}` : ''}`;
-      window.history.pushState({}, '', url);
+      const url = `/courses/${courseId}/learn?lesson=${nextLesson._id}${
+        nextLesson?.chapterId ? `&chapter=${nextLesson.chapterId}` : ""
+      }`;
+      window.history.pushState({}, "", url);
     }
   }, [allLessons, currentLessonId, courseId]);
 
   const goToPreviousLesson = useCallback(() => {
-    const currentIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
+    const currentIndex = allLessons.findIndex(
+      (lesson) => lesson._id === currentLessonId
+    );
     if (currentIndex > 0) {
       const previousLesson = allLessons[currentIndex - 1];
       setCurrentLessonId(previousLesson._id);
       setCurrentChapterId(previousLesson?.chapterId || null);
-      const url = `/courses/${courseId}/learn?lesson=${previousLesson._id}${previousLesson?.chapterId ? `&chapter=${previousLesson.chapterId}` : ''}`;
-      window.history.pushState({}, '', url);
+      const url = `/courses/${courseId}/learn?lesson=${previousLesson._id}${
+        previousLesson?.chapterId ? `&chapter=${previousLesson.chapterId}` : ""
+      }`;
+      window.history.pushState({}, "", url);
     }
   }, [allLessons, currentLessonId, courseId]);
 
@@ -178,10 +229,13 @@ export function CourseLearningClient({
 
   // Auto-expand chapter containing current lesson
   useEffect(() => {
-    if (currentChapterId && !expandedChapters.has(currentChapterId)) {
-      setExpandedChapters(prev => new Set([...prev, currentChapterId]));
+    if (currentChapterId) {
+      setExpandedChapters((prev) => {
+        if (prev.has(currentChapterId)) return prev;
+        return new Set([...prev, currentChapterId]);
+      });
     }
-  }, [currentChapterId, expandedChapters]);
+  }, [currentChapterId]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -196,44 +250,44 @@ export function CourseLearningClient({
       }
 
       switch (event.key) {
-        case 'ArrowLeft':
+        case "ArrowLeft":
           if (event.metaKey || event.ctrlKey) {
             event.preventDefault();
             goToPreviousLesson();
           }
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           if (event.metaKey || event.ctrlKey) {
             event.preventDefault();
             goToNextLesson();
           }
           break;
-        case 'Escape':
+        case "Escape":
           if (sidebarOpen) {
             setSidebarOpen(false);
           }
           break;
-        case 'm':
-        case 'M':
+        case "m":
+        case "M":
           if (event.metaKey || event.ctrlKey) {
             event.preventDefault();
-            setSidebarOpen(prev => !prev);
+            setSidebarOpen((prev) => !prev);
           }
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [sidebarOpen, goToPreviousLesson, goToNextLesson]);
 
   // Find current lesson data
   const currentLesson = useMemo(() => {
-    return allLessons.find(lesson => lesson._id === currentLessonId);
+    return allLessons.find((lesson) => lesson._id === currentLessonId);
   }, [allLessons, currentLessonId]);
 
   const markLessonComplete = (lessonId: string) => {
-    setCompletedLessons(prev => new Set([...prev, lessonId]));
+    setCompletedLessons((prev) => new Set([...prev, lessonId]));
   };
 
   const isLoading = isCourseLoading || isLoadingChapters || isLoadingLessons;
@@ -275,21 +329,24 @@ export function CourseLearningClient({
     );
   }
 
-  const currentLessonIndex = allLessons.findIndex(lesson => lesson._id === currentLessonId);
+  const currentLessonIndex = allLessons.findIndex(
+    (lesson) => lesson._id === currentLessonId
+  );
   const hasNextLesson = currentLessonIndex < allLessons.length - 1;
   const hasPreviousLesson = currentLessonIndex > 0;
 
   return (
-    <div className="h-screen bg-gray-50 flex relative overflow-hidden">
-
+    <Container
+      size="xl"
+      className="h-screen bg-gray-50 flex relative overflow-hidden my-4"
+    >
       {/* Sidebar */}
-      <div className={`${sidebarOpen
-        ? 'w-80 lg:w-96'
-        : 'w-0 lg:w-0'
-        } transition-all duration-300 ease-in-out border-r border-gray-200 flex-shrink-0 overflow-hidden z-50 lg:relative absolute lg:z-auto h-full`}>
-
+      <div
+        className={`${
+          sidebarOpen ? "w-80 lg:w-96" : "w-0 lg:w-0"
+        } transition-all duration-300 ease-in-out border-r border-gray-200 flex-shrink-0 overflow-hidden z-50 lg:relative absolute lg:z-auto h-full`}
+      >
         <div className="h-full flex flex-col bg-gradient-to-br from-[#D3E3FF] to-[#F3FFED] relative">
-
           {/* Header */}
           <div className="p-4 border-b border-gray-200 bg-white/50 backdrop-blur-sm">
             <div className="flex items-center justify-between">
@@ -315,7 +372,9 @@ export function CourseLearningClient({
 
           {/* Course Outline */}
           <div className="flex-1 overflow-hidden flex flex-col p-4">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4 px-2 flex-shrink-0">Course Content</h2>
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4 px-2 flex-shrink-0">
+              Course Content
+            </h2>
 
             <div className="flex-1 overflow-y-auto overflow-x-clip space-y-4 pb-4">
               {/* Chapters */}
@@ -330,81 +389,110 @@ export function CourseLearningClient({
                         className="w-full flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-100/60 to-purple-100/60 rounded-lg backdrop-blur-sm border border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-200 hover:from-blue-100 hover:to-purple-100"
                       >
                         <ChevronRight
-                          className={`w-4 h-4 text-blue-700 transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`}
+                          className={`w-4 h-4 text-blue-700 transition-transform duration-200 flex-shrink-0 ${
+                            isExpanded ? "rotate-90" : ""
+                          }`}
                         />
                         <BookOpen className="w-4 h-4 text-blue-700 flex-shrink-0" />
                         <span className="font-semibold text-gray-900 text-sm flex-1 text-left">
                           {chapter.title}
                         </span>
-                        <Badge variant="secondary" className="bg-white/80 text-blue-700 text-xs font-medium flex-shrink-0">
+                        <Badge
+                          variant="secondary"
+                          className="bg-white/80 text-blue-700 text-xs font-medium flex-shrink-0"
+                        >
                           {chapter.lessons?.length || 0}
                         </Badge>
                       </button>
 
-                      {isExpanded && chapter.lessons?.map((lesson) => {
-                        const isCompleted = completedLessons.has(lesson._id);
-                        const isCurrent = currentLessonId === lesson._id;
+                      {isExpanded &&
+                        chapter.lessons?.map((lesson) => {
+                          const isCompleted = completedLessons.has(lesson._id);
+                          const isCurrent = currentLessonId === lesson._id;
 
-                        return (
-                          <div key={lesson._id} className="space-y-1">
-                            <button
-                              onClick={() => goToLesson(lesson._id, chapter._id)}
-                              className={`w-full flex items-center gap-3 px-4 py-3 ml-2 rounded-lg text-left transition-all duration-200 border ${isCurrent
-                                ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300 text-blue-900 shadow-md scale-[1.02]'
-                                : 'bg-white/70 backdrop-blur-sm border-gray-200 hover:bg-white hover:shadow-md hover:scale-[1.01] hover:border-blue-200 transform'
+                          return (
+                            <div key={lesson._id} className="space-y-1">
+                              <button
+                                onClick={() =>
+                                  goToLesson(lesson._id, chapter._id)
+                                }
+                                className={`w-full flex items-center gap-3 px-4 py-3 ml-2 rounded-lg text-left transition-all duration-200 border ${
+                                  isCurrent
+                                    ? "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300 text-blue-900 shadow-md scale-[1.02]"
+                                    : "bg-white/70 backdrop-blur-sm border-gray-200 hover:bg-white hover:shadow-md hover:scale-[1.01] hover:border-blue-200 transform"
                                 }`}
-                            >
-                              {isCompleted ? (
-                                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                              ) : (
-                                <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-medium ${isCurrent ? 'text-blue-900' : 'text-gray-900'}`}>
-                                  {lesson.title}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Clock className="w-3 h-3 text-gray-500" />
-                                  <span className="text-xs text-gray-600">
-                                    {lesson.estimatedDuration || 0} min
-                                  </span>
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                                ) : (
+                                  <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className={`text-sm font-medium ${
+                                      isCurrent
+                                        ? "text-blue-900"
+                                        : "text-gray-900"
+                                    }`}
+                                  >
+                                    {lesson.title}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Clock className="w-3 h-3 text-gray-500" />
+                                    <span className="text-xs text-gray-600">
+                                      {lesson.estimatedDuration || 0} min
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            </button>
+                              </button>
 
-                            {/* Content Items for Current Lesson */}
-                            {isCurrent && contentItems.length > 0 && (
-                              <div className="ml-6 space-y-1 mt-2">
-                                {contentItems.map((contentItem, index) => {
-                                  const isContentCompleted = completedContentItems.has(contentItem._id);
-                                  const isContentCurrent = index === currentContentIndex;
+                              {/* Content Items for Current Lesson */}
+                              {isCurrent && contentItems.length > 0 && (
+                                <div className="ml-6 space-y-1 mt-2">
+                                  {contentItems.map((contentItem, index) => {
+                                    const isContentCompleted =
+                                      completedContentItems.has(
+                                        contentItem._id
+                                      );
+                                    const isContentCurrent =
+                                      index === currentContentIndex;
 
-                                  return (
-                                    <button
-                                      key={contentItem._id}
-                                      onClick={() => setCurrentContentIndex(index)}
-                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-all duration-200 text-xs ${isContentCurrent
-                                        ? 'bg-blue-500 text-white shadow-sm'
-                                        : isContentCompleted
-                                          ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                                          : 'bg-white/50 text-gray-700 hover:bg-white/80'
+                                    return (
+                                      <button
+                                        key={contentItem._id}
+                                        onClick={() =>
+                                          setCurrentContentIndex(index)
+                                        }
+                                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-all duration-200 text-xs ${
+                                          isContentCurrent
+                                            ? "bg-blue-500 text-white shadow-sm"
+                                            : isContentCompleted
+                                            ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                            : "bg-white/50 text-gray-700 hover:bg-white/80"
                                         }`}
-                                    >
-                                      {isContentCompleted && !isContentCurrent && (
-                                        <CheckCircle className="w-3 h-3 flex-shrink-0" />
-                                      )}
-                                      {getContentIcon(contentItem.type)}
-                                      <span className="truncate flex-1">
-                                        {contentItem.title || `${contentItem.type.charAt(0).toUpperCase() + contentItem.type.slice(1)} ${index + 1}`}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                                      >
+                                        {isContentCompleted &&
+                                          !isContentCurrent && (
+                                            <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                          )}
+                                        {getContentIcon(contentItem.type)}
+                                        <span className="truncate flex-1">
+                                          {contentItem.title ||
+                                            `${
+                                              contentItem.type
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                              contentItem.type.slice(1)
+                                            } ${index + 1}`}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
                   );
                 })
@@ -416,7 +504,7 @@ export function CourseLearningClient({
               )}
 
               {/* Standalone Lessons */}
-              {lessons.filter(lesson => !lesson.chapter).length > 0 && (
+              {lessons.filter((lesson) => !lesson.chapter).length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-100/60 to-blue-100/60 rounded-lg backdrop-blur-sm border border-purple-200/50 shadow-sm">
                     <BookOpen className="w-4 h-4 text-purple-700" />
@@ -425,75 +513,93 @@ export function CourseLearningClient({
                     </span>
                   </div>
 
-                  {lessons.filter(lesson => !lesson.chapter).map((lesson) => {
-                    const isCompleted = completedLessons.has(lesson._id);
-                    const isCurrent = currentLessonId === lesson._id;
+                  {lessons
+                    .filter((lesson) => !lesson.chapter)
+                    .map((lesson) => {
+                      const isCompleted = completedLessons.has(lesson._id);
+                      const isCurrent = currentLessonId === lesson._id;
 
-                    return (
-                      <div key={lesson._id} className="space-y-1">
-                        <button
-                          onClick={() => goToLesson(lesson._id)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 border ${isCurrent
-                            ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300 text-blue-900 shadow-md scale-[1.02]'
-                            : 'bg-white/70 backdrop-blur-sm border-gray-200 hover:bg-white hover:shadow-md hover:scale-[1.01] hover:border-blue-200 transform'
+                      return (
+                        <div key={lesson._id} className="space-y-1">
+                          <button
+                            onClick={() => goToLesson(lesson._id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 border ${
+                              isCurrent
+                                ? "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300 text-blue-900 shadow-md scale-[1.02]"
+                                : "bg-white/70 backdrop-blur-sm border-gray-200 hover:bg-white hover:shadow-md hover:scale-[1.01] hover:border-blue-200 transform"
                             }`}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                          ) : (
-                            <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium ${isCurrent ? 'text-blue-900' : 'text-gray-900'}`}>
-                              {lesson.title}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Clock className="w-3 h-3 text-gray-500" />
-                              <span className="text-xs text-gray-600">
-                                {lesson.estimatedDuration || 0} min
-                              </span>
+                          >
+                            {isCompleted ? (
+                              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                            ) : (
+                              <Circle className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p
+                                className={`text-sm font-medium ${
+                                  isCurrent ? "text-blue-900" : "text-gray-900"
+                                }`}
+                              >
+                                {lesson.title}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Clock className="w-3 h-3 text-gray-500" />
+                                <span className="text-xs text-gray-600">
+                                  {lesson.estimatedDuration || 0} min
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </button>
+                          </button>
 
-                        {/* Content Items for Current Lesson */}
-                        {isCurrent && contentItems.length > 0 && (
-                          <div className="ml-4 space-y-1 mt-2">
-                            {contentItems.map((contentItem, index) => {
-                              const isContentCompleted = completedContentItems.has(contentItem._id);
-                              const isContentCurrent = index === currentContentIndex;
+                          {/* Content Items for Current Lesson */}
+                          {isCurrent && contentItems.length > 0 && (
+                            <div className="ml-4 space-y-1 mt-2">
+                              {contentItems.map((contentItem, index) => {
+                                const isContentCompleted =
+                                  completedContentItems.has(contentItem._id);
+                                const isContentCurrent =
+                                  index === currentContentIndex;
 
-                              return (
-                                <button
-                                  key={contentItem._id}
-                                  onClick={() => setCurrentContentIndex(index)}
-                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-all duration-200 text-xs ${isContentCurrent
-                                    ? 'bg-blue-500 text-white shadow-sm'
-                                    : isContentCompleted
-                                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                                      : 'bg-white/50 text-gray-700 hover:bg-white/80'
+                                return (
+                                  <button
+                                    key={contentItem._id}
+                                    onClick={() =>
+                                      setCurrentContentIndex(index)
+                                    }
+                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-all duration-200 text-xs ${
+                                      isContentCurrent
+                                        ? "bg-blue-500 text-white shadow-sm"
+                                        : isContentCompleted
+                                        ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                        : "bg-white/50 text-gray-700 hover:bg-white/80"
                                     }`}
-                                >
-                                  {isContentCompleted && !isContentCurrent && (
-                                    <CheckCircle className="w-3 h-3 flex-shrink-0" />
-                                  )}
-                                  {getContentIcon(contentItem.type)}
-                                  <span className="truncate flex-1">
-                                    {contentItem.title || `${contentItem.type.charAt(0).toUpperCase() + contentItem.type.slice(1)} ${index + 1}`}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                                  >
+                                    {isContentCompleted &&
+                                      !isContentCurrent && (
+                                        <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                      )}
+                                    {getContentIcon(contentItem.type)}
+                                    <span className="truncate flex-1">
+                                      {contentItem.title ||
+                                        `${
+                                          contentItem.type
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          contentItem.type.slice(1)
+                                        } ${index + 1}`}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>
           </div>
-
 
           {/* Course Progress */}
           <div className="flex-shrink-0 m-4 p-4 bg-[#6EBC44] rounded-2xl">
@@ -531,7 +637,7 @@ export function CourseLearningClient({
 
               <div className="min-w-0">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
-                  {currentLesson?.title || 'Select a lesson'}
+                  {currentLesson?.title || "Select a lesson"}
                 </h2>
                 {currentLesson?.chapterTitle && (
                   <p className="text-sm text-gray-600 mt-1 truncate">
@@ -600,6 +706,6 @@ export function CourseLearningClient({
           onClick={() => setSidebarOpen(false)}
         />
       )}
-    </div>
+    </Container>
   );
 }

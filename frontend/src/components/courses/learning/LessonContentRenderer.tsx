@@ -14,11 +14,12 @@ import {
   FileText,
   Headphones,
   Play,
-  Video
+  Video,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { decodeHTMLEntities } from "@/lib/html-utils";
+import { EmbeddedQuizRenderer } from "./EmbeddedQuizRenderer";
 
 interface LessonContentRendererProps {
   lessonId: string;
@@ -35,19 +36,20 @@ export function LessonContentRenderer({
   onComplete,
   onNext,
   currentContentIndex: externalIndex,
-  onContentIndexChange
+  onContentIndexChange,
 }: LessonContentRendererProps) {
   const [completedItems, setCompletedItems] = useState<Set<string>>(new Set());
   const [internalIndex, setInternalIndex] = useState(0);
 
   // Use external index if provided, otherwise use internal
-  const currentContentIndex = externalIndex !== undefined ? externalIndex : internalIndex;
+  const currentContentIndex =
+    externalIndex !== undefined ? externalIndex : internalIndex;
   const setCurrentContentIndex = onContentIndexChange || setInternalIndex;
 
   const {
     data: contentData,
     isLoading,
-    error
+    error,
   } = useGetContentByLessonQuery(
     { courseId, lessonId },
     { skip: !courseId || !lessonId }
@@ -56,11 +58,12 @@ export function LessonContentRenderer({
   const contentItems = contentData?.data?.content || [];
 
   const markItemComplete = (itemId: string) => {
-    setCompletedItems(prev => new Set([...prev, itemId]));
+    setCompletedItems((prev) => new Set([...prev, itemId]));
   };
 
-  const isAllContentCompleted = contentItems.length > 0 &&
-    contentItems.every(item => Array.from(completedItems).includes(item._id));
+  const isAllContentCompleted =
+    contentItems.length > 0 &&
+    contentItems.every((item) => Array.from(completedItems).includes(item._id));
 
   const handleCompleteLesson = () => {
     onComplete();
@@ -124,15 +127,15 @@ export function LessonContentRenderer({
 
   const getContentIconLarge = (type: string) => {
     switch (type) {
-      case 'video':
+      case "video":
         return <Video className="w-5 h-5" />;
-      case 'audio':
+      case "audio":
         return <Headphones className="w-5 h-5" />;
-      case 'text':
+      case "text":
         return <FileText className="w-5 h-5" />;
-      case 'document':
+      case "document":
         return <Download className="w-5 h-5" />;
-      case 'block':
+      case "block":
         return <BookOpen className="w-5 h-5" />;
       default:
         return <FileText className="w-5 h-5" />;
@@ -144,17 +147,19 @@ export function LessonContentRenderer({
 
     const renderContent = () => {
       switch (item.type) {
-        case 'text':
+        case "text":
           return (
             <div className="prose max-w-none">
               <div
-                dangerouslySetInnerHTML={{ __html: decodeHTMLEntities(item.data.text || '') }}
+                dangerouslySetInnerHTML={{
+                  __html: decodeHTMLEntities(item.data.text || ""),
+                }}
                 className="text-gray-700 leading-relaxed"
               />
             </div>
           );
 
-        case 'video':
+        case "video":
           return (
             <div className="bg-black rounded-lg overflow-hidden aspect-video">
               {item.data.url ? (
@@ -177,7 +182,7 @@ export function LessonContentRenderer({
             </div>
           );
 
-        case 'audio':
+        case "audio":
           return (
             <div className="bg-gray-50 rounded-lg p-6">
               {item.data.url ? (
@@ -198,7 +203,7 @@ export function LessonContentRenderer({
             </div>
           );
 
-        case 'document':
+        case "document":
           return (
             <div className="border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between">
@@ -206,10 +211,10 @@ export function LessonContentRenderer({
                   <Download className="w-8 h-8 text-blue-600" />
                   <div>
                     <h4 className="font-medium text-gray-900">
-                      {item.title || 'Document'}
+                      {item.title || "Document"}
                     </h4>
                     <p className="text-sm text-gray-600">
-                      {item.description || 'Download this document to continue'}
+                      {item.description || "Download this document to continue"}
                     </p>
                   </div>
                 </div>
@@ -217,7 +222,7 @@ export function LessonContentRenderer({
                   <Button
                     variant="outline"
                     onClick={() => {
-                      window.open(item.data.url, '_blank');
+                      window.open(item.data.url, "_blank");
                       markItemComplete(item._id);
                     }}
                   >
@@ -229,46 +234,87 @@ export function LessonContentRenderer({
             </div>
           );
 
-        case 'block':
+        case "block":
           return (
             <div className="space-y-4">
               {item.data.items?.map((blockItem, index: number) => (
-                <div key={blockItem._id || index} className="border-l-4 border-blue-200 pl-4">
-                  <h4 className="font-medium text-gray-900 mb-2">{blockItem.data.title || `Block Item ${index + 1}`}</h4>
+                <div
+                  key={blockItem._id || index}
+                  className="border-l-4 border-blue-200 pl-4"
+                >
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    {blockItem.data.title || `Block Item ${index + 1}`}
+                  </h4>
                   <div className="text-gray-700 leading-relaxed">
-                    {blockItem.type === 'text' && blockItem.data.text && (
-                      <div dangerouslySetInnerHTML={{ __html: decodeHTMLEntities(blockItem.data.text) }} />
+                    {blockItem.type === "text" && blockItem.data.text && (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: decodeHTMLEntities(blockItem.data.text),
+                        }}
+                      />
                     )}
-                    {(blockItem.type === 'image' || blockItem.type === 'video' || blockItem.type === 'audio') && blockItem.data.url && (
-                      <div className="mb-2">
-                        {blockItem.type === 'image' && (
-                          <Image
-                            src={blockItem.data.url}
-                            alt={blockItem.data.alt || blockItem.data.title || 'Block content'}
-                            className="max-w-full h-auto rounded-lg"
-                          />
-                        )}
-                        {blockItem.type === 'video' && (
-                          <video controls className="w-full rounded-lg">
-                            <source src={blockItem.data.url} type={blockItem.data.mimeType || 'video/mp4'} />
-                          </video>
-                        )}
-                        {blockItem.type === 'audio' && (
-                          <audio controls className="w-full">
-                            <source src={blockItem.data.url} type={blockItem.data.mimeType || 'audio/mpeg'} />
-                          </audio>
-                        )}
-                      </div>
-                    )}
+                    {(blockItem.type === "image" ||
+                      blockItem.type === "video" ||
+                      blockItem.type === "audio") &&
+                      blockItem.data.url && (
+                        <div className="mb-2">
+                          {blockItem.type === "image" && (
+                            <Image
+                              src={blockItem.data.url}
+                              alt={
+                                blockItem.data.alt ||
+                                blockItem.data.title ||
+                                "Block content"
+                              }
+                              width={1200}
+                              height={800}
+                              className="max-w-full h-auto rounded-lg"
+                            />
+                          )}
+                          {blockItem.type === "video" && (
+                            <video controls className="w-full rounded-lg">
+                              <source
+                                src={blockItem.data.url}
+                                type={blockItem.data.mimeType || "video/mp4"}
+                              />
+                            </video>
+                          )}
+                          {blockItem.type === "audio" && (
+                            <audio controls className="w-full">
+                              <source
+                                src={blockItem.data.url}
+                                type={blockItem.data.mimeType || "audio/mpeg"}
+                              />
+                            </audio>
+                          )}
+                        </div>
+                      )}
                     {blockItem.data.description && (
-                      <p className="text-sm text-gray-600 mt-2">{blockItem.data.description}</p>
+                      <p className="text-sm text-gray-600 mt-2">
+                        {blockItem.data.description}
+                      </p>
                     )}
                   </div>
                 </div>
-              )) || (
-                  <p className="text-gray-600">No block content available</p>
-                )}
+              )) || <p className="text-gray-600">No block content available</p>}
             </div>
+          );
+
+        case "quiz":
+          return (
+            <EmbeddedQuizRenderer
+              quizData={
+                item.data.quiz || {
+                  attempts: 0,
+                  passingScore: 0,
+                  questions: [],
+                  shuffleQuestions: false,
+                  showFeedback: false,
+                  timeLimit: 0,
+                }
+              }
+              onComplete={() => markItemComplete(item._id)}
+            />
           );
 
         default:
@@ -282,17 +328,33 @@ export function LessonContentRenderer({
     };
 
     return (
-      <div key={item._id} className="border border-gray-200 rounded-lg overflow-hidden">
+      <div
+        key={item._id}
+        className="border border-gray-200 rounded-lg overflow-hidden"
+      >
         {/* Content Header */}
         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-                {isCompleted ? <CheckCircle className="w-5 h-5" /> : getContentIconLarge(item.type)}
+              <div
+                className={`p-2 rounded-lg ${
+                  isCompleted
+                    ? "bg-green-100 text-green-600"
+                    : "bg-blue-100 text-blue-600"
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle className="w-5 h-5" />
+                ) : (
+                  getContentIconLarge(item.type)
+                )}
               </div>
               <div>
                 <h3 className="font-medium text-gray-900">
-                  {item.title || `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} Content`}
+                  {item.title ||
+                    `${
+                      item.type.charAt(0).toUpperCase() + item.type.slice(1)
+                    } Content`}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="secondary" className="text-xs">
@@ -310,7 +372,7 @@ export function LessonContentRenderer({
                 </div>
               </div>
             </div>
-            {!isCompleted && item.type !== 'video' && item.type !== 'audio' && (
+            {!isCompleted && item.type !== "video" && item.type !== "audio" && (
               <Button
                 size="sm"
                 variant="outline"
@@ -372,18 +434,29 @@ export function LessonContentRenderer({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isAllContentCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-              {isAllContentCompleted ? <CheckCircle className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+            <div
+              className={`p-2 rounded-lg ${
+                isAllContentCompleted
+                  ? "bg-green-100 text-green-600"
+                  : "bg-blue-100 text-blue-600"
+              }`}
+            >
+              {isAllContentCompleted ? (
+                <CheckCircle className="w-6 h-6" />
+              ) : (
+                <BookOpen className="w-6 h-6" />
+              )}
             </div>
             <div>
               <h3 className="font-medium text-gray-900">
-                {isAllContentCompleted ? 'Lesson Completed!' : 'Complete this lesson'}
+                {isAllContentCompleted
+                  ? "Lesson Completed!"
+                  : "Complete this lesson"}
               </h3>
               <p className="text-sm text-gray-600">
                 {isAllContentCompleted
-                  ? 'Great job! You can move on to the next lesson.'
-                  : `Complete all ${contentItems.length} content items to finish this lesson.`
-                }
+                  ? "Great job! You can move on to the next lesson."
+                  : `Complete all ${contentItems.length} content items to finish this lesson.`}
               </p>
             </div>
           </div>
@@ -394,7 +467,10 @@ export function LessonContentRenderer({
               </Button>
             )}
             {onNext && isAllContentCompleted && (
-              <Button onClick={onNext} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={onNext}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 Next Lesson
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
@@ -411,7 +487,7 @@ export function useContentItems(courseId: string, lessonId: string) {
   const {
     data: contentData,
     isLoading,
-    error
+    error,
   } = useGetContentByLessonQuery(
     { courseId, lessonId },
     { skip: !courseId || !lessonId }
@@ -420,6 +496,6 @@ export function useContentItems(courseId: string, lessonId: string) {
   return {
     contentItems: contentData?.data?.content || [],
     isLoading,
-    error
+    error,
   };
 }
