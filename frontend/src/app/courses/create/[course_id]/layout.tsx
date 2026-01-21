@@ -8,6 +8,7 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import SimplePageContainer from "@/components/layout/SimplePageContainer";
 import TabNav from "@/components/ui/TabNav";
 import { CourseHeaderContext } from "./CourseHeaderContext";
+import { MoreMenu } from "@/components/courses/course_create/MoreMenu";
 
 export default function CourseLayout({
   children,
@@ -175,12 +176,7 @@ export default function CourseLayout({
               >
                 Preview
               </Button>
-              <Button
-                variant="outline"
-                className="border border-blue-600 text-blue-600"
-              >
-                More
-              </Button>
+              <MoreMenu courseId={courseId} />
             </div>
           )}
         </div>

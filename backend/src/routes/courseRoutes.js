@@ -575,6 +575,30 @@ router.patch('/:id/revoke-approval', restrictTo('org_admin', 'super_admin'), cou
  */
 router.post('/', restrictTo('instructor', 'org_admin', 'super_admin'), courseController.createCourse);
 
+/**
+ * @swagger
+ * /api/v1/courses/{id}/duplicate:
+ *   post:
+ *     summary: Duplicate a course
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Course duplicated successfully
+ *       403:
+ *         description: Insufficient permissions
+ *       404:
+ *         description: Course not found
+ */
+router.post('/:id/duplicate', restrictTo('instructor', 'org_admin', 'super_admin'), courseController.duplicateCourse);
+
 
 /**
  * @swagger

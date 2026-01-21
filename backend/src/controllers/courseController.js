@@ -1,5 +1,8 @@
 const Course = require('../models/Course');
 const User = require('../models/User');
+const Chapter = require('../models/Chapter');
+const Lesson = require('../models/Lesson');
+const Content = require('../models/Content');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const emailService = require('../services/emailService');
@@ -843,6 +846,124 @@ const getAllCoursesAdmin = catchAsync(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Duplicate a course
+ * @route   POST /api/v1/courses/:id/duplicate
+ * @access  Private (Instructor/Admin)
+ */
+const duplicateCourse = catchAsync(async (req, res, next) => {
+  const course = await Course.findById(req.params.id);
+
+  if (!course) {
+    return next(new AppError('No course found with that ID', 404));
+  }
+
+  // Check permissions
+  if (course.instructor.toString() !== req.user.id && !['org_admin', 'super_admin'].includes(req.user.role)) {
+    return next(new AppError('You do not have permission to duplicate this course', 403));
+  }
+
+  // 1. Create new course object
+  const courseObj = course.toObject();
+  delete courseObj._id;
+  delete courseObj.createdAt;
+  delete courseObj.updatedAt;
+  delete courseObj.slug;
+  delete courseObj.id;
+  delete courseObj.__v;
+
+  // Reset status and stats
+  let baseTitle = `Copy of ${course.title}`;
+  courseObj.title = baseTitle;
+  courseObj.isPublished = false;
+  courseObj.isApproved = false;
+  courseObj.publishedAt = undefined;
+  courseObj.enrollmentCount = 0;
+  courseObj.averageRating = 0;
+  courseObj.ratingCount = 0;
+  courseObj.reviews = [];
+  courseObj.enrollments = [];
+  courseObj.isDeleted = false;
+  courseObj.deletedAt = undefined;
+  courseObj.deletedBy = undefined;
+
+  // Smart duplicate handling: Check if title exists and append counter if needed
+  let counter = 1;
+  let titleExists = true;
+  while (titleExists) {
+    const existingCourse = await Course.findOne({ title: courseObj.title });
+    if (existingCourse) {
+      courseObj.title = `${baseTitle} (${counter})`;
+      counter++;
+    } else {
+      titleExists = false;
+    }
+  }
+
+  const newCourse = await Course.create(courseObj);
+
+  // 2. Clone Chapters
+  const chapters = await Chapter.find({ course: course._id, isDeleted: false });
+  
+  // Use a map to keep track of old->new IDs if needed, though for hierarchy we just need to pass parent IDs down
+  for (const chapter of chapters) {
+    const chapterObj = chapter.toObject();
+    delete chapterObj._id;
+    delete chapterObj.course;
+    delete chapterObj.createdAt;
+    delete chapterObj.updatedAt;
+    delete chapterObj.__v;
+    
+    chapterObj.course = newCourse._id;
+    const newChapter = await Chapter.create(chapterObj);
+
+    // 3. Clone Lessons for this chapter
+    const lessons = await Lesson.find({ chapter: chapter._id, isDeleted: false });
+    
+    for (const lesson of lessons) {
+      const lessonObj = lesson.toObject();
+      delete lessonObj._id;
+      delete lessonObj.course;
+      delete lessonObj.chapter;
+      delete lessonObj.createdAt;
+      delete lessonObj.updatedAt;
+      delete lessonObj.__v;
+
+      lessonObj.course = newCourse._id;
+      lessonObj.chapter = newChapter._id;
+      const newLesson = await Lesson.create(lessonObj);
+
+      // 4. Clone Content for this lesson
+      const contents = await Content.find({ lesson: lesson._id, isDeleted: false });
+      
+      const newContents = contents.map(content => {
+        const contentObj = content.toObject();
+        delete contentObj._id;
+        delete contentObj.course;
+        delete contentObj.lesson;
+        delete contentObj.createdAt;
+        delete contentObj.updatedAt;
+        delete contentObj.__v;
+        
+        contentObj.course = newCourse._id;
+        contentObj.lesson = newLesson._id;
+        return contentObj;
+      });
+
+      if (newContents.length > 0) {
+        await Content.insertMany(newContents);
+      }
+    }
+  }
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      course: newCourse
+    }
+  });
+});
+
 module.exports = {
   getAllCourses,
   getCourse,
@@ -864,4 +985,5 @@ module.exports = {
   rejectCourse,
   revokeApproval,
   getAllCoursesAdmin,
+  duplicateCourse,
 };
