@@ -6,11 +6,10 @@ import {
   useGetContentByLessonQuery,
   useReorderContentMutation,
 } from "@/store/api/courseApi";
-import { CourseLesson, LessonContent } from "@/types/backend-models";
+import { CourseLesson } from "@/types/backend-models";
 import {
   ChevronDown,
   ChevronRight,
-  Edit,
   File,
   Plus,
   Settings,
@@ -22,32 +21,15 @@ import { DragDropProvider } from "./DragDropProvider";
 import { SortableContainer } from "./SortableContainer";
 import { SortableItem } from "./SortableItem";
 
-interface ContentType {
-  id: string;
-  type: LessonContent["type"];
-  icon: string;
-  label: string;
-}
-
 interface LessonItemProps {
   lesson: Partial<CourseLesson> & { _id: string; title: string };
   courseId: string;
-  isInChapter?: boolean;
   expandedLessons: Set<string>;
-  showContentPopup: string | null;
-  editingLesson: string | null;
-  editingLessonName: string;
   isDeletingLesson: boolean;
   isDeletingContent: boolean;
-  isUpdatingLesson: boolean;
   onToggleLessonExpansion: (lessonId: string) => void;
   onSetShowContentPopup: (lessonId: string | null) => void;
-  onStartEditingLesson: (lessonId: string, currentTitle: string) => void;
-  onUpdateLesson: (lessonId: string) => void;
-  onCancelEditingLesson: () => void;
-  onSetEditingLessonName: (name: string) => void;
   onDeleteLesson: (lessonId: string) => void;
-  onAddContent: (lessonId: string, contentType: ContentType) => void;
   onDeleteContent: (lessonId: string, contentId: string) => void;
   onOpenLessonDrawer: (
     lesson: Partial<CourseLesson> & { _id: string; title: string }
@@ -57,22 +39,12 @@ interface LessonItemProps {
 export const LessonItem = ({
   lesson,
   courseId,
-  isInChapter = false,
   expandedLessons,
-  showContentPopup,
-  editingLesson,
-  editingLessonName,
   isDeletingLesson,
   isDeletingContent,
-  isUpdatingLesson,
   onToggleLessonExpansion,
   onSetShowContentPopup,
-  onStartEditingLesson,
-  onUpdateLesson,
-  onCancelEditingLesson,
-  onSetEditingLessonName,
   onDeleteLesson,
-  onAddContent,
   onDeleteContent,
   onOpenLessonDrawer,
 }: LessonItemProps) => {
@@ -155,101 +127,53 @@ export const LessonItem = ({
 
       {/* Lesson Header */}
       <div className="p-4">
-        {editingLesson === lesson._id ? (
-          /* Editing Mode */
-          <div className="flex items-center gap-2">
-            <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            <input
-              type="text"
-              value={editingLessonName}
-              onChange={(e) => onSetEditingLessonName(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Lesson name"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onUpdateLesson(lesson._id);
-                } else if (e.key === "Escape") {
-                  onCancelEditingLesson();
-                }
-              }}
-            />
-            <Button
-              size="sm"
-              onClick={() => onUpdateLesson(lesson._id)}
-              disabled={isUpdatingLesson}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            >
-              {isUpdatingLesson ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCancelEditingLesson}
-              disabled={isUpdatingLesson}
-            >
-              Cancel
-            </Button>
-          </div>
-        ) : (
-          /* Display Mode */
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                {/* Collapse/Expand Chevron - moved to left for consistency with chapters */}
-                {content.length > 0 && (
-                  <button
-                    onClick={() => onToggleLessonExpansion(lesson._id)}
-                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                    title={isExpanded ? "Collapse lesson" : "Expand lesson"}
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-500" />
-                    )}
-                  </button>
-                )}
-                <File className="w-4 h-4 text-gray-500" />
-                <span className="font-medium">{lesson.title}</span>
-                {content.length > 0 && (
-                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                    {content.length} content item{content.length > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onStartEditingLesson(lesson._id, lesson.title)}
-                title="Rename lesson"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenLessonDrawer(lesson)}
-                title="Edit lesson details"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDeleteLesson(lesson._id)}
-                disabled={isDeletingLesson}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Collapse/Expand Chevron - moved to left for consistency with chapters */}
+              {content.length > 0 && (
+                <button
+                  onClick={() => onToggleLessonExpansion(lesson._id)}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title={isExpanded ? "Collapse lesson" : "Expand lesson"}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                  )}
+                </button>
+              )}
+              <File className="w-4 h-4 text-gray-500" />
+              <span className="font-medium">{lesson.title}</span>
+              {content.length > 0 && (
+                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                  {content.length} content{content.length > 1 ? "s" : ""}
+                </span>
+              )}
             </div>
           </div>
-        )}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenLessonDrawer(lesson)}
+              title="Edit lesson details"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDeleteLesson(lesson._id)}
+              disabled={isDeletingLesson}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Content List */}

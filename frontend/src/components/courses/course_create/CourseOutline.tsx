@@ -16,8 +16,6 @@ import {
   useGetLessonsQuery,
   useReorderChaptersMutation,
   useReorderLessonsMutation,
-  useUpdateChapterMutation,
-  useUpdateLessonMutation,
 } from "@/store/api/courseApi";
 import {
   CourseChapter,
@@ -25,7 +23,6 @@ import {
   LessonContent,
 } from "@/types/backend-models";
 import {
-  Edit,
   List,
   Plus,
   Settings,
@@ -67,10 +64,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     useState<boolean>(false);
   // Additional state for nested content
   const [showContentPopup, setShowContentPopup] = useState<string | null>(null);
-  const [editingLesson, setEditingLesson] = useState<string | null>(null);
-  const [editingLessonName, setEditingLessonName] = useState("");
-  const [editingChapter, setEditingChapter] = useState<string | null>(null);
-  const [editingChapterName, setEditingChapterName] = useState("");
   const [expandedLessons, setExpandedLessons] = useState<Set<string>>(
     new Set()
   );
@@ -109,14 +102,10 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
   const [createLesson, { isLoading: isCreatingLesson }] =
     useCreateLessonMutation();
-  const [updateLesson, { isLoading: isUpdatingLesson }] =
-    useUpdateLessonMutation();
   const [deleteLesson, { isLoading: isDeletingLesson }] =
     useDeleteLessonMutation();
   const [createChapter, { isLoading: isCreatingChapter }] =
     useCreateChapterMutation();
-  const [updateChapter, { isLoading: isUpdatingChapter }] =
-    useUpdateChapterMutation();
   const [deleteChapter, { isLoading: isDeletingChapter }] =
     useDeleteChapterMutation();
   const [deleteContent, { isLoading: isDeletingContent }] =
@@ -157,6 +146,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     if (chapters.length > 0) {
       setCollapsedChapters(new Set(chapters.map((ch) => ch._id)));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapters.length]); // Only run when chapters are first loaded
 
   const handleCreateLesson = useCallback(
@@ -233,32 +223,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     }
   }, [course?._id, chapterName, createChapter]);
 
-  const handleUpdateLesson = useCallback(
-    async (lessonId: string) => {
-      if (!course?._id || !editingLessonName.trim()) {
-        showErrorToast("Please enter a lesson name");
-        return;
-      }
-
-      try {
-        await updateLesson({
-          courseId: course._id,
-          lessonId,
-          data: {
-            title: editingLessonName,
-          },
-        }).unwrap();
-        showSuccessToast("Lesson updated successfully!");
-        setEditingLesson(null);
-        setEditingLessonName("");
-      } catch (error) {
-        console.error("Error updating lesson:", error);
-        showErrorToast("Failed to update lesson");
-      }
-    },
-    [course?._id, editingLessonName, updateLesson]
-  );
-
   const handleDeleteLesson = async (lessonId: string) => {
     if (!course?._id) return;
 
@@ -274,42 +238,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     }
   };
 
-  const startEditingLesson = (lessonId: string, currentTitle: string) => {
-    setEditingLesson(lessonId);
-    setEditingLessonName(currentTitle);
-  };
-
-  const cancelEditingLesson = () => {
-    setEditingLesson(null);
-    setEditingLessonName("");
-  };
-
-  const handleUpdateChapter = useCallback(
-    async (chapterId: string) => {
-      if (!course?._id || !editingChapterName.trim()) {
-        showErrorToast("Please enter a chapter name");
-        return;
-      }
-
-      try {
-        await updateChapter({
-          courseId: course._id,
-          chapterId,
-          data: {
-            title: editingChapterName,
-          },
-        }).unwrap();
-        showSuccessToast("Chapter updated successfully!");
-        setEditingChapter(null);
-        setEditingChapterName("");
-      } catch (error) {
-        console.error("Error updating chapter:", error);
-        showErrorToast("Failed to update chapter");
-      }
-    },
-    [course?._id, editingChapterName, updateChapter]
-  );
-
   const handleDeleteChapter = async (chapterId: string) => {
     if (!course?._id) return;
 
@@ -323,16 +251,6 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
       console.error("Error deleting chapter:", error);
       showErrorToast("Failed to delete chapter");
     }
-  };
-
-  const startEditingChapter = (chapterId: string, currentTitle: string) => {
-    setEditingChapter(chapterId);
-    setEditingChapterName(currentTitle);
-  };
-
-  const cancelEditingChapter = () => {
-    setEditingChapter(null);
-    setEditingChapterName("");
   };
 
   const handleAddContent = (lessonId: string, contentType: ContentType) => {
@@ -687,117 +605,68 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                   <div className="space-y-2">
                     {/* Chapter Header */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      {editingChapter === chapter._id ? (
-                        /* Editing Mode */
+                      {/* Display Mode */}
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <List className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                          <input
-                            type="text"
-                            value={editingChapterName}
-                            onChange={(e) =>
-                              setEditingChapterName(e.target.value)
+                          {/* Collapse/Expand Chevron */}
+                          <button
+                            onClick={() => toggleChapterCollapse(chapter._id)}
+                            className="p-1 hover:bg-blue-50 rounded transition-colors"
+                            title={
+                              collapsedChapters.has(chapter._id)
+                                ? "Expand chapter"
+                                : "Collapse chapter"
                             }
-                            className="flex-1 px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Chapter name"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleUpdateChapter(chapter._id);
-                              } else if (e.key === "Escape") {
-                                cancelEditingChapter();
-                              }
-                            }}
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateChapter(chapter._id)}
-                            disabled={isUpdatingChapter}
-                            className="bg-blue-600 text-white hover:bg-blue-700"
                           >
-                            {isUpdatingChapter ? "Saving..." : "Save"}
-                          </Button>
+                            {collapsedChapters.has(chapter._id) ? (
+                              <ChevronRight className="w-4 h-4 text-blue-600" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-blue-600" />
+                            )}
+                          </button>
+                          <List className="w-4 h-4 text-blue-600" />
+                          <span className="font-semibold text-blue-800">
+                            {chapter.title}
+                          </span>
+                          <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
+                            Chapter{" "}
+                            {chapter.lessons?.length
+                              ? `(${chapter.lessons.length} lessons)`
+                              : ""}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={cancelEditingChapter}
-                            disabled={isUpdatingChapter}
+                            onClick={() =>
+                              setCreatingLessonInChapter(chapter._id)
+                            }
+                            className="text-blue-600 border-blue-300 hover:bg-blue-100"
                           >
-                            Cancel
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add Lesson
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenChapterDrawer(chapter)}
+                            title="Edit chapter details"
+                          >
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600"
+                            onClick={() => handleDeleteChapter(chapter._id)}
+                            disabled={isDeletingChapter}
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      ) : (
-                        /* Display Mode */
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {/* Collapse/Expand Chevron */}
-                            <button
-                              onClick={() => toggleChapterCollapse(chapter._id)}
-                              className="p-1 hover:bg-blue-50 rounded transition-colors"
-                              title={
-                                collapsedChapters.has(chapter._id)
-                                  ? "Expand chapter"
-                                  : "Collapse chapter"
-                              }
-                            >
-                              {collapsedChapters.has(chapter._id) ? (
-                                <ChevronRight className="w-4 h-4 text-blue-600" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4 text-blue-600" />
-                              )}
-                            </button>
-                            <List className="w-4 h-4 text-blue-600" />
-                            <span className="font-semibold text-blue-800">
-                              {chapter.title}
-                            </span>
-                            <span className="text-xs bg-blue-200 text-blue-700 px-2 py-1 rounded">
-                              Chapter{" "}
-                              {chapter.lessons?.length
-                                ? `(${chapter.lessons.length} lessons)`
-                                : ""}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setCreatingLessonInChapter(chapter._id)
-                              }
-                              className="text-blue-600 border-blue-300 hover:bg-blue-100"
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              Add Lesson
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                startEditingChapter(chapter._id, chapter.title)
-                              }
-                              title="Rename chapter"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenChapterDrawer(chapter)}
-                              title="Edit chapter details"
-                            >
-                              <Settings className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600"
-                              onClick={() => handleDeleteChapter(chapter._id)}
-                              disabled={isDeletingChapter}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Add Lesson Form for this chapter */}
@@ -838,24 +707,14 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                                 <LessonItem
                                   lesson={lesson}
                                   courseId={course?._id || ""}
-                                  isInChapter={true}
                                   expandedLessons={expandedLessons}
-                                  showContentPopup={showContentPopup}
-                                  editingLesson={editingLesson}
-                                  editingLessonName={editingLessonName}
                                   isDeletingLesson={isDeletingLesson}
                                   isDeletingContent={isDeletingContent}
-                                  isUpdatingLesson={isUpdatingLesson}
                                   onToggleLessonExpansion={
                                     toggleLessonExpansion
                                   }
                                   onSetShowContentPopup={setShowContentPopup}
-                                  onStartEditingLesson={startEditingLesson}
-                                  onUpdateLesson={handleUpdateLesson}
-                                  onCancelEditingLesson={cancelEditingLesson}
-                                  onSetEditingLessonName={setEditingLessonName}
                                   onDeleteLesson={handleDeleteLesson}
-                                  onAddContent={handleAddContent}
                                   onDeleteContent={handleDeleteContent}
                                   onOpenLessonDrawer={handleOpenLessonDrawer}
                                 />
@@ -891,22 +750,12 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
                     <LessonItem
                       lesson={lesson}
                       courseId={course?._id || ""}
-                      isInChapter={false}
                       expandedLessons={expandedLessons}
-                      showContentPopup={showContentPopup}
-                      editingLesson={editingLesson}
-                      editingLessonName={editingLessonName}
                       isDeletingLesson={isDeletingLesson}
                       isDeletingContent={isDeletingContent}
-                      isUpdatingLesson={isUpdatingLesson}
                       onToggleLessonExpansion={toggleLessonExpansion}
                       onSetShowContentPopup={setShowContentPopup}
-                      onStartEditingLesson={startEditingLesson}
-                      onUpdateLesson={handleUpdateLesson}
-                      onCancelEditingLesson={cancelEditingLesson}
-                      onSetEditingLessonName={setEditingLessonName}
                       onDeleteLesson={handleDeleteLesson}
-                      onAddContent={handleAddContent}
                       onDeleteContent={handleDeleteContent}
                       onOpenLessonDrawer={handleOpenLessonDrawer}
                     />

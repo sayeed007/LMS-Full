@@ -166,7 +166,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-off-white-1">
-      <Container size="xl" padding="none">
+      <Container size="xl" padding="none" className="my-4">
         <PageHeader title="Dashboard" />
 
         <div className="space-y-8">
