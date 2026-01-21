@@ -39,6 +39,7 @@ async function seedGitHubMasteryCourse(users, categories) {
       learningOutcomes: courseData.course.learningOutcomes,
       isPublished: courseData.course.isPublished,
       isApproved: courseData.course.isApproved,
+      isFeatured: true,
       status: 'published'
     });
 

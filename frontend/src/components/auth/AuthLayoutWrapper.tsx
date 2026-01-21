@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import StudentSummary from "@/components/common/StudentSummary";
 
 interface AuthLayoutWrapperProps {
   children: React.ReactNode;
@@ -70,28 +71,7 @@ export default function AuthLayoutWrapper({
             </p>
 
             <div className="flex gap-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-10 h-10 rounded-full border-2 border-dark bg-gray-700 overflow-hidden"
-                  >
-                    <Image
-                      src={`/images/Dummy_Profile.png`}
-                      alt="User"
-                      width={40}
-                      height={40}
-                      className="opacity-80"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-col justify-center">
-                <span className="text-sm font-semibold text-white">
-                  2k+ Students
-                </span>
-                <span className="text-xs text-gray-400">Joined this week</span>
-              </div>
+              <StudentSummary variant="dark" />
             </div>
           </motion.div>
         </div>

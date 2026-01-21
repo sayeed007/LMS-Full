@@ -95,6 +95,10 @@ const courseSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
   publishedAt: Date,
   isDeleted: {
     type: Boolean,
