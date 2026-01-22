@@ -420,6 +420,22 @@ export interface CourseSettings {
   enrollmentDeadline?: string;
   courseStartDate?: string;
   courseEndDate?: string;
+  expiration?: {
+    type: 'from_enrollment' | 'from_publish' | 'never';
+    days: number;
+  };
+  visibility?: 'public' | 'organization' | 'private';
+  reminders?: {
+    name: string;
+    type: string;
+    via: string;
+    active: boolean;
+    message?: string;
+  }[];
+  certificate?: {
+    enabled: boolean;
+    templateId?: string;
+  };
 }
 
 export interface Course extends BaseDocument {
@@ -449,7 +465,7 @@ export interface Course extends BaseDocument {
   learningOutcomes: string[];
   targetAudience: string[];
   requirements: string[];
-  estimatedDuration: number; // in hours
+  estimatedDuration: number; // in minutes
   isPublished: boolean;
   isFeatured: boolean;
   isApproved: boolean;

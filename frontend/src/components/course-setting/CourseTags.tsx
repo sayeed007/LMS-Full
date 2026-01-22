@@ -3,9 +3,19 @@ import React, { useState } from "react";
 interface CourseTagsProps {
   tags: string[];
   setTags: React.Dispatch<React.SetStateAction<string[]>>;
+  onSave: () => void;
+  isLoading?: boolean;
 }
 
-export function CourseTags({ tags, setTags }: CourseTagsProps) {
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+
+export function CourseTags({
+  tags,
+  setTags,
+  onSave,
+  isLoading,
+}: CourseTagsProps) {
   const [tagInput, setTagInput] = useState("");
 
   const onTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -46,6 +56,16 @@ export function CourseTags({ tags, setTags }: CourseTagsProps) {
       </div>
       <div className="text-xs text-gray-500 mt-1">
         Type comma or press enter to add
+      </div>
+      <div className="flex items-center gap-4 mt-6">
+        <Button
+          onClick={onSave}
+          disabled={isLoading}
+          className="bg-blue-600 text-white"
+        >
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Save
+        </Button>
       </div>
     </div>
   );

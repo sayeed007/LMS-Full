@@ -7,13 +7,19 @@ interface CourseDurationProps {
   setDurationHours: (value: number) => void;
   durationMinutes: number;
   setDurationMinutes: (value: number) => void;
+  onSave: () => void;
+  isLoading?: boolean;
 }
+
+import { Loader2 } from "lucide-react";
 
 export function CourseDuration({
   durationHours,
   setDurationHours,
   durationMinutes,
   setDurationMinutes,
+  onSave,
+  isLoading,
 }: CourseDurationProps) {
   return (
     <div className="px-4 pb-4 pt-2">
@@ -44,7 +50,14 @@ export function CourseDuration({
         </div>
       </div>
       <div className="flex items-center gap-4 mt-6">
-        <Button className="bg-blue-600 text-white">Save</Button>
+        <Button
+          onClick={onSave}
+          disabled={isLoading}
+          className="bg-blue-600 text-white"
+        >
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Save
+        </Button>
         <button className="text-gray-600">Cancel</button>
       </div>
     </div>

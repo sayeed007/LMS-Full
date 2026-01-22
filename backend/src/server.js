@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { app, connectDB } = require('./app');
 const socketService = require('./services/socketService');
+const reminderService = require('./services/reminderService');
 
 // Create HTTP server
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,7 @@ socketService.initialize(io);
 // Connect to database
 if (process.env.NODE_ENV !== 'test') {
   connectDB();
+  reminderService.initialize();
 }
 
 // Start server

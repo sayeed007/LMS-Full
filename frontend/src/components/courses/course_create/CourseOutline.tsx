@@ -41,6 +41,7 @@ import { LessonEditDrawer } from "./LessonEditDrawer";
 import { LessonItem } from "./LessonItem";
 import { SortableContainer } from "./SortableContainer";
 import { SortableItem } from "./SortableItem";
+import { CourseOutlineSkeleton } from "./CourseOutlineSkeleton";
 
 interface CourseOutlineProps {
   course?: CoursePopulated;
@@ -65,7 +66,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   // Additional state for nested content
   const [showContentPopup, setShowContentPopup] = useState<string | null>(null);
   const [expandedLessons, setExpandedLessons] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [creatingLessonInChapter, setCreatingLessonInChapter] = useState<
     string | null
@@ -75,7 +76,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   const [editingChapterDetails, setEditingChapterDetails] =
     useState<CourseChapter | null>(null);
   const [collapsedChapters, setCollapsedChapters] = useState<Set<string>>(
-    new Set() // All chapters expanded by default
+    new Set(), // All chapters expanded by default
   );
 
   const { setShowHeaderActions } = useContext(CourseHeaderContext);
@@ -88,7 +89,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     error: lessonsError,
   } = useGetLessonsQuery(
     { courseId: course?._id || "" },
-    { skip: !course?._id }
+    { skip: !course?._id },
   );
 
   const {
@@ -97,7 +98,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
     error: chaptersError,
   } = useGetChaptersQuery(
     { courseId: course?._id || "" },
-    { skip: !course?._id }
+    { skip: !course?._id },
   );
 
   const [createLesson, { isLoading: isCreatingLesson }] =
@@ -128,7 +129,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         ...chapter,
         lessons: chapter.lessons
           ? [...chapter.lessons].sort(
-              (a, b) => (a?.order || 0) - (b?.order || 0)
+              (a, b) => (a?.order || 0) - (b?.order || 0),
             )
           : [],
       }));
@@ -192,7 +193,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         showErrorToast("Failed to create lesson");
       }
     },
-    [course?._id, lessonName, createLesson]
+    [course?._id, lessonName, createLesson],
   );
 
   const handleCreateChapter = useCallback(async () => {
@@ -260,7 +261,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
 
     // Navigate to content creation page with content type
     router.push(
-      `/courses/create/${course._id}/courseOutline/${lessonId}/content?type=${contentType.type}`
+      `/courses/create/${course._id}/courseOutline/${lessonId}/content?type=${contentType.type}`,
     );
   };
 
@@ -305,7 +306,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   };
 
   const handleOpenLessonDrawer = (
-    lesson: Partial<CourseLesson> & { _id: string; title: string }
+    lesson: Partial<CourseLesson> & { _id: string; title: string },
   ) => {
     setEditingLessonDetails(lesson as CourseLesson);
   };
@@ -315,7 +316,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   };
 
   const handleOpenChapterDrawer = (
-    chapter: Partial<CourseChapter> & { _id: string; title: string }
+    chapter: Partial<CourseChapter> & { _id: string; title: string },
   ) => {
     setEditingChapterDetails(chapter as CourseChapter);
   };
@@ -393,7 +394,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
             if (sourceChapterId === destChapterId) {
               // Reordering within same chapter
               const sourceChapter = chapters.find(
-                (ch) => ch._id === sourceChapterId
+                (ch) => ch._id === sourceChapterId,
               );
               if (sourceChapter?.lessons) {
                 const reorderedLessons = Array.from(sourceChapter.lessons);
@@ -419,7 +420,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
           ) {
             // Reordering standalone lessons
             const standaloneLessons = lessons.filter(
-              (lesson) => !lesson.chapter
+              (lesson) => !lesson.chapter,
             );
             const reorderedLessons = Array.from(standaloneLessons);
             const [removed] = reorderedLessons.splice(sourceIndex, 1);
@@ -443,7 +444,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
         showErrorToast("Failed to reorder items");
       }
     },
-    [chapters, lessons, course?._id, reorderChapters, reorderLessons]
+    [chapters, lessons, course?._id, reorderChapters, reorderLessons],
   );
 
   const startCreatingLesson = () => {
@@ -476,10 +477,10 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   useEffect(() => {
     if (showContentPopup) {
       const popupElement = document.getElementById(
-        `lesson-popup-${showContentPopup}`
+        `lesson-popup-${showContentPopup}`,
       );
       const buttonElement = document.querySelector(
-        `[data-lesson-id="${showContentPopup}"] button[aria-label="Add Content"]`
+        `[data-lesson-id="${showContentPopup}"] button[aria-label="Add Content"]`,
       );
 
       if (popupElement && buttonElement) {
@@ -507,16 +508,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
   }, [showContentPopup]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="bg-gray-100 animate-pulse rounded-lg h-16"
-          ></div>
-        ))}
-      </div>
-    );
+    return <CourseOutlineSkeleton />;
   }
 
   if (error) {

@@ -634,6 +634,69 @@ const sendGradeNotificationEmail = async (student, assignment, grade, course) =>
   return await sendEmail({ to: student.email, subject, html });
 };
 
+/**
+ * Send course reminder email
+ *
+ * @param {Object} user - User object
+ * @param {Object} course - Course object
+ * @param {string} message - Custom reminder message
+ * @param {string} type - Reminder type (e.g., Expiry Warning)
+ * @returns {Promise<Object>}
+ */
+const sendCourseReminderEmail = async (user, course, message, type) => {
+  const courseUrl = `${emailConfig.frontendUrl}/courses/${course._id}`;
+  const subject = `Reminder: ${course.title} - ${type}`;
+  
+  // Replace simple placeholders in message
+  const personalizedMessage = message
+    .replace(/{studentName}/g, user.name || 'Student')
+    .replace(/{courseTitle}/g, course.title);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #607d8b; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .message-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #607d8b; }
+        .button { display: inline-block; padding: 12px 30px; background: #607d8b; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Course Reminder</h1>
+        </div>
+        <div class="content">
+          <h2>Hi ${user.name || 'there'},</h2>
+          
+          <div class="message-box">
+            <p>${personalizedMessage}</p>
+          </div>
+
+          <p><strong>Course:</strong> ${course.title}</p>
+
+          <div style="text-align: center;">
+            <a href="${courseUrl}" class="button">Go to Course</a>
+          </div>
+
+          <p>The LMS Team</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} LMS Platform. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({ to: user.email, subject, html });
+};
+
 module.exports = {
   sendEmail,
   sendWelcomeEmail,
@@ -645,4 +708,5 @@ module.exports = {
   sendEmailVerification,
   sendAssignmentSubmittedEmail,
   sendGradeNotificationEmail,
+  sendCourseReminderEmail,
 };

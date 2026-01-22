@@ -133,13 +133,71 @@ const courseSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  estimatedDuration: {
+    type: Number, // in minutes
+    default: 0
+  },
   
   // Settings
   settings: {
     requiresEnrollment: { type: Boolean, default: true },
     isFree: { type: Boolean, default: false },
     hasCertificate: { type: Boolean, default: true },
-    dripContent: { type: Boolean, default: false }
+    allowReviews: { type: Boolean, default: true },
+    allowComments: { type: Boolean, default: true },
+    autoApproveComments: { type: Boolean, default: true },
+    dripContent: { type: Boolean, default: false },
+    expiration: {
+      type: {
+        type: String,
+        enum: ['from_enrollment', 'from_publish', 'never'],
+        default: 'never'
+      },
+      days: { type: Number, default: 0 }
+    },
+    visibility: {
+      type: String,
+      enum: ['public', 'organization', 'private'],
+      default: 'public'
+    },
+    reminders: {
+      type: [{
+        name: String,
+        type: String,
+        via: String,
+        active: Boolean,
+        message: String
+      }],
+      default: function() {
+        return [
+          {
+            name: 'Welcome Email',
+            type: 'enrollment',
+            via: 'email',
+            active: true,
+            message: 'Welcome to the course {courseTitle}! We are excited to have you join us. Happy learning!'
+          },
+          {
+            name: 'Course Completion',
+            type: 'completion',
+            via: 'email',
+            active: true,
+            message: 'Congratulations on completing {courseTitle}! You have done a great job.'
+          },
+          {
+            name: '3 Days Before Expiry',
+            type: 'expiry_3days',
+            via: 'email',
+            active: false, // Default to inactive until expiry is configured
+            message: 'your access to {courseTitle} will expire in 3 days. Please complete any remaining lessons.'
+          }
+        ];
+      }
+    },
+    certificate: {
+      enabled: { type: Boolean, default: false },
+      templateId: String
+    }
   }
 }, {
   timestamps: true,

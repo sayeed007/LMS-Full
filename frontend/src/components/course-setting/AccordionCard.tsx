@@ -23,7 +23,7 @@ export function AccordionCard({
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-3 text-left p-4"
+        className="w-full h-[-webkit-fill-available] flex items-center gap-3 text-left p-4"
       >
         <div className="grid place-items-center w-10 h-10 rounded-xl bg-gray-100/80">
           {icon}

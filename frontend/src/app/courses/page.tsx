@@ -116,7 +116,7 @@ export default function CoursesPage() {
     error: myCoursesError,
   } = useGetMyCoursesQuery(
     undefined,
-    { skip: activeTab !== "my" || !isAuthenticated } // Skip if not authenticated
+    { skip: activeTab !== "my" || !isAuthenticated }, // Skip if not authenticated
   );
 
   const {
@@ -125,7 +125,7 @@ export default function CoursesPage() {
     error: enrolledCoursesError,
   } = useGetEnrolledCoursesQuery(
     { page: 1, limit: 50 },
-    { skip: activeTab !== "enrolled" || !isAuthenticated } // Skip if not authenticated
+    { skip: activeTab !== "enrolled" || !isAuthenticated }, // Skip if not authenticated
   );
 
   const openCreateModal = () => {
@@ -137,7 +137,7 @@ export default function CoursesPage() {
           router.push(`/courses/create/${courseId}`);
         }}
       />,
-      { size: "md", position: "center" }
+      { size: "md", position: "center" },
     );
   };
 
@@ -162,7 +162,7 @@ export default function CoursesPage() {
         size: "md",
         position: "right",
         className: "max-w-md",
-      }
+      },
     );
   };
 
@@ -216,7 +216,7 @@ export default function CoursesPage() {
       const errorMessage = getErrorMessage(error, "Failed to load courses");
       showErrorToast(
         `Failed to load ${activeTab === "my" ? "your" : activeTab} courses`,
-        errorMessage
+        errorMessage,
       );
     }
   }, [error, activeTab, showAuthRequired]);
@@ -229,7 +229,7 @@ export default function CoursesPage() {
           isAuthenticated ? (
             <Button
               onClick={openCreateModal}
-              className="bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
+              className="my-4 bg-info text-white px-6 py-2 font-medium hover:bg-info/90 transition"
             >
               Create Now
             </Button>
@@ -328,8 +328,8 @@ export default function CoursesPage() {
                 activeTab === "my"
                   ? "courses created"
                   : activeTab === "enrolled"
-                  ? "enrolled courses"
-                  : "courses available"
+                    ? "enrolled courses"
+                    : "courses available"
               }`}
               description={getEmptyStateDescription(activeTab)}
               buttonText={activeTab === "my" ? "Create Now" : "Browse Courses"}

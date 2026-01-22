@@ -4,6 +4,8 @@ import CourseOutline from "@/components/courses/course_create/CourseOutline";
 import { useGetCourseByIdQuery } from "@/store/api/courseApi";
 import { use } from "react";
 
+import { CourseOutlineSkeleton } from "@/components/courses/course_create/CourseOutlineSkeleton";
+
 export default function CourseOutlinePage({
   params,
 }: {
@@ -16,16 +18,7 @@ export default function CourseOutlinePage({
   const course = courseData?.data?.course;
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="bg-gray-100 animate-pulse rounded-lg h-16"
-          ></div>
-        ))}
-      </div>
-    );
+    return <CourseOutlineSkeleton />;
   }
 
   return <CourseOutline course={course} />;
