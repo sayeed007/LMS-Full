@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { DataTable } from "@/components/ui/data-table/data-table";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { MoreVertical, Plus } from "lucide-react";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +44,7 @@ export interface Reminder {
 interface CourseRemindersProps {
   reminders: Reminder[];
   setReminders: React.Dispatch<React.SetStateAction<Reminder[]>>;
-  onSave: () => void;
+  onSave: (updatedReminders?: Reminder[]) => void;
   isLoading?: boolean;
 }
 
@@ -51,7 +52,6 @@ export function CourseReminders({
   reminders,
   setReminders,
   onSave,
-  isLoading,
 }: CourseRemindersProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,11 +81,19 @@ export function CourseReminders({
     setIsSheetOpen(true);
   };
 
-  const handleOpenEdit = (reminder: Reminder) => {
-    setFormData(reminder);
-    setEditingId(reminder.id);
-    setIsSheetOpen(true);
-  };
+  const handleOpenEdit = useCallback(
+    (e: React.MouseEvent, reminder: Reminder) => {
+      setFormData(reminder);
+      setEditingId(reminder.id);
+
+      // Slight delay to allow dropdown to close completely before opening sheet
+      // This prevents focus/pointer-event issues
+      setTimeout(() => {
+        setIsSheetOpen(true);
+      }, 100);
+    },
+    [],
+  );
 
   const handleSaveReminder = () => {
     if (!formData.name?.trim()) {
@@ -93,12 +101,12 @@ export function CourseReminders({
       return;
     }
 
+    let newReminders: Reminder[];
+
     if (editingId) {
       // Update existing
-      setReminders((prev) =>
-        prev.map((r) =>
-          r.id === editingId ? ({ ...r, ...formData } as Reminder) : r,
-        ),
+      newReminders = reminders.map((r) =>
+        r.id === editingId ? ({ ...r, ...formData } as Reminder) : r,
       );
       toast.success("Reminder updated");
     } else {
@@ -107,23 +115,36 @@ export function CourseReminders({
         id: `temp-${Date.now()}`,
         ...(formData as Omit<Reminder, "id">),
       };
-      setReminders((prev) => [...prev, newReminder]);
+      newReminders = [...reminders, newReminder];
       toast.success("Reminder added");
     }
+
+    setReminders(newReminders);
+    onSave(newReminders);
     setIsSheetOpen(false);
     resetForm();
   };
 
-  const handleDelete = (id: string) => {
-    setReminders((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Reminder deleted");
-  };
+  const handleDelete = useCallback(
+    (id: string) => {
+      const newReminders = reminders.filter((r) => r.id !== id);
+      setReminders(newReminders);
+      onSave(newReminders);
+      toast.success("Reminder deleted");
+    },
+    [reminders, setReminders, onSave],
+  );
 
-  const handleToggleActive = (id: string, currentStatus: boolean) => {
-    setReminders((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, active: !currentStatus } : r)),
-    );
-  };
+  const handleToggleActive = useCallback(
+    (id: string, currentStatus: boolean) => {
+      const newReminders = reminders.map((r) =>
+        r.id === id ? { ...r, active: !currentStatus } : r,
+      );
+      setReminders(newReminders);
+      onSave(newReminders);
+    },
+    [reminders, setReminders, onSave],
+  );
 
   const columns: ColumnDef<Reminder>[] = useMemo(
     () => [
@@ -183,16 +204,34 @@ export function CourseReminders({
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleOpenEdit(reminder)}>
-                  <Pencil className="mr-2 h-4 w-4" />
+              <DropdownMenuContent
+                align="end"
+                className="w-46 px-2 bg-white border-0 shadow-xl rounded-lg overflow-hidden"
+              >
+                <DropdownMenuItem
+                  onClick={(e) => handleOpenEdit(e, reminder)}
+                  className="cursor-pointer py-3 px-4 text-gray-700 focus:text-blue-600 focus:bg-blue-50 border-b border-gray-100 rounded-none mx-0"
+                >
+                  <Image
+                    src="/icons/Edit.png"
+                    alt="Edit"
+                    width={20}
+                    height={20}
+                    className="mr-3 w-5 h-5"
+                  />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleDelete(reminder.id)}
-                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                  className="cursor-pointer py-3 px-4 text-red-600 focus:text-red-600 focus:bg-red-50 rounded-none mx-0"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Image
+                    src="/icons/Delete.png"
+                    alt="Delete"
+                    width={20}
+                    height={20}
+                    className="mr-3 w-5 h-5"
+                  />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -201,7 +240,7 @@ export function CourseReminders({
         },
       },
     ],
-    [],
+    [handleDelete, handleToggleActive, handleOpenEdit],
   );
 
   return (
@@ -210,14 +249,6 @@ export function CourseReminders({
         <Button onClick={handleOpenAdd} variant="outline">
           <Plus className="w-4 h-4 mr-2" />
           Add Reminder
-        </Button>
-        <Button
-          onClick={onSave}
-          disabled={isLoading}
-          className="bg-blue-600 text-white"
-        >
-          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          Save Changes
         </Button>
       </div>
 

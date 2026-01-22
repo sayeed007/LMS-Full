@@ -300,10 +300,11 @@ export default function CourseSettings() {
             reminders={reminders}
             setReminders={setReminders}
             isLoading={isUpdating}
-            onSave={() => {
+            onSave={(updatedReminders) => {
               const currentSettings = courseData?.data?.course?.settings || {};
+              const sourceReminders = updatedReminders || reminders;
               // Strip IDs before saving if backend doesn't need them or keep them if schema has _id
-              const remindersToSave = reminders.map((r) => {
+              const remindersToSave = sourceReminders.map((r) => {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { id, ...rest } = r;
                 return rest;

@@ -163,7 +163,7 @@ const courseSchema = new mongoose.Schema({
     reminders: {
       type: [{
         name: String,
-        type: String,
+        type: { type: String },
         via: String,
         active: Boolean,
         message: String
