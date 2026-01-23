@@ -409,7 +409,6 @@ export function CourseLearningClient({
                         chapter.lessons?.map((lesson) => {
                           const isCompleted = completedLessons.has(lesson._id);
                           const isCurrent = currentLessonId === lesson._id;
-                          console.log(lesson);
 
                           return (
                             <div key={lesson._id} className="space-y-1">

@@ -13,13 +13,18 @@ import {
   Download,
   FileText,
   Headphones,
-  Play,
   Video,
 } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
-import { decodeHTMLEntities } from "@/lib/html-utils";
-import { EmbeddedQuizRenderer } from "./EmbeddedQuizRenderer";
+import {
+  AudioContentRenderer,
+  BlockContentRenderer,
+  DocumentContentRenderer,
+  QuizContentRenderer,
+  TextContentRenderer,
+  UnsupportedContentRenderer,
+  VideoContentRenderer,
+} from "./content-renderers";
 
 interface LessonContentRendererProps {
   lessonId: string;
@@ -52,7 +57,7 @@ export function LessonContentRenderer({
     error,
   } = useGetContentByLessonQuery(
     { courseId, lessonId },
-    { skip: !courseId || !lessonId }
+    { skip: !courseId || !lessonId },
   );
 
   const contentItems = contentData?.data?.content || [];
@@ -148,182 +153,42 @@ export function LessonContentRenderer({
     const renderContent = () => {
       switch (item.type) {
         case "text":
-          return (
-            <div className="prose max-w-none">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: decodeHTMLEntities(item.data.text || ""),
-                }}
-                className="text-gray-700 leading-relaxed"
-              />
-            </div>
-          );
+          return <TextContentRenderer content={item} />;
 
         case "video":
           return (
-            <div className="bg-black rounded-lg overflow-hidden aspect-video">
-              {item.data.url ? (
-                <video
-                  controls
-                  className="w-full h-full"
-                  onEnded={() => markItemComplete(item._id)}
-                >
-                  <source src={item.data.url} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <div className="flex items-center justify-center h-full text-white">
-                  <div className="text-center">
-                    <Play className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Video not available</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <VideoContentRenderer
+              content={item}
+              onComplete={markItemComplete}
+            />
           );
 
         case "audio":
           return (
-            <div className="bg-gray-50 rounded-lg p-6">
-              {item.data.url ? (
-                <audio
-                  controls
-                  className="w-full"
-                  onEnded={() => markItemComplete(item._id)}
-                >
-                  <source src={item.data.url} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
-              ) : (
-                <div className="text-center text-gray-500">
-                  <Headphones className="w-8 h-8 mx-auto mb-2" />
-                  <p>Audio not available</p>
-                </div>
-              )}
-            </div>
+            <AudioContentRenderer
+              content={item}
+              onComplete={markItemComplete}
+            />
           );
 
         case "document":
           return (
-            <div className="border border-gray-200 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Download className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">
-                      {item.title || "Document"}
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      {item.description || "Download this document to continue"}
-                    </p>
-                  </div>
-                </div>
-                {item.data.url && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      window.open(item.data.url, "_blank");
-                      markItemComplete(item._id);
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-
-        case "block":
-          return (
-            <div className="space-y-4">
-              {item.data.items?.map((blockItem, index: number) => (
-                <div
-                  key={blockItem._id || index}
-                  className="border-l-4 border-blue-200 pl-4"
-                >
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    {blockItem.data.title || `Block Item ${index + 1}`}
-                  </h4>
-                  <div className="text-gray-700 leading-relaxed">
-                    {blockItem.type === "text" && blockItem.data.text && (
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: decodeHTMLEntities(blockItem.data.text),
-                        }}
-                      />
-                    )}
-                    {(blockItem.type === "image" ||
-                      blockItem.type === "video" ||
-                      blockItem.type === "audio") &&
-                      blockItem.data.url && (
-                        <div className="mb-2">
-                          {blockItem.type === "image" && (
-                            <Image
-                              src={blockItem.data.url}
-                              alt={
-                                blockItem.data.alt ||
-                                blockItem.data.title ||
-                                "Block content"
-                              }
-                              width={1200}
-                              height={800}
-                              className="max-w-full h-auto rounded-lg"
-                            />
-                          )}
-                          {blockItem.type === "video" && (
-                            <video controls className="w-full rounded-lg">
-                              <source
-                                src={blockItem.data.url}
-                                type={blockItem.data.mimeType || "video/mp4"}
-                              />
-                            </video>
-                          )}
-                          {blockItem.type === "audio" && (
-                            <audio controls className="w-full">
-                              <source
-                                src={blockItem.data.url}
-                                type={blockItem.data.mimeType || "audio/mpeg"}
-                              />
-                            </audio>
-                          )}
-                        </div>
-                      )}
-                    {blockItem.data.description && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        {blockItem.data.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )) || <p className="text-gray-600">No block content available</p>}
-            </div>
-          );
-
-        case "quiz":
-          return (
-            <EmbeddedQuizRenderer
-              quizData={
-                item.data.quiz || {
-                  attempts: 0,
-                  passingScore: 0,
-                  questions: [],
-                  shuffleQuestions: false,
-                  showFeedback: false,
-                  timeLimit: 0,
-                }
-              }
-              onComplete={() => markItemComplete(item._id)}
+            <DocumentContentRenderer
+              content={item}
+              onComplete={markItemComplete}
             />
           );
 
-        default:
+        case "block":
+          return <BlockContentRenderer content={item} />;
+
+        case "quiz":
           return (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="w-8 h-8 mx-auto mb-2" />
-              <p>Content type not supported</p>
-            </div>
+            <QuizContentRenderer content={item} onComplete={markItemComplete} />
           );
+
+        default:
+          return <UnsupportedContentRenderer content={item} />;
       }
     };
 
@@ -490,7 +355,7 @@ export function useContentItems(courseId: string, lessonId: string) {
     error,
   } = useGetContentByLessonQuery(
     { courseId, lessonId },
-    { skip: !courseId || !lessonId }
+    { skip: !courseId || !lessonId },
   );
 
   return {
