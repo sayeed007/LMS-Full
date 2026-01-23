@@ -55,7 +55,7 @@ export function LessonEditDrawer({
       setIsPublished(lesson.isPublished || false);
 
       setAllowComments(lesson.settings?.allowComments ?? true);
-      setDownloadable(lesson.settings?.downloadable ?? false);
+      setDownloadable(lesson.settings?.isDownloadable ?? false);
     }
   }, [lesson]);
 
@@ -75,12 +75,12 @@ export function LessonEditDrawer({
           title: title.trim(),
           description: description.trim(),
           type,
-          estimatedDuration: duration,
+          duration: duration,
           isPreview,
           isPublished,
           settings: {
             allowComments,
-            downloadable,
+            isDownloadable: downloadable,
             autoComplete: false,
             preventSkipping: false,
             showTranscript: false,
@@ -152,8 +152,7 @@ export function LessonEditDrawer({
                   onChange={(e) =>
                     setType(e.target.value as CourseLesson["type"])
                   }
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="text">Text</option>
                   <option value="video">Video</option>

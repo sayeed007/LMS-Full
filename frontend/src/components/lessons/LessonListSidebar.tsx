@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Lesson {
   _id: string;
   title: string;
-  estimatedDuration?: number;
+  duration?: number;
 }
 
 interface LessonListSidebarProps {
@@ -15,7 +15,7 @@ interface LessonListSidebarProps {
 export function LessonListSidebar({
   lessons,
   currentLessonId,
-  onLessonClick
+  onLessonClick,
 }: LessonListSidebarProps) {
   return (
     <Card>
@@ -30,21 +30,23 @@ export function LessonListSidebar({
               onClick={() => onLessonClick(lesson._id)}
               className={`w-full text-left p-3 rounded-lg transition-colors ${
                 lesson._id === currentLessonId
-                  ? 'bg-blue-100 border-blue-300 border'
-                  : 'hover:bg-gray-100'
+                  ? "bg-blue-100 border-blue-300 border"
+                  : "hover:bg-gray-100"
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <p
                     className={`text-sm font-medium truncate ${
-                      lesson._id === currentLessonId ? 'text-blue-900' : 'text-gray-900'
+                      lesson._id === currentLessonId
+                        ? "text-blue-900"
+                        : "text-gray-900"
                     }`}
                   >
                     {index + 1}. {lesson.title}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {lesson.estimatedDuration || 0} min
+                    {lesson.duration || 0} min
                   </p>
                 </div>
                 {/* Show completion status */}

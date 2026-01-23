@@ -150,7 +150,7 @@ export interface CourseAssignmentDetails {
 
 export interface CourseLessonSettings {
   allowComments: boolean;
-  downloadable: boolean;
+  isDownloadable: boolean;
   autoComplete: boolean;
   preventSkipping: boolean;
   showTranscript: boolean;

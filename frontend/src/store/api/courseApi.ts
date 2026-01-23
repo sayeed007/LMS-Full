@@ -102,6 +102,7 @@ export interface UpdateLessonRequest {
   title?: string;
   description?: string;
   type?: CourseLesson['type'];
+  duration?: number;
   estimatedDuration?: number;
   resources?: CourseLesson['resources'];
   isPreview?: boolean;

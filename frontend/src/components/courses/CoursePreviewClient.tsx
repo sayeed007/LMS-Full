@@ -48,7 +48,10 @@ export function CoursePreviewClient({
 
   console.info(chaptersError, lessonsError);
 
-  const course = (courseData?.data?.course || {}) as Partial<CoursePopulated>;
+  const course = useMemo(() => {
+    return (courseData?.data?.course || {}) as Partial<CoursePopulated>;
+  }, [courseData?.data?.course]);
+
   const error =
     propError || (courseError ? "Failed to fetch course data" : null);
 
@@ -63,7 +66,7 @@ export function CoursePreviewClient({
         ...chapter,
         lessons: chapter.lessons
           ? [...chapter.lessons].sort(
-              (a, b) => (a?.order || 0) - (b?.order || 0)
+              (a, b) => (a?.order || 0) - (b?.order || 0),
             )
           : [],
       }));
@@ -73,6 +76,75 @@ export function CoursePreviewClient({
     const lessonList = lessonsData?.data?.lessons || [];
     return [...lessonList].sort((a, b) => (a?.order || 0) - (b?.order || 0));
   }, [lessonsData?.data?.lessons]);
+
+  // Calculate course stats from chapters and lessons
+  const totalLessons = useMemo(() => {
+    return (
+      chapters.reduce(
+        (acc, chapter) => acc + (chapter.lessons?.length || 0),
+        0,
+      ) + lessons.filter((lesson) => !lesson.chapter).length
+    );
+  }, [chapters, lessons]);
+
+  // Calculate total quizzes from lessons
+  const totalQuizzes = useMemo(() => {
+    let quizCount = 0;
+
+    // Count quizzes in chapter lessons
+    chapters.forEach((chapter) => {
+      chapter.lessons?.forEach((lesson) => {
+        if (lesson.quiz || lesson.type === "quiz") {
+          quizCount++;
+        }
+      });
+    });
+
+    // Count quizzes in standalone lessons
+    lessons.forEach((lesson) => {
+      if (!lesson.chapter && (lesson.quiz || lesson.type === "quiz")) {
+        quizCount++;
+      }
+    });
+
+    return quizCount;
+  }, [chapters, lessons]);
+
+  // Calculate total duration from lessons (in minutes)
+  const totalDuration = useMemo(() => {
+    let durationMinutes = 0;
+
+    // Sum durations from chapter lessons
+    chapters.forEach((chapter) => {
+      chapter.lessons?.forEach((lesson) => {
+        durationMinutes += lesson.duration || 0;
+      });
+    });
+
+    // Sum durations from standalone lessons
+    lessons.forEach((lesson) => {
+      if (!lesson.chapter) {
+        durationMinutes += lesson.duration || 0;
+      }
+    });
+
+    // Convert to hours (rounded to 1 decimal place)
+    return Math.round((durationMinutes / 60) * 10) / 10;
+  }, [chapters, lessons]);
+
+  // Merge calculated stats into course object
+  const courseWithStats: Partial<CoursePopulated> = useMemo(
+    () =>
+      ({
+        ...course,
+        duration: totalDuration, // Override with calculated duration in hours
+        stats: {
+          ...course.stats,
+          totalQuizzes,
+        },
+      }) as Partial<CoursePopulated>,
+    [course, totalQuizzes, totalDuration],
+  );
 
   const isLoading = isCourseLoading || isLoadingChapters || isLoadingLessons;
 
@@ -112,11 +184,6 @@ export function CoursePreviewClient({
       </div>
     );
   }
-
-  // Calculate course stats from chapters and lessons
-  const totalLessons =
-    chapters.reduce((acc, chapter) => acc + (chapter.lessons?.length || 0), 0) +
-    lessons.filter((lesson) => !lesson.chapter).length;
 
   return (
     <Container size="xl" padding="sm" className="bg-white">
@@ -162,7 +229,7 @@ export function CoursePreviewClient({
         <div className="flex flex-col md:flex-row flex-8 justify-between">
           {/* Left - Course Header */}
           <CourseHeader
-            course={course}
+            course={courseWithStats}
             chapters={chapters}
             totalLessons={totalLessons}
             actionButtons={
@@ -186,7 +253,7 @@ export function CoursePreviewClient({
 
           {/* Right - Stats Card */}
           <CourseStatsCard
-            course={course}
+            course={courseWithStats}
             totalLessons={totalLessons}
             enrollment={null}
             mode="preview"

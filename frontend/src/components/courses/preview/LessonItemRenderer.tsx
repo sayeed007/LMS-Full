@@ -34,7 +34,7 @@ export function LessonItemRenderer({
 
   const { data: contentData } = useGetContentByLessonQuery(
     { courseId, lessonId: lesson._id },
-    { skip: !courseId || !lesson._id }
+    { skip: !courseId || !lesson._id },
   );
 
   const contentItems = contentData?.data?.content || [];
@@ -57,7 +57,7 @@ export function LessonItemRenderer({
     e.stopPropagation(); // Prevent triggering the expand/collapse
     const chapterParam = lesson.chapterId ? `&chapter=${lesson.chapterId}` : "";
     router.push(
-      `/courses/${courseId}/learn?lesson=${lesson._id}${chapterParam}`
+      `/courses/${courseId}/learn?lesson=${lesson._id}${chapterParam}`,
     );
   };
 
@@ -99,7 +99,7 @@ export function LessonItemRenderer({
             </div>
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{lesson.estimatedDuration || 0} min</span>
+                <span>{lesson.duration || 0} min</span>
                 {(hasResources || hasAssignment || hasQuiz) && (
                   <>
                     <span>•</span>
@@ -192,7 +192,7 @@ export function LessonItemRenderer({
                           {resource.type}
                         </span>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </div>
@@ -220,7 +220,7 @@ export function LessonItemRenderer({
                           <span className="text-xs text-gray-500">
                             Due:{" "}
                             {new Date(
-                              assignmentItem.data.assignment.dueDate
+                              assignmentItem.data.assignment.dueDate,
                             ).toLocaleDateString()}
                           </span>
                         )}

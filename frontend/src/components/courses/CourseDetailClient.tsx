@@ -41,10 +41,13 @@ export function CourseDetailClient({
 
   const { data: lessonsData, isLoading: isLoadingLessons } = useGetLessonsQuery(
     { courseId: courseId || "" },
-    { skip: !courseId }
+    { skip: !courseId },
   );
 
-  const course = (courseData?.data?.course || {}) as Partial<CoursePopulated>;
+  const course = useMemo(() => {
+    return (courseData?.data?.course || {}) as Partial<CoursePopulated>;
+  }, [courseData?.data?.course]);
+
   const error =
     propError || (queryError ? "Failed to fetch course data" : null);
 
@@ -55,7 +58,7 @@ export function CourseDetailClient({
   const handleContinueCourse = () => {
     if (!isAuthenticated) {
       openLoginModal(
-        "Please sign in to enroll in this course and access lessons."
+        "Please sign in to enroll in this course and access lessons.",
       );
       return;
     }
@@ -73,7 +76,7 @@ export function CourseDetailClient({
         ...chapter,
         lessons: chapter.lessons
           ? [...chapter.lessons].sort(
-              (a, b) => (a?.order || 0) - (b?.order || 0)
+              (a, b) => (a?.order || 0) - (b?.order || 0),
             )
           : [],
       }));
@@ -83,6 +86,75 @@ export function CourseDetailClient({
     const lessonList = lessonsData?.data?.lessons || [];
     return [...lessonList].sort((a, b) => (a?.order || 0) - (b?.order || 0));
   }, [lessonsData?.data?.lessons]);
+
+  // Calculate course stats from chapters and lessons - moved before conditional returns
+  const totalLessons = useMemo(() => {
+    return (
+      chapters.reduce(
+        (acc, chapter) => acc + (chapter.lessons?.length || 0),
+        0,
+      ) + lessons.filter((lesson) => !lesson.chapter).length
+    );
+  }, [chapters, lessons]);
+
+  // Calculate total quizzes from lessons
+  const totalQuizzes = useMemo(() => {
+    let quizCount = 0;
+
+    // Count quizzes in chapter lessons
+    chapters.forEach((chapter) => {
+      chapter.lessons?.forEach((lesson) => {
+        if (lesson.quiz || lesson.type === "quiz") {
+          quizCount++;
+        }
+      });
+    });
+
+    // Count quizzes in standalone lessons
+    lessons.forEach((lesson) => {
+      if (!lesson.chapter && (lesson.quiz || lesson.type === "quiz")) {
+        quizCount++;
+      }
+    });
+
+    return quizCount;
+  }, [chapters, lessons]);
+
+  // Calculate total duration from lessons (in minutes)
+  const totalDuration = useMemo(() => {
+    let durationMinutes = 0;
+
+    // Sum durations from chapter lessons
+    chapters.forEach((chapter) => {
+      chapter.lessons?.forEach((lesson) => {
+        durationMinutes += lesson.duration || 0;
+      });
+    });
+
+    // Sum durations from standalone lessons
+    lessons.forEach((lesson) => {
+      if (!lesson.chapter) {
+        durationMinutes += lesson.duration || 0;
+      }
+    });
+
+    // Convert to hours (rounded to 1 decimal place)
+    return Math.round((durationMinutes / 60) * 10) / 10;
+  }, [chapters, lessons]);
+
+  // Merge calculated stats into course object
+  const courseWithStats: Partial<CoursePopulated> = useMemo(
+    () =>
+      ({
+        ...course,
+        duration: totalDuration, // Override with calculated duration in hours
+        stats: {
+          ...course.stats,
+          totalQuizzes,
+        },
+      }) as Partial<CoursePopulated>,
+    [course, totalQuizzes, totalDuration],
+  );
 
   const isLoadingData = isLoading || isLoadingChapters || isLoadingLessons;
 
@@ -123,11 +195,6 @@ export function CourseDetailClient({
     );
   }
 
-  // Calculate course stats from chapters and lessons
-  const totalLessons =
-    chapters.reduce((acc, chapter) => acc + (chapter.lessons?.length || 0), 0) +
-    lessons.filter((lesson) => !lesson.chapter).length;
-
   // TODO: Fetch enrollment data when user is authenticated and enrolled
   // For now, passing null - will show preview mode stats
   const enrollment = null;
@@ -150,7 +217,7 @@ export function CourseDetailClient({
         <div className="flex flex-col md:flex-row flex-9 justify-between">
           {/* Left - Course Header */}
           <CourseHeader
-            course={course}
+            course={courseWithStats}
             chapters={chapters}
             totalLessons={totalLessons}
             actionButtons={
@@ -165,7 +232,7 @@ export function CourseDetailClient({
 
           {/* Right - Stats Card */}
           <CourseStatsCard
-            course={course}
+            course={courseWithStats}
             totalLessons={totalLessons}
             enrollment={enrollment}
             mode="detail"

@@ -47,16 +47,16 @@ export function CourseLearningClient({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentLessonId, setCurrentLessonId] = useState<string | null>(
-    initialLessonId || null
+    initialLessonId || null,
   );
   const [currentChapterId, setCurrentChapterId] = useState<string | null>(
-    initialChapterId || null
+    initialChapterId || null,
   );
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [currentContentIndex, setCurrentContentIndex] = useState(0);
   const [completedContentItems, setCompletedContentItems] = useState<
@@ -77,7 +77,7 @@ export function CourseLearningClient({
 
   const { data: lessonsData, isLoading: isLoadingLessons } = useGetLessonsQuery(
     { courseId: courseId || "" },
-    { skip: !courseId }
+    { skip: !courseId },
   );
 
   const course = courseData?.data?.course;
@@ -93,7 +93,7 @@ export function CourseLearningClient({
         ...chapter,
         lessons: chapter.lessons
           ? [...chapter.lessons].sort(
-              (a, b) => (a?.order || 0) - (b?.order || 0)
+              (a, b) => (a?.order || 0) - (b?.order || 0),
             )
           : [],
       }));
@@ -137,7 +137,7 @@ export function CourseLearningClient({
   // Fetch content items for current lesson
   const { contentItems } = useContentItems(
     courseId || "",
-    currentLessonId || ""
+    currentLessonId || "",
   );
 
   // Reset content index when lesson changes
@@ -189,7 +189,7 @@ export function CourseLearningClient({
 
   const goToNextLesson = useCallback(() => {
     const currentIndex = allLessons.findIndex(
-      (lesson) => lesson._id === currentLessonId
+      (lesson) => lesson._id === currentLessonId,
     );
     if (currentIndex < allLessons.length - 1) {
       const nextLesson = allLessons[currentIndex + 1];
@@ -204,7 +204,7 @@ export function CourseLearningClient({
 
   const goToPreviousLesson = useCallback(() => {
     const currentIndex = allLessons.findIndex(
-      (lesson) => lesson._id === currentLessonId
+      (lesson) => lesson._id === currentLessonId,
     );
     if (currentIndex > 0) {
       const previousLesson = allLessons[currentIndex - 1];
@@ -330,7 +330,7 @@ export function CourseLearningClient({
   }
 
   const currentLessonIndex = allLessons.findIndex(
-    (lesson) => lesson._id === currentLessonId
+    (lesson) => lesson._id === currentLessonId,
   );
   const hasNextLesson = currentLessonIndex < allLessons.length - 1;
   const hasPreviousLesson = currentLessonIndex > 0;
@@ -409,6 +409,7 @@ export function CourseLearningClient({
                         chapter.lessons?.map((lesson) => {
                           const isCompleted = completedLessons.has(lesson._id);
                           const isCurrent = currentLessonId === lesson._id;
+                          console.log(lesson);
 
                           return (
                             <div key={lesson._id} className="space-y-1">
@@ -440,7 +441,7 @@ export function CourseLearningClient({
                                   <div className="flex items-center gap-2 mt-1">
                                     <Clock className="w-3 h-3 text-gray-500" />
                                     <span className="text-xs text-gray-600">
-                                      {lesson.estimatedDuration || 0} min
+                                      {lesson.duration || 0} min
                                     </span>
                                   </div>
                                 </div>
@@ -452,7 +453,7 @@ export function CourseLearningClient({
                                   {contentItems.map((contentItem, index) => {
                                     const isContentCompleted =
                                       completedContentItems.has(
-                                        contentItem._id
+                                        contentItem._id,
                                       );
                                     const isContentCurrent =
                                       index === currentContentIndex;
@@ -467,8 +468,8 @@ export function CourseLearningClient({
                                           isContentCurrent
                                             ? "bg-blue-500 text-white shadow-sm"
                                             : isContentCompleted
-                                            ? "bg-green-50 text-green-700 hover:bg-green-100"
-                                            : "bg-white/50 text-gray-700 hover:bg-white/80"
+                                              ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                              : "bg-white/50 text-gray-700 hover:bg-white/80"
                                         }`}
                                       >
                                         {isContentCompleted &&
@@ -545,7 +546,7 @@ export function CourseLearningClient({
                               <div className="flex items-center gap-2 mt-1">
                                 <Clock className="w-3 h-3 text-gray-500" />
                                 <span className="text-xs text-gray-600">
-                                  {lesson.estimatedDuration || 0} min
+                                  {lesson.duration || 0} min
                                 </span>
                               </div>
                             </div>
@@ -570,8 +571,8 @@ export function CourseLearningClient({
                                       isContentCurrent
                                         ? "bg-blue-500 text-white shadow-sm"
                                         : isContentCompleted
-                                        ? "bg-green-50 text-green-700 hover:bg-green-100"
-                                        : "bg-white/50 text-gray-700 hover:bg-white/80"
+                                          ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                          : "bg-white/50 text-gray-700 hover:bg-white/80"
                                     }`}
                                   >
                                     {isContentCompleted &&

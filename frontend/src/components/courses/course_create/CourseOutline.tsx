@@ -168,7 +168,7 @@ export default function CourseOutline({ course }: CourseOutlineProps) {
           resources: [],
           settings: {
             allowComments: true,
-            downloadable: true, // Changed to true by default
+            isDownloadable: true, // Changed to true by default
             autoComplete: false,
             preventSkipping: false,
             showTranscript: false,
